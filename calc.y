@@ -15,7 +15,7 @@ import (
 	"unicode"
 )
 
-var regs = make([]int, 26)
+var regs = map[string]int{}
 var base int
 
 %}
@@ -23,15 +23,18 @@ var base int
 // fields inside this union end up as the fields in a structure known
 // as ${PREFIX}SymType, of which a reference is passed to the lexer.
 %union{
-	val int
+    val int
+    name string    
 }
 
 // any non-terminal which returns a value needs a type, which is
 // really a field name in the above union struct
-%type <val> expr number
+%type <val> expr number 
+%type <name> name
 
 // same for terminals
-%token <val> DIGIT LETTER
+%token <val> DIGIT 
+%token <name> LETTER
 
 %left '|'
 %left '&'
@@ -49,7 +52,7 @@ stat	:    expr
 		{
 			fmt.Printf( "%d\n", $1 );
 		}
-	|    LETTER '=' expr
+	|    name '=' expr
 		{
 			regs[$1]  =  $3
 		}
@@ -73,7 +76,7 @@ expr	:    '(' expr ')'
 		{ $$  =  $1 | $3 }
 	|    '-'  expr        %prec  UMINUS
 		{ $$  = -$2  }
-	|    LETTER
+	|    name
 		{ $$  = regs[$1] }
 	|    number
 	;
@@ -90,6 +93,14 @@ number	:    DIGIT
 	|    number DIGIT
 		{ $$ = base * $1 + $2 }
 	;
+
+name : LETTER {
+           $$ = $1
+       }
+       | name LETTER {
+           $$ = $$ + $2
+       }
+       ;
 
 %%      /*  start  of  programs  */
 
@@ -112,8 +123,8 @@ func (l *CalcLex) Lex(lval *CalcSymType) int {
 	if unicode.IsDigit(c) {
 		lval.val = int(c - '0')
 		return DIGIT
-	} else if unicode.IsLower(c) {
-		lval.val = int(c - 'a')
+	} else if unicode.IsLetter(c) {
+		lval.name = string(c)
 		return LETTER
 	}
 	return int(c)
