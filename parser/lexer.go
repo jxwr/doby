@@ -57,27 +57,11 @@ func (l *Lexer) Lex(lval *CalcSymType) int {
 		return IDENT
 	}
 
-	switch {
-	case strings.HasPrefix(cur, "+"):
-		l.Pos++
-		return '+'
-	case strings.HasPrefix(cur, "-"):
-		l.Pos++
-		return '-'
-	case strings.HasPrefix(cur, "/"):
-		l.Pos++
-		return '/'
-	case strings.HasPrefix(cur, "%"):
-		l.Pos++
-		return '%'
-	case strings.HasPrefix(cur, "&"):
-		l.Pos++
-		return '&'
-	case strings.HasPrefix(cur, "|"):
-		l.Pos++
-		return '|'
+	// otherwise
+	l.Pos++
+	if len(cur) > 0 {
+		return int(cur[0])
 	}
-
 	return 0
 }
 
