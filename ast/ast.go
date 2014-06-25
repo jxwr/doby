@@ -1,7 +1,7 @@
 package ast
 
 import (
-	"github.com/jxwr/gocalc/token"
+	"github.com/jxwr/doubi/token"
 )
 
 type Node interface {

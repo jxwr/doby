@@ -5,7 +5,7 @@ import (
 	"fmt"
 	"os"
 
-	"github.com/jxwr/gocalc/parser"
+	"github.com/jxwr/doubi/parser"
 )
 
 func main() {

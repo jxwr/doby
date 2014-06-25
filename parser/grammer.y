@@ -3,8 +3,8 @@
 package parser
 
 import (
-       "github.com/jxwr/gocalc/ast"
-       "github.com/jxwr/gocalc/token"
+       "github.com/jxwr/doubi/ast"
+       "github.com/jxwr/doubi/token"
 )
 
 %}
