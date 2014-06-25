@@ -1,14 +1,51 @@
-gocalc - yacc calculator example in Go
-======================================
 
-gocalc is a transliteration of the integer calculator example in
-Appendix A of [the original YACC
-paper](http://dinosaur.compilertools.net/yacc/) into a form parsable
-by goyacc.  I did this mainly to get some experience with yacc, and
-specifically goyacc (which doesn't have much documentation of its
-own).  Hopefully it may be helpful to others as well.
 
-license
--------
+name 
 
-gocalc is offered under the MIT license, see LICENSE for details.
+123
+0x1213
+
+(expr)
+
+expr . name
+
+expr [ index ]
+
+slice : expr [ low : high ]
+
+expr ( []expr )
+
+op expr
+
+expr op expr
+
+-- 
+ident : name
+      
+basiclit : INT | FLOAT | STRING | CHAR 
+
+paren_expr : '(' expr ')'
+
+selector_expr : expr '.' ident
+
+index_expr : expr '[' expr ']'
+
+slice_expr : expr '[' expr ':' expr ':' expr ']'
+
+call_expr : expr '(' expr_list ')'
+
+unary_expr : OP expr 
+
+binary_expr : expr OP expr
+
+expr : ident
+     | basiclit
+     | paren_expr
+     | selector_expr
+     | inden_expr
+     | slice_expr
+     | call_expr
+     | unary_expr
+     | binary_expr
+     ;
+

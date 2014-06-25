@@ -1,10 +1,10 @@
 #!/bin/sh
 
-# create parser
+cd parser
 for y in *.y
 do
     go tool yacc -o ${y%.y}.go -p Calc $y
 done
+cd ..
 
-# build go
 go build
