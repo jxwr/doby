@@ -26,7 +26,7 @@ import (
 %type <expr_list> expr_list
 
 %type <stmt> stmt expr_stmt send_stmt incdec_stmt assign_stmt go_stmt
-%type <stmt> return_stmt branch_stmt block_stmt
+%type <stmt> return_stmt branch_stmt block_stmt if_stmt
 %type <stmt_list> stmt_list
 
 %token <lit> EOF EOL COMMENT
@@ -136,14 +136,15 @@ go_stmt : GO call_expr
 return_stmt : RETURN expr_list
 	      { $$ = ast.ReturnStmt{0, $2} }
 
-branch_stmt : BREAK  		       { $$ = ast.BranchStmt{0, token.BREAK} }
-	     | CONTINUE 	       { $$ = ast.BranchStmt{0, token.CONTINUE } }
+branch_stmt : BREAK				{ $$ = ast.BranchStmt{0, token.BREAK} }
+	     | CONTINUE				{ $$ = ast.BranchStmt{0, token.CONTINUE } }
 
-block_stmt : LBRACE stmt_list RBRACE   { $$ = ast.BlockStmt{0, $2 ,0} }
+block_stmt : LBRACE stmt_list RBRACE		{ $$ = ast.BlockStmt{0, $2 ,0} }
+
+if_stmt : IF expr block_stmt  			{ $$ = ast.IfStmt{0, $2, $3.(ast.BlockStmt), nil} }
+	| IF expr block_stmt ELSE stmt		{ $$ = ast.IfStmt{0, $2, $3.(ast.BlockStmt), $5} }
 
 /*
-if_stmt : IF expr block_stmt ELSE stmt
-
 case_stmt : CASE expr_list COLON stmt_list
 
 switch_stmt : SWITCH stmt block_stmt
@@ -163,8 +164,8 @@ stmt : expr_stmt
      | return_stmt
      | branch_stmt
      | block_stmt
-/*
      | if_stmt
+/*
      | case_stmt
      | switch_stmt
      | for_stmt
