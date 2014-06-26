@@ -25,7 +25,7 @@ import (
 %type <expr> call_expr unary_expr binary_expr prog
 %type <expr_list> expr_list
 
-%type <stmt> stmt expr_stmt send_stmt incdec_stmt
+%type <stmt> stmt expr_stmt send_stmt incdec_stmt assign_stmt
 %type <stmt_list> stmt_list
 
 %token <lit> EOF EOL COMMENT
@@ -115,21 +115,19 @@ send_stmt : expr ARROW expr		{ $$ = ast.SendStmt{$1, 0, $3} }
 incdec_stmt : expr INC 			{ $$ = ast.IncDecStmt{$1, 0, token.INC} }
 	    | expr DEC			{ $$ = ast.IncDecStmt{$1, 0, token.DEC } }
 
+assign_stmt : expr_list ASSIGN expr_list       		{ $$ = ast.AssignStmt{$1, 0, token.ASSIGN, $3} }
+	    | expr_list ADD_ASSIGN expr_list		{ $$ = ast.AssignStmt{$1, 0, token.ADD_ASSIGN, $3} }
+	    | expr_list SUB_ASSIGN expr_list		{ $$ = ast.AssignStmt{$1, 0, token.SUB_ASSIGN, $3} }
+	    | expr_list MUL_ASSIGN expr_list		{ $$ = ast.AssignStmt{$1, 0, token.MUL_ASSIGN, $3} }
+	    | expr_list QUO_ASSIGN expr_list		{ $$ = ast.AssignStmt{$1, 0, token.QUO_ASSIGN, $3} }
+	    | expr_list REM_ASSIGN expr_list		{ $$ = ast.AssignStmt{$1, 0, token.REM_ASSIGN, $3} }
+	    | expr_list AND_ASSIGN expr_list		{ $$ = ast.AssignStmt{$1, 0, token.AND_ASSIGN, $3} }
+	    | expr_list OR_ASSIGN expr_list		{ $$ = ast.AssignStmt{$1, 0, token.OR_ASSIGN, $3} }
+	    | expr_list XOR_ASSIGN expr_list		{ $$ = ast.AssignStmt{$1, 0, token.XOR_ASSIGN, $3} }
+	    | expr_list SHL_ASSIGN expr_list		{ $$ = ast.AssignStmt{$1, 0, token.SHL_ASSIGN, $3} }
+	    | expr_list SHR_ASSIGN expr_list		{ $$ = ast.AssignStmt{$1, 0, token.SHR_ASSIGN, $3} }
+	    | expr_list AND_NOT_ASSIGN expr_list	{ $$ = ast.AssignStmt{$1, 0, token.AND_NOT_ASSIGN, $3} }
 /*
-assign_stmt : expr_list ASSIGN 
-	    | expr_list ADD_ASSIGN expr_list
-	    | expr_list SUB_ASSIGN expr_list
-	    | expr_list MUL_ASSIGN expr_list
-	    | expr_list QUO_ASSIGN expr_list
-	    | expr_list REM_ASSIGN expr_list
-	    | expr_list AND_ASSIGN expr_list
-	    | expr_list OR_ASSIGN expr_list
-	    | expr_list XOR_ASSIGN expr_list
-	    | expr_list SHL_ASSIGN expr_list
-	    | expr_list SHR_ASSIGN expr_list
-	    | expr_list AND_NOT_ASSIGN expr_list
-	    ;
-
 go_stmt : go call_expr ;
 
 return_stmt : RETURN expr_list
@@ -150,12 +148,12 @@ for_stmt : FOR stmt SEMICOLON expr SEMICOLON stmt block_stmt
 
 range_stmt : FOR expr SEMICOLON expr ASSIGN expr block_stmt
 */
+
 stmt : expr_stmt
      | send_stmt
      | incdec_stmt
-     ; 
-/*
      | assign_stmt
+/*
      | go_stmt
      | return_stmt
      | branch_stmt
@@ -164,16 +162,11 @@ stmt : expr_stmt
      | switch_stmt
      | for_stmt
      | range_stmt
-     ;
 */
 
-stmt_list : stmt
-	    { $$ = []ast.Stmt{$1} }
-	  | stmt_list EOL stmt 
-	    { $$ = append($1, $3) }
-	  | stmt_list SEMICOLON stmt
-	    { $$ = append($1, $3) }
-	  ;
+stmt_list : stmt			{ $$ = []ast.Stmt{$1} }
+	  | stmt_list EOL stmt		{ $$ = append($1, $3) }
+	  | stmt_list SEMICOLON stmt	{ $$ = append($1, $3) }
 
 /// program
 
