@@ -27,7 +27,7 @@ import (
 
 %type <stmt> stmt expr_stmt send_stmt incdec_stmt assign_stmt go_stmt
 %type <stmt> return_stmt branch_stmt block_stmt if_stmt 
-%type <stmt> case_clause case_block switch_stmt
+%type <stmt> case_clause case_block switch_stmt select_stmt
 %type <stmt_list> stmt_list case_clause_list
 
 %token <lit> EOF EOL COMMENT
@@ -154,9 +154,9 @@ case_block : LBRACE case_clause_list RBRACE	{ $$ = ast.BlockStmt{0, $2, 0} }
 
 switch_stmt : SWITCH stmt case_block		{ $$ = ast.SwitchStmt{0, $2, $3.(ast.BlockStmt)} }
 
-/*
-select_stmt : SELECT block_stmt
+select_stmt : SELECT case_block			{ $$ = ast.SelectStmt{0, $2.(ast.BlockStmt)} }
 
+/*
 for_stmt : FOR stmt SEMICOLON expr SEMICOLON stmt block_stmt
 
 range_stmt : FOR expr SEMICOLON expr ASSIGN expr block_stmt
@@ -172,6 +172,7 @@ stmt : expr_stmt
      | block_stmt
      | if_stmt
      | switch_stmt
+     | select_stmt
 
 /*
      | for_stmt
