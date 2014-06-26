@@ -27,7 +27,7 @@ import (
 
 %type <stmt> stmt expr_stmt send_stmt incdec_stmt assign_stmt go_stmt
 %type <stmt> return_stmt branch_stmt block_stmt if_stmt 
-%type <stmt> case_clause case_block switch_stmt select_stmt
+%type <stmt> case_clause case_block switch_stmt select_stmt for_stmt range_stmt
 %type <stmt_list> stmt_list case_clause_list
 
 %token <lit> EOF EOL COMMENT
@@ -156,11 +156,11 @@ switch_stmt : SWITCH stmt case_block		{ $$ = ast.SwitchStmt{0, $2, $3.(ast.Block
 
 select_stmt : SELECT case_block			{ $$ = ast.SelectStmt{0, $2.(ast.BlockStmt)} }
 
-/*
 for_stmt : FOR stmt SEMICOLON expr SEMICOLON stmt block_stmt
+	   { $$ = ast.ForStmt{0, $2, $4, $6, $7.(ast.BlockStmt)} }
 
-range_stmt : FOR expr SEMICOLON expr ASSIGN expr block_stmt
-*/
+range_stmt : FOR expr COMMA expr ASSIGN expr block_stmt
+	     { $$ = ast.RangeStmt{0, $2, $4, $6, $7.(ast.BlockStmt)} }
 
 stmt : expr_stmt
      | send_stmt
@@ -173,11 +173,8 @@ stmt : expr_stmt
      | if_stmt
      | switch_stmt
      | select_stmt
-
-/*
      | for_stmt
      | range_stmt
-*/
 
 stmt_list : /* empty */			{ $$ = []ast.Stmt{} }
 	  | stmt			{ $$ = []ast.Stmt{$1} }

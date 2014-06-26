@@ -166,6 +166,14 @@ type ForStmt struct {
 	Body BlockStmt
 }
 
+type RangeStmt struct {
+	For   token.Pos
+	Key   Expr
+	Value Expr
+	X     Expr
+	Body  BlockStmt
+}
+
 func (ExprStmt) stmtNode()   {}
 func (SendStmt) stmtNode()   {}
 func (IncDecStmt) stmtNode() {}
@@ -179,3 +187,4 @@ func (CaseClause) stmtNode() {}
 func (SwitchStmt) stmtNode() {}
 func (SelectStmt) stmtNode() {}
 func (ForStmt) stmtNode()    {}
+func (RangeStmt) stmtNode()  {}
