@@ -25,7 +25,7 @@ import (
 %type <expr> call_expr unary_expr binary_expr prog
 %type <expr_list> expr_list
 
-%type <stmt> stmt expr_stmt send_stmt incdec_stmt assign_stmt
+%type <stmt> stmt expr_stmt send_stmt incdec_stmt assign_stmt go_stmt
 %type <stmt_list> stmt_list
 
 %token <lit> EOF EOL COMMENT
@@ -127,9 +127,11 @@ assign_stmt : expr_list ASSIGN expr_list       		{ $$ = ast.AssignStmt{$1, 0, to
 	    | expr_list SHL_ASSIGN expr_list		{ $$ = ast.AssignStmt{$1, 0, token.SHL_ASSIGN, $3} }
 	    | expr_list SHR_ASSIGN expr_list		{ $$ = ast.AssignStmt{$1, 0, token.SHR_ASSIGN, $3} }
 	    | expr_list AND_NOT_ASSIGN expr_list	{ $$ = ast.AssignStmt{$1, 0, token.AND_NOT_ASSIGN, $3} }
-/*
-go_stmt : go call_expr ;
 
+go_stmt : GO call_expr
+	  { $$ = ast.GoStmt{0, $2.(ast.CallExpr)} }
+
+/*
 return_stmt : RETURN expr_list
 
 branch_stmt : BREAK | CONTINUE ;
@@ -153,8 +155,8 @@ stmt : expr_stmt
      | send_stmt
      | incdec_stmt
      | assign_stmt
-/*
      | go_stmt
+/*
      | return_stmt
      | branch_stmt
      | if_stmt
