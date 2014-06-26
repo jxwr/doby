@@ -26,8 +26,9 @@ import (
 %type <expr_list> expr_list
 
 %type <stmt> stmt expr_stmt send_stmt incdec_stmt assign_stmt go_stmt
-%type <stmt> return_stmt branch_stmt block_stmt if_stmt
-%type <stmt_list> stmt_list
+%type <stmt> return_stmt branch_stmt block_stmt if_stmt 
+%type <stmt> case_clause case_block switch_stmt
+%type <stmt_list> stmt_list case_clause_list
 
 %token <lit> EOF EOL COMMENT
 %token <lit> IDENT INT FLOAT STRING CHAR 
@@ -144,11 +145,16 @@ block_stmt : LBRACE stmt_list RBRACE		{ $$ = ast.BlockStmt{0, $2 ,0} }
 if_stmt : IF expr block_stmt  			{ $$ = ast.IfStmt{0, $2, $3.(ast.BlockStmt), nil} }
 	| IF expr block_stmt ELSE stmt		{ $$ = ast.IfStmt{0, $2, $3.(ast.BlockStmt), $5} }
 
+case_clause : CASE expr_list COLON stmt_list	{ $$ = ast.CaseClause{0, $2, 0, $4} }
+
+case_clause_list : case_clause	   		{ $$ = []ast.Stmt{$1} }
+		 | case_clause_list case_clause { $$ = append($1, $2) }
+
+case_block : LBRACE case_clause_list RBRACE	{ $$ = ast.BlockStmt{0, $2, 0} }
+
+switch_stmt : SWITCH stmt case_block		{ $$ = ast.SwitchStmt{0, $2, $3.(ast.BlockStmt)} }
+
 /*
-case_stmt : CASE expr_list COLON stmt_list
-
-switch_stmt : SWITCH stmt block_stmt
-
 select_stmt : SELECT block_stmt
 
 for_stmt : FOR stmt SEMICOLON expr SEMICOLON stmt block_stmt
@@ -165,9 +171,9 @@ stmt : expr_stmt
      | branch_stmt
      | block_stmt
      | if_stmt
-/*
-     | case_stmt
      | switch_stmt
+
+/*
      | for_stmt
      | range_stmt
 */
