@@ -26,7 +26,7 @@ import (
 %type <expr_list> expr_list
 
 %type <stmt> stmt expr_stmt send_stmt incdec_stmt assign_stmt go_stmt
-%type <stmt> return_stmt branch_stmt
+%type <stmt> return_stmt branch_stmt block_stmt
 %type <stmt_list> stmt_list
 
 %token <lit> EOF EOL COMMENT
@@ -82,8 +82,9 @@ slice_expr : expr LBRACK expr COLON expr RBRACK
 index_expr : expr LBRACK expr RBRACK    
 	     { $$ = ast.IndexExpr{$1, 0, $3, 0} }
 
-expr_list : expr  	      		{ $$ = []ast.Expr{$1} }
-	  | expr_list COMMA expr	{ $$ = append($1, $3) }
+expr_list : /* empty */		      	  { $$ = []ast.Expr{} }
+	  | expr			  { $$ = []ast.Expr{$1} }
+	  | expr_list COMMA expr	  { $$ = append($1, $3) }
 
 call_expr : expr LPAREN expr_list RPAREN  { $$ = ast.CallExpr{$1, 0, $3, 0} }
 
@@ -138,9 +139,9 @@ return_stmt : RETURN expr_list
 branch_stmt : BREAK  		       { $$ = ast.BranchStmt{0, token.BREAK} }
 	     | CONTINUE 	       { $$ = ast.BranchStmt{0, token.CONTINUE } }
 
-/*
-block_stmt : LBRACE stmt_list RBRACE ;
+block_stmt : LBRACE stmt_list RBRACE   { $$ = ast.BlockStmt{0, $2 ,0} }
 
+/*
 if_stmt : IF expr block_stmt ELSE stmt
 
 case_stmt : CASE expr_list COLON stmt_list
@@ -161,6 +162,7 @@ stmt : expr_stmt
      | go_stmt
      | return_stmt
      | branch_stmt
+     | block_stmt
 /*
      | if_stmt
      | case_stmt
@@ -169,7 +171,8 @@ stmt : expr_stmt
      | range_stmt
 */
 
-stmt_list : stmt			{ $$ = []ast.Stmt{$1} }
+stmt_list : /* empty */			{ $$ = []ast.Stmt{} }
+	  | stmt			{ $$ = []ast.Stmt{$1} }
 	  | stmt_list EOL stmt		{ $$ = append($1, $3) }
 	  | stmt_list SEMICOLON stmt	{ $$ = append($1, $3) }
 
