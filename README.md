@@ -1,4 +1,6 @@
+DOUBI GRAMMER
 
+;;; expression 
 
 name 
 
@@ -49,3 +51,33 @@ expr : ident
      | binary_expr
      ;
 
+;;; Stmts
+
+expr_stmt : expr
+
+send_stmt : expr "<-" expr
+
+incdec_stmt : expr "++"
+	    | expr "--"
+
+assign_stmt : expr_list = expr_list
+
+go_stmt : go call_expr
+
+return_stmt : "return" expr_list
+
+branch_stmt : "break" "continue"
+
+block_stmt : '{' stmt_list '}'
+
+if_stmt : "if" expr block_stmt 'else' stmt
+
+case_stmt : "case" expr_list ':' stmt_list
+
+switch_stmt : "switch" stmt block_stmt
+
+select_stmt : "select" block_stmt
+
+for_stmt : "for" stmt ';' expr ';' stmt block_stmt
+
+range_stmt : "for" expr ',' expr '=' expr block_stmt

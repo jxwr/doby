@@ -86,3 +86,97 @@ func (n SliceExpr) exprNode()    {}
 func (n CallExpr) exprNode()     {}
 func (n UnaryExpr) exprNode()    {}
 func (n BinaryExpr) exprNode()   {}
+
+/// stmts
+
+type ExprStmt struct {
+	X Expr
+}
+
+type SendStmt struct {
+	Chan  Expr
+	Arrow token.Pos
+	Value Expr
+}
+
+type IncDecStmt struct {
+	X      Expr
+	TokPos token.Pos
+	Tok    token.Token
+}
+
+type AssignStmt struct {
+	Lhs    []Expr
+	TokPos token.Pos
+	Tok    token.Token
+	Rhs    []Expr
+}
+
+type GoStmt struct {
+	Go   token.Pos
+	Call CallExpr
+}
+
+type ReturnStmt struct {
+	Return  token.Pos
+	Results []Expr
+}
+
+type BranchStmt struct {
+	TokPos token.Pos
+	Tok    token.Token
+	Label  Ident
+}
+
+type BlockStmt struct {
+	Lbrace token.Pos
+	List   []Stmt
+	Rbrack token.Pos
+}
+
+type IfStmt struct {
+	If   token.Pos
+	Cond Expr
+	Body BlockStmt
+	Else Stmt
+}
+
+type CaseClause struct {
+	Case  token.Pos
+	List  []Expr
+	Colon token.Pos
+	Body  []Stmt
+}
+
+type SwitchStmt struct {
+	Switch token.Pos
+	Init   Stmt
+	Body   BlockStmt
+}
+
+type SelectStmt struct {
+	Select token.Pos
+	Body   BlockStmt
+}
+
+type ForStmt struct {
+	For  token.Pos
+	Init Stmt
+	Cond Expr
+	Post Stmt
+	Body BlockStmt
+}
+
+func (ExprStmt) stmtNode()   {}
+func (SendStmt) stmtNode()   {}
+func (IncDecStmt) stmtNode() {}
+func (AssignStmt) stmtNode() {}
+func (GoStmt) stmtNode()     {}
+func (ReturnStmt) stmtNode() {}
+func (BranchStmt) stmtNode() {}
+func (BlockStmt) stmtNode()  {}
+func (IfStmt) stmtNode()     {}
+func (CaseClause) stmtNode() {}
+func (SwitchStmt) stmtNode() {}
+func (SelectStmt) stmtNode() {}
+func (ForStmt) stmtNode()    {}

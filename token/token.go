@@ -114,7 +114,7 @@ const (
 	keyword_end
 )
 
-var tokens = [...]string{
+var Tokens = [...]string{
 	ILLEGAL: "ILLEGAL",
 
 	EOF:     "EOF",
