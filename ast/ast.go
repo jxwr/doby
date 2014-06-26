@@ -125,7 +125,6 @@ type ReturnStmt struct {
 type BranchStmt struct {
 	TokPos token.Pos
 	Tok    token.Token
-	Label  Ident
 }
 
 type BlockStmt struct {

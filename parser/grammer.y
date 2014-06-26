@@ -26,6 +26,7 @@ import (
 %type <expr_list> expr_list
 
 %type <stmt> stmt expr_stmt send_stmt incdec_stmt assign_stmt go_stmt
+%type <stmt> return_stmt branch_stmt
 %type <stmt_list> stmt_list
 
 %token <lit> EOF EOL COMMENT
@@ -131,11 +132,13 @@ assign_stmt : expr_list ASSIGN expr_list       		{ $$ = ast.AssignStmt{$1, 0, to
 go_stmt : GO call_expr
 	  { $$ = ast.GoStmt{0, $2.(ast.CallExpr)} }
 
-/*
 return_stmt : RETURN expr_list
+	      { $$ = ast.ReturnStmt{0, $2} }
 
-branch_stmt : BREAK | CONTINUE ;
+branch_stmt : BREAK  		       { $$ = ast.BranchStmt{0, token.BREAK} }
+	     | CONTINUE 	       { $$ = ast.BranchStmt{0, token.CONTINUE } }
 
+/*
 block_stmt : LBRACE stmt_list RBRACE ;
 
 if_stmt : IF expr block_stmt ELSE stmt
@@ -156,9 +159,9 @@ stmt : expr_stmt
      | incdec_stmt
      | assign_stmt
      | go_stmt
-/*
      | return_stmt
      | branch_stmt
+/*
      | if_stmt
      | case_stmt
      | switch_stmt
