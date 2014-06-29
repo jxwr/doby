@@ -17,13 +17,17 @@ import (
     expr_list []ast.Expr
     stmt ast.Stmt
     stmt_list []ast.Stmt
+    field ast.Field
+    field_list []ast.Field
     lit string
 }
 
 %type <expr> expr ident basiclit
 %type <expr> paren_expr selector_expr index_expr slice_expr 
-%type <expr> call_expr unary_expr binary_expr prog array_expr
+%type <expr> call_expr unary_expr binary_expr prog array_expr dict_expr set_expr
 %type <expr_list> expr_list
+%type <field> field_pair
+%type <field_list> field_list
 
 %type <stmt> stmt expr_stmt send_stmt incdec_stmt assign_stmt go_stmt
 %type <stmt> return_stmt branch_stmt block_stmt if_stmt 
@@ -102,6 +106,22 @@ binary_expr : expr ADD expr 		  { $$ = ast.BinaryExpr{$1, 0, token.ADD, $3 } }
 array_expr : LBRACK expr_list RBRACK
 	     { $$ = ast.ArrayExpr{0, $2, 0} }
 
+set_expr : '#' LBRACK expr_list RBRACK
+	   { $$ = ast.SetExpr{0, $3, 0} }
+
+field_pair : expr COLON expr
+	     { $$ = ast.Field{$1, 0, $3} }
+
+field_list : field_pair
+	     { $$ = []ast.Field{$1} } 
+	   | field_list COMMA field_pair
+	     { $$ = append($1, $3) }
+	   | field_list EOL field_pair
+	     { $$ = append($1, $3) }
+
+dict_expr : '#' LBRACE field_list RBRACE
+	    { $$ = ast.DictExpr{0, $3, 0} } 
+
 expr : ident
      | basiclit
      | paren_expr
@@ -112,6 +132,8 @@ expr : ident
      | unary_expr
      | binary_expr
      | array_expr
+     | dict_expr
+     | set_expr
 
 /// stmts
 

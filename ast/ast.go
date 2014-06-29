@@ -83,6 +83,24 @@ type ArrayExpr struct {
 	Rbrack token.Pos
 }
 
+type SetExpr struct {
+	Lbrack token.Pos
+	Elems  []Expr
+	Rbrack token.Pos
+}
+
+type Field struct {
+	Name     Expr
+	ColonPos token.Pos
+	Value    Expr
+}
+
+type DictExpr struct {
+	Lbrace token.Pos
+	Fields []Field
+	Rbrace token.Pos
+}
+
 func (n Ident) exprNode()        {}
 func (n BasicLit) exprNode()     {}
 func (n ParenExpr) exprNode()    {}
@@ -93,6 +111,8 @@ func (n CallExpr) exprNode()     {}
 func (n UnaryExpr) exprNode()    {}
 func (n BinaryExpr) exprNode()   {}
 func (n ArrayExpr) exprNode()    {}
+func (n SetExpr) exprNode()      {}
+func (n DictExpr) exprNode()     {}
 
 /// stmts
 
