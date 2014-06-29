@@ -22,7 +22,7 @@ import (
 
 %type <expr> expr ident basiclit
 %type <expr> paren_expr selector_expr index_expr slice_expr 
-%type <expr> call_expr unary_expr binary_expr prog
+%type <expr> call_expr unary_expr binary_expr prog array_expr
 %type <expr_list> expr_list
 
 %type <stmt> stmt expr_stmt send_stmt incdec_stmt assign_stmt go_stmt
@@ -99,6 +99,9 @@ binary_expr : expr ADD expr 		  { $$ = ast.BinaryExpr{$1, 0, token.ADD, $3 } }
             | expr AND expr		  { $$ = ast.BinaryExpr{$1, 0, token.AND, $3 } }
             | expr OR expr		  { $$ = ast.BinaryExpr{$1, 0, token.OR, $3 } }
 
+array_expr : LBRACK expr_list RBRACK
+	     { $$ = ast.ArrayExpr{0, $2, 0} }
+
 expr : ident
      | basiclit
      | paren_expr
@@ -108,6 +111,7 @@ expr : ident
      | call_expr
      | unary_expr
      | binary_expr
+     | array_expr
 
 /// stmts
 
@@ -186,3 +190,4 @@ stmt_list : /* empty */			{ $$ = []ast.Stmt{} }
 prog : stmt_list EOL
        { __yyfmt__.Printf("%#v\n", $1) }
      ;
+

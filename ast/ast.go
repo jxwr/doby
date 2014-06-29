@@ -46,7 +46,7 @@ type IndexExpr struct {
 	X      Expr
 	Lbrack token.Pos
 	Index  Expr
-	Bbrack token.Pos
+	Rbrack token.Pos
 }
 
 type SliceExpr struct {
@@ -77,6 +77,12 @@ type BinaryExpr struct {
 	Y     Expr
 }
 
+type ArrayExpr struct {
+	Lbrack token.Pos
+	Elems  []Expr
+	Rbrack token.Pos
+}
+
 func (n Ident) exprNode()        {}
 func (n BasicLit) exprNode()     {}
 func (n ParenExpr) exprNode()    {}
@@ -86,6 +92,7 @@ func (n SliceExpr) exprNode()    {}
 func (n CallExpr) exprNode()     {}
 func (n UnaryExpr) exprNode()    {}
 func (n BinaryExpr) exprNode()   {}
+func (n ArrayExpr) exprNode()    {}
 
 /// stmts
 
