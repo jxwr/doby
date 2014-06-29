@@ -159,8 +159,8 @@ select_stmt : SELECT case_block			{ $$ = ast.SelectStmt{0, $2.(ast.BlockStmt)} }
 for_stmt : FOR stmt SEMICOLON expr SEMICOLON stmt block_stmt
 	   { $$ = ast.ForStmt{0, $2, $4, $6, $7.(ast.BlockStmt)} }
 
-range_stmt : FOR expr COMMA expr ASSIGN expr block_stmt
-	     { $$ = ast.RangeStmt{0, $2, $4, $6, $7.(ast.BlockStmt)} }
+range_stmt : FOR expr_list ASSIGN RANGE expr block_stmt 
+	     { $$ = ast.RangeStmt{0, $2, $5, $6.(ast.BlockStmt)} }
 
 stmt : expr_stmt
      | send_stmt

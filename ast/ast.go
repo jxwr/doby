@@ -167,11 +167,10 @@ type ForStmt struct {
 }
 
 type RangeStmt struct {
-	For   token.Pos
-	Key   Expr
-	Value Expr
-	X     Expr
-	Body  BlockStmt
+	For      token.Pos
+	KeyValue []Expr
+	X        Expr
+	Body     BlockStmt
 }
 
 func (ExprStmt) stmtNode()   {}
