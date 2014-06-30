@@ -19,6 +19,11 @@ type Stmt interface {
 	stmtNode()
 }
 
+type Decl interface {
+	Node
+	declNode()
+}
+
 // Expression
 type Ident struct {
 	NamePos token.Pos
@@ -101,6 +106,15 @@ type DictExpr struct {
 	Rbrace token.Pos
 }
 
+type FuncDeclExpr struct {
+	Func     token.Pos
+	Recv     *Ident
+	RecvType *Ident
+	Name     Ident
+	Args     []Ident
+	Body     BlockStmt
+}
+
 func (n Ident) exprNode()        {}
 func (n BasicLit) exprNode()     {}
 func (n ParenExpr) exprNode()    {}
@@ -113,8 +127,9 @@ func (n BinaryExpr) exprNode()   {}
 func (n ArrayExpr) exprNode()    {}
 func (n SetExpr) exprNode()      {}
 func (n DictExpr) exprNode()     {}
+func (n FuncDeclExpr) exprNode() {}
 
-/// stmts
+/// Stmts
 
 type ExprStmt struct {
 	X Expr

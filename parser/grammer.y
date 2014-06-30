@@ -19,15 +19,17 @@ import (
     stmt_list []ast.Stmt
     field ast.Field
     field_list []ast.Field
+    ident_list []ast.Ident
     lit string
 }
 
 %type <expr> expr ident basiclit
-%type <expr> paren_expr selector_expr index_expr slice_expr 
+%type <expr> paren_expr selector_expr index_expr slice_expr func_decl_expr
 %type <expr> call_expr unary_expr binary_expr prog array_expr dict_expr set_expr
 %type <expr_list> expr_list
 %type <field> field_pair
 %type <field_list> field_list
+%type <ident_list> ident_list
 
 %type <stmt> stmt expr_stmt send_stmt incdec_stmt assign_stmt go_stmt
 %type <stmt> return_stmt branch_stmt block_stmt if_stmt 
@@ -120,7 +122,18 @@ field_list : field_pair
 	     { $$ = append($1, $3) }
 
 dict_expr : '#' LBRACE field_list RBRACE
-	    { $$ = ast.DictExpr{0, $3, 0} } 
+	    { $$ = ast.DictExpr{0, $3, 0} }
+
+ident_list : IDENT
+	     { $$ = []ast.Ident{ast.Ident{0, $1}} }
+	   | ident_list COMMA IDENT
+	     { $$ = append($1, ast.Ident{0, $3}) }
+
+func_decl_expr : FUNC IDENT LPAREN ident_list RPAREN block_stmt
+	       	 { $$ = ast.FuncDeclExpr{0, nil, nil, ast.Ident{0, $2}, $4, $6.(ast.BlockStmt)} }
+	       | FUNC LPAREN IDENT IDENT RPAREN IDENT LPAREN ident_list RPAREN block_stmt
+	       	 { $$ = ast.FuncDeclExpr{0, &ast.Ident{0, $3}, &ast.Ident{0, $4},
+		                         ast.Ident{0, $6}, $8, $10.(ast.BlockStmt)} }
 
 expr : ident
      | basiclit
@@ -134,6 +147,7 @@ expr : ident
      | array_expr
      | dict_expr
      | set_expr
+     | func_decl_expr
 
 /// stmts
 
