@@ -220,6 +220,7 @@ stmt_list : /* empty */			{ $$ = []ast.Stmt{} }
 	  | stmt			{ $$ = []ast.Stmt{$1} }
 	  | stmt_list EOL stmt		{ $$ = append($1, $3) }
 	  | stmt_list SEMICOLON stmt	{ $$ = append($1, $3) }
+	  | stmt_list EOL		{ $$ = $1 }
 
 /// program
 
