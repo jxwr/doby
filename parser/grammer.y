@@ -7,6 +7,8 @@ import (
        "github.com/jxwr/doubi/token"
 )
 
+var ProgramAst []ast.Stmt
+
 %}
 
 // fields inside this union end up as the fields in a structure known
@@ -25,7 +27,7 @@ import (
 
 %type <expr> expr ident basiclit
 %type <expr> paren_expr selector_expr index_expr slice_expr func_decl_expr
-%type <expr> call_expr unary_expr binary_expr prog array_expr dict_expr set_expr
+%type <expr> call_expr unary_expr binary_expr array_expr dict_expr set_expr
 %type <expr_list> expr_list
 %type <field> field_pair
 %type <field_list> field_list
@@ -34,7 +36,7 @@ import (
 %type <stmt> stmt expr_stmt send_stmt incdec_stmt assign_stmt go_stmt
 %type <stmt> return_stmt branch_stmt block_stmt if_stmt 
 %type <stmt> case_clause case_block switch_stmt select_stmt for_stmt range_stmt
-%type <stmt_list> stmt_list case_clause_list
+%type <stmt_list> stmt_list case_clause_list prog
 
 %token <lit> EOF EOL COMMENT
 %token <lit> IDENT INT FLOAT STRING CHAR 
@@ -225,6 +227,5 @@ stmt_list : /* empty */			{ $$ = []ast.Stmt{} }
 /// program
 
 prog : stmt_list EOL
-       { __yyfmt__.Printf("%#v\n", $1) }
-     ;
+       { ProgramAst = $1 }
 

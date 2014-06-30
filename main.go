@@ -6,6 +6,7 @@ import (
 	"os"
 	"strings"
 
+	"github.com/jxwr/doubi/eval"
 	"github.com/jxwr/doubi/parser"
 )
 
@@ -19,6 +20,7 @@ func main() {
 		fmt.Printf("> ")
 		if src, ok = readGist(fi); ok {
 			parser.CalcParse(&parser.Lexer{Src: src})
+			eval.Eval(parser.ProgramAst)
 		} else {
 			break
 		}
