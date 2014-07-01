@@ -61,7 +61,7 @@ var ProgramAst []ast.Stmt
 %left AND XOR
 %left ADD SUB
 %left MUL QUO REM
-%left NEQ LEQ GEQ 
+%left NEQ LEQ GEQ
 %left LSS GTR
 %left NOT 
 %left LAND LOR ARROW INC DEC EQL
@@ -94,6 +94,7 @@ index_expr : expr LBRACK expr RBRACK
 expr_list : /* empty */		      	  { $$ = []ast.Expr{} }
 	  | expr			  { $$ = []ast.Expr{$1} }
 	  | expr_list COMMA expr	  { $$ = append($1, $3) }
+	  | expr_list COMMA EOL expr	  { $$ = append($1, $4) }
 
 call_expr : expr LPAREN expr_list RPAREN  { $$ = ast.CallExpr{$1, 0, $3, 0} }
 
@@ -106,22 +107,43 @@ binary_expr : expr ADD expr 		  { $$ = ast.BinaryExpr{$1, 0, token.ADD, $3 } }
             | expr REM expr		  { $$ = ast.BinaryExpr{$1, 0, token.REM, $3 } }
             | expr AND expr		  { $$ = ast.BinaryExpr{$1, 0, token.AND, $3 } }
             | expr OR expr		  { $$ = ast.BinaryExpr{$1, 0, token.OR, $3 } }
+            | expr XOR expr		  { $$ = ast.BinaryExpr{$1, 0, token.XOR, $3 } }
+            | expr SHL expr		  { $$ = ast.BinaryExpr{$1, 0, token.SHL, $3 } }
+            | expr SHR expr		  { $$ = ast.BinaryExpr{$1, 0, token.SHR, $3 } }
+            | expr AND_NOT expr		  { $$ = ast.BinaryExpr{$1, 0, token.AND_NOT, $3 } }
+            | expr LSS expr		  { $$ = ast.BinaryExpr{$1, 0, token.LSS, $3 } }
+            | expr GTR expr		  { $$ = ast.BinaryExpr{$1, 0, token.GTR, $3 } }
+            | expr NEQ expr		  { $$ = ast.BinaryExpr{$1, 0, token.NEQ, $3 } }
+            | expr GEQ expr		  { $$ = ast.BinaryExpr{$1, 0, token.GEQ, $3 } }
+            | expr EQL expr		  { $$ = ast.BinaryExpr{$1, 0, token.EQL, $3 } }
+
+            | expr LAND expr		  { $$ = ast.BinaryExpr{$1, 0, token.LAND, $3 } }
+            | expr LOR expr		  { $$ = ast.BinaryExpr{$1, 0, token.LOR, $3 } }
 
 array_expr : LBRACK expr_list RBRACK
 	     { $$ = ast.ArrayExpr{0, $2, 0} }
+	   | LBRACK EOL expr_list EOL RBRACK
+	     { $$ = ast.ArrayExpr{0, $3, 0} }
+	   | LBRACK EOL expr_list RBRACK
+	     { $$ = ast.ArrayExpr{0, $3, 0} }
 
 set_expr : '#' LBRACK expr_list RBRACK
 	   { $$ = ast.SetExpr{0, $3, 0} }
+	 | '#' LBRACK EOL expr_list EOL RBRACK
+	   { $$ = ast.SetExpr{0, $4, 0} }
+	 | '#' LBRACK EOL expr_list RBRACK
+	   { $$ = ast.SetExpr{0, $4, 0} }
 
 field_pair : expr COLON expr
 	     { $$ = ast.Field{$1, 0, $3} }
 
-field_list : field_pair
-	     { $$ = []ast.Field{$1} } 
-	   | field_list COMMA field_pair
-	     { $$ = append($1, $3) }
-	   | field_list EOL field_pair
-	     { $$ = append($1, $3) }
+field_list : /* empty */			    { $$ = []ast.Field{} } 
+	   | field_pair	     		     	    { $$ = []ast.Field{$1} } 
+	   | field_list EOL field_pair	       	    { $$ = append($1, $3) }
+	   | field_list COMMA field_pair	    { $$ = append($1, $3) }
+	   | field_list COMMA EOL field_pair	    { $$ = append($1, $4) }
+	   | field_list EOL	     		    { $$ = $1 }
+	   | field_list COMMA EOL	     	    { $$ = $1 }
 
 dict_expr : '#' LBRACE field_list RBRACE
 	    { $$ = ast.DictExpr{0, $3, 0} }
@@ -185,7 +207,7 @@ branch_stmt : BREAK				{ $$ = ast.BranchStmt{0, token.BREAK} }
 block_stmt : LBRACE stmt_list RBRACE		{ $$ = ast.BlockStmt{0, $2 ,0} }
 
 if_stmt : IF expr block_stmt  			{ $$ = ast.IfStmt{0, $2, $3.(ast.BlockStmt), nil} }
-	| IF expr block_stmt ELSE stmt		{ $$ = ast.IfStmt{0, $2, $3.(ast.BlockStmt), $5} }
+//	| IF expr block_stmt ELSE stmt		{ $$ = ast.IfStmt{0, $2, $3.(ast.BlockStmt), $5} }
 
 case_clause : CASE expr_list COLON stmt_list	{ $$ = ast.CaseClause{0, $2, 0, $4} }
 

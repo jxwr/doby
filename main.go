@@ -3,6 +3,7 @@ package main
 import (
 	"bufio"
 	"fmt"
+	"io/ioutil"
 	"os"
 	"strings"
 
@@ -10,9 +11,23 @@ import (
 	"github.com/jxwr/doubi/parser"
 )
 
-func main() {
-	fi := bufio.NewReader(os.NewFile(0, "stdin"))
+func runTest(filename string) {
+	var contents []byte
+	var err error
 
+	fmt.Println("Test:", filename)
+
+	contents, err = ioutil.ReadFile(filename)
+	if err != nil {
+		return
+	}
+
+	parser.CalcParse(&parser.Lexer{Src: string(contents)})
+	eval.Eval(parser.ProgramAst)
+}
+
+func repl() {
+	fi := bufio.NewReader(os.NewFile(0, "stdin"))
 	for {
 		var src string
 		var ok bool
@@ -35,4 +50,13 @@ func readGist(fi *bufio.Reader) (string, bool) {
 	}
 
 	return strings.TrimSuffix(s, "~"), true
+}
+
+func main() {
+	runTest("test/vars.d")
+	runTest("test/conf.d")
+	runTest("test/func.d")
+	runTest("test/datatype.d")
+
+	repl()
 }

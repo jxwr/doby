@@ -7,15 +7,15 @@ import (
 )
 
 func EvalExprStmt(stmt *ast.ExprStmt) {
-	fmt.Printf("EXPR %#v\n", *stmt)
+	//	fmt.Printf("EXPR %#v\n", *stmt)
 }
 
 func EvalAssignStmt(stmt *ast.AssignStmt) {
-	fmt.Printf("ASSIGN %#v\n", *stmt)
+	//fmt.Printf("ASSIGN %#v\n", *stmt)
 }
 
 func EvalStmt(stmt *ast.Stmt) {
-	//	fmt.Printf("%#v\n", *stmt)
+	fmt.Printf("%#v\n", *stmt)
 
 	switch s := (*stmt).(type) {
 	case ast.ExprStmt:
