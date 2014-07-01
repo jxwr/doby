@@ -211,7 +211,8 @@ if_stmt : IF expr block_stmt  			{ $$ = ast.IfStmt{0, $2, $3.(ast.BlockStmt), ni
 
 case_clause : CASE expr_list COLON stmt_list	{ $$ = ast.CaseClause{0, $2, 0, $4} }
 
-case_clause_list : case_clause	   		{ $$ = []ast.Stmt{$1} }
+case_clause_list : EOL	     	   		{ $$ = []ast.Stmt{} }
+		 | case_clause	   		{ $$ = []ast.Stmt{$1} }
 		 | case_clause_list case_clause { $$ = append($1, $2) }
 
 case_block : LBRACE case_clause_list RBRACE	{ $$ = ast.BlockStmt{0, $2, 0} }

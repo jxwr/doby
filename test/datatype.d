@@ -42,3 +42,7 @@ set = #[1,
 set = #[    
     1, a, c
 ]
+
+list[1:2]
+list["name"]
+

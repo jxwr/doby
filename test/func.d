@@ -1,3 +1,5 @@
+
+
 func p(str) {
      print(str)
 }
@@ -5,3 +7,7 @@ func p(str) {
 print(c)
 
 p("aaa" + "," + "ccc")
+
+
+go print("go routine")
+

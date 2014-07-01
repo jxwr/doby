@@ -15,13 +15,14 @@ func runTest(filename string) {
 	var contents []byte
 	var err error
 
-	fmt.Println("Test:", filename)
+	fmt.Println("================================> ", filename)
 
 	contents, err = ioutil.ReadFile(filename)
 	if err != nil {
 		return
 	}
 
+	parser.ProgramAst = nil
 	parser.CalcParse(&parser.Lexer{Src: string(contents)})
 	eval.Eval(parser.ProgramAst)
 }
@@ -54,9 +55,9 @@ func readGist(fi *bufio.Reader) (string, bool) {
 
 func main() {
 	runTest("test/vars.d")
-	runTest("test/conf.d")
-	runTest("test/func.d")
 	runTest("test/datatype.d")
+	runTest("test/func.d")
+	runTest("test/cond.d")
 
 	repl()
 }
