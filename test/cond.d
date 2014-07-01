@@ -18,3 +18,6 @@ switch aabb {
 	 print("god")
 }
 
+100.times(func(){
+    print(i)
+})

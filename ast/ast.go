@@ -110,7 +110,7 @@ type FuncDeclExpr struct {
 	Func     token.Pos
 	Recv     *Ident
 	RecvType *Ident
-	Name     Ident
+	Name     *Ident
 	Args     []Ident
 	Body     BlockStmt
 }

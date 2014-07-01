@@ -148,16 +148,20 @@ field_list : /* empty */			    { $$ = []ast.Field{} }
 dict_expr : '#' LBRACE field_list RBRACE
 	    { $$ = ast.DictExpr{0, $3, 0} }
 
-ident_list : IDENT
+ident_list : /* empty */
+   	     { $$ = []ast.Ident{} }
+	   | IDENT
 	     { $$ = []ast.Ident{ast.Ident{0, $1}} }
 	   | ident_list COMMA IDENT
 	     { $$ = append($1, ast.Ident{0, $3}) }
 
-func_decl_expr : FUNC IDENT LPAREN ident_list RPAREN block_stmt
-	       	 { $$ = ast.FuncDeclExpr{0, nil, nil, ast.Ident{0, $2}, $4, $6.(ast.BlockStmt)} }
+func_decl_expr : FUNC LPAREN ident_list RPAREN block_stmt
+	       	 { $$ = ast.FuncDeclExpr{0, nil, nil, nil, $3, $5.(ast.BlockStmt)} }
+	       | FUNC IDENT LPAREN ident_list RPAREN block_stmt
+	       	 { $$ = ast.FuncDeclExpr{0, nil, nil, &ast.Ident{0, $2}, $4, $6.(ast.BlockStmt)} }
 	       | FUNC LPAREN IDENT IDENT RPAREN IDENT LPAREN ident_list RPAREN block_stmt
 	       	 { $$ = ast.FuncDeclExpr{0, &ast.Ident{0, $3}, &ast.Ident{0, $4},
-		                         ast.Ident{0, $6}, $8, $10.(ast.BlockStmt)} }
+		                        &ast.Ident{0, $6}, $8, $10.(ast.BlockStmt)} }
 
 expr : ident
      | basiclit
