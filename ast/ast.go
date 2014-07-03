@@ -5,8 +5,6 @@ import (
 )
 
 type Node interface {
-	//	Pos() int
-	//	End() int
 	Accept(Visitor)
 }
 
@@ -116,19 +114,19 @@ type FuncDeclExpr struct {
 	Body     *BlockStmt
 }
 
-func (n Ident) exprNode()        {}
-func (n BasicLit) exprNode()     {}
-func (n ParenExpr) exprNode()    {}
-func (n SelectorExpr) exprNode() {}
-func (n IndexExpr) exprNode()    {}
-func (n SliceExpr) exprNode()    {}
-func (n CallExpr) exprNode()     {}
-func (n UnaryExpr) exprNode()    {}
-func (n BinaryExpr) exprNode()   {}
-func (n ArrayExpr) exprNode()    {}
-func (n SetExpr) exprNode()      {}
-func (n DictExpr) exprNode()     {}
-func (n FuncDeclExpr) exprNode() {}
+func (Ident) exprNode()        {}
+func (BasicLit) exprNode()     {}
+func (ParenExpr) exprNode()    {}
+func (SelectorExpr) exprNode() {}
+func (IndexExpr) exprNode()    {}
+func (SliceExpr) exprNode()    {}
+func (CallExpr) exprNode()     {}
+func (UnaryExpr) exprNode()    {}
+func (BinaryExpr) exprNode()   {}
+func (ArrayExpr) exprNode()    {}
+func (SetExpr) exprNode()      {}
+func (DictExpr) exprNode()     {}
+func (FuncDeclExpr) exprNode() {}
 
 func (n *Ident) Accept(v Visitor) {
 	v.VisitIdent(n)
