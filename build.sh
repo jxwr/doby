@@ -3,7 +3,7 @@
 cd parser
 for y in *.y
 do
-    go tool yacc -o ${y%.y}.go -p Calc $y 
+    go tool yacc -o ${y%.y}.go -p Doubi $y 
 done
 cd ..
 

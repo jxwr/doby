@@ -183,7 +183,7 @@ var (
 	}
 )
 
-func (l *Lexer) Lex(lval *CalcSymType) int {
+func (l *Lexer) Lex(lval *DoubiSymType) int {
 	if l.Pos >= len(l.Src) {
 		return 0
 	}

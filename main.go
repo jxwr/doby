@@ -35,7 +35,7 @@ func runTest(filename string) {
 	}
 
 	parser.ProgramAst = nil
-	parser.CalcParse(&parser.Lexer{Src: string(contents)})
+	parser.DoubiParse(&parser.Lexer{Src: string(contents)})
 	Eval(parser.ProgramAst)
 }
 
@@ -47,7 +47,7 @@ func repl() {
 
 		fmt.Printf("> ")
 		if src, ok = readGist(fi); ok {
-			parser.CalcParse(&parser.Lexer{Src: src})
+			parser.DoubiParse(&parser.Lexer{Src: src})
 			Eval(parser.ProgramAst)
 		} else {
 			break
