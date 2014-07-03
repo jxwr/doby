@@ -7,9 +7,19 @@ import (
 	"os"
 	"strings"
 
-	"github.com/jxwr/doubi/eval"
+	"github.com/jxwr/doubi/ast"
 	"github.com/jxwr/doubi/parser"
 )
+
+func EvalStmt(stmt *ast.Stmt) {
+	fmt.Printf("%#v\n", *stmt)
+}
+
+func Eval(stmts []ast.Stmt) {
+	for _, stmt := range stmts {
+		EvalStmt(&stmt)
+	}
+}
 
 func runTest(filename string) {
 	var contents []byte
@@ -24,7 +34,7 @@ func runTest(filename string) {
 
 	parser.ProgramAst = nil
 	parser.CalcParse(&parser.Lexer{Src: string(contents)})
-	eval.Eval(parser.ProgramAst)
+	Eval(parser.ProgramAst)
 }
 
 func repl() {
@@ -36,7 +46,7 @@ func repl() {
 		fmt.Printf("> ")
 		if src, ok = readGist(fi); ok {
 			parser.CalcParse(&parser.Lexer{Src: src})
-			eval.Eval(parser.ProgramAst)
+			Eval(parser.ProgramAst)
 		} else {
 			break
 		}
