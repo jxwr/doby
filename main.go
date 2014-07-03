@@ -5,9 +5,9 @@ import (
 	"fmt"
 	"io/ioutil"
 	"os"
-	"strings"
 
 	"github.com/jxwr/doubi/ast"
+	"github.com/jxwr/doubi/comp"
 	"github.com/jxwr/doubi/parser"
 )
 
@@ -16,8 +16,10 @@ func EvalStmt(stmt *ast.Stmt) {
 }
 
 func Eval(stmts []ast.Stmt) {
+	pretty := &comp.PrettyPrinter{false, 0, true}
+
 	for _, stmt := range stmts {
-		EvalStmt(&stmt)
+		stmt.Accept(pretty)
 	}
 }
 
@@ -25,7 +27,7 @@ func runTest(filename string) {
 	var contents []byte
 	var err error
 
-	fmt.Println("================================> ", filename)
+	fmt.Println("==============> ", filename, " <=============")
 
 	contents, err = ioutil.ReadFile(filename)
 	if err != nil {
@@ -54,13 +56,13 @@ func repl() {
 }
 
 func readGist(fi *bufio.Reader) (string, bool) {
-	s, err := fi.ReadString('~')
+	s, err := fi.ReadString('\n')
 
-	if err != nil || s == "q\n" {
+	if err != nil || s == "q\n" || s == "exit\n" {
 		return "", false
 	}
 
-	return strings.TrimSuffix(s, "~"), true
+	return s, true
 }
 
 func main() {
