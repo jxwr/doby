@@ -276,8 +276,8 @@ func (self *PrettyPrinter) VisitBlockStmt(node *ast.BlockStmt) {
 	}
 	self.Indent--
 	self.ShowNewLine = nl
+	self.putIndent()
 	puts("}")
-	self.putln()
 }
 
 func (self *PrettyPrinter) VisitIfStmt(node *ast.IfStmt) {
@@ -324,6 +324,7 @@ func (self *PrettyPrinter) VisitSwitchStmt(node *ast.SwitchStmt) {
 	self.ShowNewLine = true
 	puts(" ")
 	node.Body.Accept(self)
+	self.putln()
 }
 
 func (self *PrettyPrinter) VisitSelectStmt(node *ast.SelectStmt) {
@@ -331,6 +332,7 @@ func (self *PrettyPrinter) VisitSelectStmt(node *ast.SelectStmt) {
 
 	puts("select ")
 	node.Body.Accept(self)
+	self.putln()
 }
 
 func (self *PrettyPrinter) VisitForStmt(node *ast.ForStmt) {
@@ -346,6 +348,7 @@ func (self *PrettyPrinter) VisitForStmt(node *ast.ForStmt) {
 	puts(" ")
 	self.ShowNewLine = true
 	node.Body.Accept(self)
+	self.putln()
 }
 
 func (self *PrettyPrinter) VisitRangeStmt(node *ast.RangeStmt) {
@@ -361,4 +364,5 @@ func (self *PrettyPrinter) VisitRangeStmt(node *ast.RangeStmt) {
 	puts(" ")
 	self.ShowNewLine = true
 	node.Body.Accept(self)
+	self.putln()
 }
