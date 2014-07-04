@@ -5,6 +5,7 @@ import (
 	"reflect"
 
 	"github.com/jxwr/doubi/ast"
+	"github.com/jxwr/doubi/token"
 )
 
 type Attr struct {
@@ -146,8 +147,10 @@ func (self *Attr) VisitIncDecStmt(node *ast.IncDecStmt) {
 func (self *Attr) VisitAssignStmt(node *ast.AssignStmt) {
 	self.debug(node)
 
-	for _, arg := range node.Lhs {
-		self.checkIdentRef(arg)
+	if node.Tok != token.ASSIGN {
+		for _, arg := range node.Lhs {
+			self.checkIdentRef(arg)
+		}
 	}
 
 	for _, arg := range node.Rhs {
