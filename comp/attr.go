@@ -10,7 +10,7 @@ import (
 
 type Attr struct {
 	Debug bool
-	Env   map[string]interface{}
+	E     *Env
 }
 
 func (self *Attr) log(fmtstr string, args ...interface{}) {
@@ -27,7 +27,7 @@ func (self *Attr) debug(node interface{}) {
 func (self *Attr) checkIdentRef(node ast.Expr) {
 	switch arg := node.(type) {
 	case *ast.Ident:
-		if _, ok := self.Env[arg.Name]; !ok {
+		if arg.Name != "_" && self.E.LookUp(arg.Name) == nil {
 			self.log("'%s' not found", arg.Name)
 		}
 	default:
@@ -53,6 +53,8 @@ func (self *Attr) VisitBasicLit(node *ast.BasicLit) {
 
 func (self *Attr) VisitParenExpr(node *ast.ParenExpr) {
 	self.debug(node)
+
+	self.checkIdentRef(node.X)
 }
 
 func (self *Attr) VisitSelectorExpr(node *ast.SelectorExpr) {
@@ -120,7 +122,16 @@ func (self *Attr) VisitDictExpr(node *ast.DictExpr) {
 func (self *Attr) VisitFuncDeclExpr(node *ast.FuncDeclExpr) {
 	self.debug(node)
 
+	if node.Name != nil {
+		self.E.Put(node.Name.Name, node.Name)
+	}
+
+	self.Enter()
+	for _, arg := range node.Args {
+		self.E.Put(arg.Name, arg)
+	}
 	node.Body.Accept(self)
+	self.Leave()
 }
 
 // stmts
@@ -151,10 +162,23 @@ func (self *Attr) VisitAssignStmt(node *ast.AssignStmt) {
 		for _, arg := range node.Lhs {
 			self.checkIdentRef(arg)
 		}
+	} else {
+		for _, arg := range node.Lhs {
+			if ident, ok := arg.(*ast.Ident); ok {
+				self.E.Put(ident.Name, ident)
+			}
+		}
 	}
 
 	for _, arg := range node.Rhs {
 		self.checkIdentRef(arg)
+	}
+
+	for _, lh := range node.Lhs {
+		lh, ok := lh.(*ast.Ident)
+		if ok {
+			self.E.Put(lh.Name, lh)
+		}
 	}
 }
 
@@ -225,7 +249,19 @@ func (self *Attr) VisitForStmt(node *ast.ForStmt) {
 func (self *Attr) VisitRangeStmt(node *ast.RangeStmt) {
 	self.debug(node)
 
-	self.checkIdentListRef(node.KeyValue)
+	self.E.Put(node.KeyValue[0].(*ast.Ident).Name, node.KeyValue[0])
+	self.E.Put(node.KeyValue[1].(*ast.Ident).Name, node.KeyValue[1])
+
 	self.checkIdentRef(node.X)
+	self.Enter()
 	node.Body.Accept(self)
+	self.Leave()
+}
+
+func (self *Attr) Enter() {
+	self.E = NewEnv(self.E)
+}
+
+func (self *Attr) Leave() {
+	self.E = self.E.Outer
 }

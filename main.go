@@ -19,6 +19,7 @@ func Eval(stmts []ast.Stmt) {
 	pretty := &comp.PrettyPrinter{false, 0, true}
 	attr := &comp.Attr{}
 	attr.Debug = false
+	attr.E = comp.NewEnv(nil)
 
 	for _, stmt := range stmts {
 		stmt.Accept(pretty)

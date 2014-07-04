@@ -1,4 +1,17 @@
 
+true = 1
+false = 0
+
+func filter(list, fn) {
+     sublist = []
+     for _, elem = range list {
+         if fn(elem) {
+            sublist.append(elem)
+         }
+     }
+     return sublist
+}
+
 func qsort(list) {
     if list.len() <= 1 {
         return list
@@ -6,17 +19,15 @@ func qsort(list) {
 
     pivot = list[0]
 
-    left = filter(func (x) {
+    left = filter(list, func (x) {
         if x <= pivot {
-            return list
+            return true
+        } else {
+            return false
         }
     })
 
-    right = filter(func (x) {
-        if x > pivot {
-            return list
-        }
-    })
+    right = filter(list, func (x) { return x > pivot })
 
     return qsort(left) + pivot + qsort(right)
 }

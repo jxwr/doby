@@ -3,24 +3,33 @@
 CodeGen
 
 ```
+e = 100
+
 func add(a, b) {
-     c = a + b
-     return c
+     c = a
+     d = c + b + e
+     return d
 }
 
 d = add(100, 200)
 
 add sym
 code:
-push b
+push_args 0
+store_local 0
+push_args 0
 push operator:add
-push a
+push_args 1
 send 3
+store_local 1
+push_local 1
+return 1
 
 push 100
 push 100
 push add
 call
+store 0
 
 100.times(func(i){
    print(i)
@@ -31,7 +40,7 @@ push times
 push 100
 send 3
 
-cls = getClassOfObject(100)
+Clsesh = getClassOfObject(100)
 method = cls.getMethod("times")
 method.call(args)
 
