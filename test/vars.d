@@ -10,4 +10,5 @@ a.b.c(100)
 
 if a != 100 {
    print(d)
+   return c, d
 }

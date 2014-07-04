@@ -44,5 +44,5 @@ set = #[
 ]
 
 list[1:2]
-list["name"]
+list["name"].uppercase()
 
