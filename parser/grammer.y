@@ -114,6 +114,7 @@ binary_expr : expr ADD expr 		  { $$ = &ast.BinaryExpr{$1, 0, token.ADD, $3 } }
             | expr LSS expr		  { $$ = &ast.BinaryExpr{$1, 0, token.LSS, $3 } }
             | expr GTR expr		  { $$ = &ast.BinaryExpr{$1, 0, token.GTR, $3 } }
             | expr NEQ expr		  { $$ = &ast.BinaryExpr{$1, 0, token.NEQ, $3 } }
+            | expr LEQ expr		  { $$ = &ast.BinaryExpr{$1, 0, token.LEQ, $3 } }
             | expr GEQ expr		  { $$ = &ast.BinaryExpr{$1, 0, token.GEQ, $3 } }
             | expr EQL expr		  { $$ = &ast.BinaryExpr{$1, 0, token.EQL, $3 } }
 

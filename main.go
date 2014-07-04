@@ -70,6 +70,7 @@ func main() {
 	runTest("test/datatype.d")
 	runTest("test/func.d")
 	runTest("test/cond.d")
+	runTest("test/quicksort.d")
 
-	repl()
+	//	repl()
 }
