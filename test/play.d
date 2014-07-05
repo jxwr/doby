@@ -72,3 +72,15 @@ println(list)
 cl = [1,2,3,4] + [5,6,7,8]
 println(cl)
 println(cl[1:8])
+
+base = 99
+10.times(func(i){ println(i) })
+
+println(-100.abs())
+
+list = ["hello", "world"]
+list.name = func() {
+  return list[0] + " " + list[1]
+}
+
+println(list.name())

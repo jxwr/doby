@@ -86,6 +86,6 @@ func main() {
 		runTest("test/cond.d")
 
 	*/
-	//runTest("test/play.d")
-	runTest("test/quicksort.d")
+	runTest("test/play.d")
+	//runTest("test/quicksort.d")
 }

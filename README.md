@@ -4,7 +4,7 @@
 
 1. quicksort
 
-```golang
+```go
 func filter(list, fn) {
      sublist = []
      for _, elem = range list {
@@ -36,9 +36,34 @@ print(a, "\n")
 ```
 
 Output:
-```golang
+```go
 [1,2,3,4,5,6,7,8,100,199,200,299,2229] 
 ```
 
+2. A little ruby like syntax
+
+```go
+func println(str) {
+     print(str, "\n")
+}
+
+10.times(func(i){ println(i) })
+
+hundred = -100.abs()
+```
+
+3. Object-based_language
+```
+list = ["hello", "world"]
+list.name = func() {
+  return list[0] + " " + list[1]
+}
+
+println(list.name())
+```
+
+#### Notes
+
 > See notes and tests
 
+DO NOT USE, IT'S EXPERIMENTAL

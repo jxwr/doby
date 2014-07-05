@@ -129,7 +129,7 @@ func (self *Eval) VisitSelectorExpr(node *ast.SelectorExpr) {
 	self.evalExpr(node.X)
 	obj := self.Stack.Pop()
 	prop := NewStringObject(node.Sel.Name)
-	rets := obj.Dispatch("__get_property__", prop)
+	rets := obj.Dispatch(self, "__get_property__", prop)
 	self.Stack.Push(rets[0])
 }
 
@@ -140,7 +140,7 @@ func (self *Eval) VisitIndexExpr(node *ast.IndexExpr) {
 	obj := self.Stack.Pop()
 	self.evalExpr(node.Index)
 	index := self.Stack.Pop()
-	rets := obj.Dispatch("__get_index__", index)
+	rets := obj.Dispatch(self, "__get_index__", index)
 	self.Stack.Push(rets[0])
 }
 
@@ -162,7 +162,7 @@ func (self *Eval) VisitSliceExpr(node *ast.SliceExpr) {
 		highObj = self.Stack.Pop()
 	}
 
-	rets := obj.Dispatch("__slice__", lowObj, highObj)
+	rets := obj.Dispatch(self, "__slice__", lowObj, highObj)
 	self.Stack.Push(rets[0])
 }
 
@@ -179,7 +179,9 @@ func (self *Eval) VisitCallExpr(node *ast.CallExpr) {
 				self.evalExpr(arg)
 				args = append(args, self.Stack.Pop())
 			}
-			rets := fnobj.Dispatch("__call__", args...)
+			self.E = NewEnv(self.E)
+			rets := fnobj.Dispatch(self, "__call__", args...)
+			self.E = self.E.Outer
 			for _, ret := range rets {
 				self.Stack.Push(ret)
 			}
@@ -195,7 +197,9 @@ func (self *Eval) VisitCallExpr(node *ast.CallExpr) {
 				self.evalExpr(arg)
 				args = append(args, self.Stack.Pop())
 			}
-			rets := fnobj.Dispatch("__call__", args...)
+			self.E = NewEnv(self.E)
+			rets := fnobj.Dispatch(self, "__call__", args...)
+			self.E = self.E.Outer
 			for _, ret := range rets {
 				self.Stack.Push(ret)
 			}
@@ -217,6 +221,10 @@ func (self *Eval) VisitCallExpr(node *ast.CallExpr) {
 
 func (self *Eval) VisitUnaryExpr(node *ast.UnaryExpr) {
 	self.debug(node)
+
+	self.evalExpr(node.X)
+	obj := self.Stack.Pop().(*IntegerObject)
+	self.Stack.Push(NewIntegerObject(-obj.val))
 }
 
 var BinaryFuncs = map[token.Token]string{
@@ -250,7 +258,7 @@ func (self *Eval) VisitBinaryExpr(node *ast.BinaryExpr) {
 	robj := self.Stack.Pop()
 	lobj := self.Stack.Pop()
 
-	objs := lobj.Dispatch(BinaryFuncs[node.Op], robj)
+	objs := lobj.Dispatch(self, BinaryFuncs[node.Op], robj)
 	self.Stack.Push(objs[0])
 }
 
@@ -312,9 +320,9 @@ func (self *Eval) VisitIncDecStmt(node *ast.IncDecStmt) {
 	obj := self.Stack.Pop()
 
 	if node.Tok == token.INC {
-		obj.Dispatch("__inc__")
+		obj.Dispatch(self, "__inc__")
 	} else if node.Tok == token.DEC {
-		obj.Dispatch("__dec__")
+		obj.Dispatch(self, "__dec__")
 	}
 }
 
@@ -333,12 +341,12 @@ func (self *Eval) VisitAssignStmt(node *ast.AssignStmt) {
 			lobj := self.Stack.Pop()
 			self.evalExpr(v.Index)
 			idx := self.Stack.Pop()
-			lobj.Dispatch("__set_index__", idx, robj)
+			lobj.Dispatch(self, "__set_index__", idx, robj)
 		case *ast.SelectorExpr:
 			self.evalExpr(v.X)
 			lobj := self.Stack.Pop()
 			sel := NewStringObject(v.Sel.Name)
-			lobj.Dispatch("__set_property__", sel, robj)
+			lobj.Dispatch(self, "__set_property__", sel, robj)
 		}
 	}
 }

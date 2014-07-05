@@ -13,7 +13,7 @@ type Lexer struct {
 
 var (
 	floatRe  = regexp.MustCompile("^[0-9]+\\.[0-9]+")
-	intRe    = regexp.MustCompile("^[0-9]+")
+	intRe    = regexp.MustCompile("^[-0-9]+")
 	stringRe = regexp.MustCompile("^\"[^\"]*\"")
 	charRe   = regexp.MustCompile("^'.*'")
 	identRe  = regexp.MustCompile("^[a-zA-Z_][a-zA-Z0-9_]*")
@@ -199,14 +199,22 @@ func (l *Lexer) Lex(lval *DoubiSymType) int {
 		return EOL
 	}
 
+	m := floatRe.FindString(cur)
+	if m != "" {
+		lval.lit = m
+		l.Pos += len(m)
+		return FLOAT
+	}
+
+	m = intRe.FindString(cur)
+	if m != "" {
+		lval.lit = m
+		l.Pos += len(m)
+		return INT
+	}
+
 	for _, tok := range OpTokens {
 		op := OpTokenMap[tok]
-
-		//		if cur[len(cur)-1] == '\n' {
-		//			fmt.Println(cur[:len(cur)-1], "NL", op)
-		//		} else {
-		//			fmt.Println(cur, op)
-		//		}
 
 		if strings.HasPrefix(cur, op) {
 			lval.lit = op
@@ -221,20 +229,6 @@ func (l *Lexer) Lex(lval *DoubiSymType) int {
 			l.Pos += len(kw)
 			return tok
 		}
-	}
-
-	m := floatRe.FindString(cur)
-	if m != "" {
-		lval.lit = m
-		l.Pos += len(m)
-		return FLOAT
-	}
-
-	m = intRe.FindString(cur)
-	if m != "" {
-		lval.lit = m
-		l.Pos += len(m)
-		return INT
 	}
 
 	m = stringRe.FindString(cur)

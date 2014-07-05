@@ -7,7 +7,7 @@ import (
 )
 
 type Object interface {
-	Dispatch(method string, args ...Object) []Object
+	Dispatch(ctx *Eval, method string, args ...Object) []Object
 	Name() string
 	String() string
 }
@@ -57,7 +57,7 @@ func (self *StringObject) String() string {
 	return self.val
 }
 
-func (self *StringObject) Dispatch(method string, args ...Object) (results []Object) {
+func (self *StringObject) Dispatch(ctx *Eval, method string, args ...Object) (results []Object) {
 	var is bool
 	if is, results = self.AccessPropMethod(method, args...); is {
 		return
@@ -92,7 +92,7 @@ func (self *BoolObject) String() string {
 	return fmt.Sprintf("%v", self.val)
 }
 
-func (self *BoolObject) Dispatch(method string, args ...Object) (results []Object) {
+func (self *BoolObject) Dispatch(ctx *Eval, method string, args ...Object) (results []Object) {
 	var is bool
 	if is, results = self.AccessPropMethod(method, args...); is {
 		return
@@ -122,6 +122,8 @@ type IntegerObject struct {
 
 func NewIntegerObject(val int) Object {
 	obj := &IntegerObject{Property(map[string]Object{}), val}
+	obj.SetProp("times", NewBuiltinFuncObject("times", obj))
+	obj.SetProp("abs", NewBuiltinFuncObject("abs", obj))
 	return obj
 }
 
@@ -133,7 +135,28 @@ func (self *IntegerObject) String() string {
 	return fmt.Sprintf("%d", self.val)
 }
 
-func (self *IntegerObject) Dispatch(method string, args ...Object) (results []Object) {
+func (self *IntegerObject) classMethods(ctx *Eval, method string, args ...Object) (results []Object) {
+	switch method {
+	case "times":
+		fnobj := args[0].(*FuncObject)
+		fnDecl := fnobj.Decl
+		for i := 0; i < self.val; i++ {
+			ctx.E.Put(fnDecl.Args[0].Name, NewIntegerObject(i))
+			fnDecl.Body.Accept(ctx)
+		}
+	case "abs":
+		val := self.val
+		if val < 0 {
+			val = 0 - val
+		}
+		results = append(results, NewIntegerObject(val))
+		fmt.Println(len(results))
+	}
+	return
+}
+
+// shits
+func (self *IntegerObject) Dispatch(ctx *Eval, method string, args ...Object) (results []Object) {
 	var is bool
 	if is, results = self.AccessPropMethod(method, args...); is {
 		return
@@ -147,6 +170,9 @@ func (self *IntegerObject) Dispatch(method string, args ...Object) (results []Ob
 			self.val++
 		} else if method == "__dec__" {
 			self.val--
+		} else {
+			results = self.classMethods(ctx, method, args...)
+			return
 		}
 		return
 	}
@@ -204,6 +230,9 @@ func (self *IntegerObject) Dispatch(method string, args ...Object) (results []Ob
 		cmp := float64(self.val) != val
 		results = append(results, NewBoolObject(cmp))
 		return
+	default:
+		results = self.classMethods(ctx, method, args...)
+		return
 	}
 
 	if isFloat {
@@ -235,7 +264,7 @@ func (self *FloatObject) String() string {
 	return fmt.Sprintf("%f", self.val)
 }
 
-func (self *FloatObject) Dispatch(method string, args ...Object) (results []Object) {
+func (self *FloatObject) Dispatch(ctx *Eval, method string, args ...Object) (results []Object) {
 	var is bool
 	if is, results = self.AccessPropMethod(method, args...); is {
 		return
@@ -321,7 +350,7 @@ func (self *ArrayObject) String() string {
 	return s
 }
 
-func (self *ArrayObject) Dispatch(method string, args ...Object) (results []Object) {
+func (self *ArrayObject) Dispatch(ctx *Eval, method string, args ...Object) (results []Object) {
 	var is bool
 	if is, results = self.AccessPropMethod(method, args...); is {
 		return
@@ -395,7 +424,7 @@ func (self *SetObject) String() string {
 	return s
 }
 
-func (self *SetObject) Dispatch(method string, args ...Object) (results []Object) {
+func (self *SetObject) Dispatch(ctx *Eval, method string, args ...Object) (results []Object) {
 	var is bool
 	if is, results = self.AccessPropMethod(method, args...); is {
 		return
@@ -449,7 +478,7 @@ var Builtins = map[string]func(args ...Object) []Object{
 	},
 }
 
-func (self *FuncObject) Dispatch(method string, args ...Object) (results []Object) {
+func (self *FuncObject) Dispatch(ctx *Eval, method string, args ...Object) (results []Object) {
 	var is bool
 	if is, results = self.AccessPropMethod(method, args...); is {
 		return
@@ -463,7 +492,7 @@ func (self *FuncObject) Dispatch(method string, args ...Object) (results []Objec
 				results = fn(args...)
 			}
 		} else {
-			results = self.Obj.Dispatch(self.name, args...)
+			results = self.Obj.Dispatch(ctx, self.name, args...)
 		}
 	}
 	return
