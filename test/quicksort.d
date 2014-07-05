@@ -28,3 +28,6 @@ func qsort(list) {
 
     return qsort(left) + pivot + qsort(right)
 }
+
+a = qsort([3,34,1,445,14])
+print(a, "\n")

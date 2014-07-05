@@ -167,16 +167,25 @@ func (self *Eval) VisitCallExpr(node *ast.CallExpr) {
 		fnobj = self.Stack.Pop()
 
 		fn := fnobj.(*FuncObject)
-		fnDecl := fn.Decl
+		if fn.IsBuiltin {
+			args := []Object{}
+			for _, arg := range node.Args {
+				self.evalExpr(arg)
+				args = append(args, self.Stack.Pop())
+			}
+			fnobj.Dispatch("__call__", args...)
+		} else {
+			fnDecl := fn.Decl
 
-		self.E = NewEnv(self.E)
-		for i, arg := range node.Args {
-			self.evalExpr(arg)
-			self.E.Put(fnDecl.Args[i].Name, self.Stack.Pop())
+			self.E = NewEnv(self.E)
+			for i, arg := range node.Args {
+				self.evalExpr(arg)
+				self.E.Put(fnDecl.Args[i].Name, self.Stack.Pop())
+			}
+
+			fnDecl.Body.Accept(self)
+			self.E = self.E.Outer
 		}
-
-		fnDecl.Body.Accept(self)
-		self.E = self.E.Outer
 	}
 }
 

@@ -298,6 +298,8 @@ type ArrayObject struct {
 
 func NewArrayObject(vals []Object) Object {
 	obj := &ArrayObject{Property(map[string]Object{}), vals}
+	obj.SetProp("append", NewBuiltinFuncObject("append", obj))
+
 	return obj
 }
 
@@ -334,6 +336,12 @@ func (self *ArrayObject) Dispatch(method string, args ...Object) (results []Obje
 		idx := args[0].(*IntegerObject)
 		val := args[1]
 		self.vals[idx.val] = val
+	case "append":
+		val := args[0]
+		self.vals = append(self.vals, val)
+	case "length":
+		ret := NewIntegerObject(len(self.vals))
+		results = append(results, ret)
 	}
 	return
 }
@@ -388,10 +396,18 @@ type FuncObject struct {
 
 	name string
 	Decl *ast.FuncDeclExpr
+
+	IsBuiltin bool
+	Obj       Object
 }
 
 func NewFuncObject(name string, decl *ast.FuncDeclExpr) Object {
-	obj := &FuncObject{Property(map[string]Object{}), name, decl}
+	obj := &FuncObject{Property(map[string]Object{}), name, decl, false, nil}
+	return obj
+}
+
+func NewBuiltinFuncObject(name string, recv Object) Object {
+	obj := &FuncObject{Property(map[string]Object{}), name, nil, true, recv}
 	return obj
 }
 
@@ -401,21 +417,6 @@ func (self *FuncObject) Name() string {
 
 func (self *FuncObject) String() string {
 	return self.name
-}
-
-func (self *FuncObject) Dispatch(method string, args ...Object) (results []Object) {
-	var is bool
-	if is, results = self.AccessPropMethod(method, args...); is {
-		return
-	}
-
-	switch method {
-	case "__call__":
-		if self.Decl == nil {
-			results = self.callBuiltin(args...)
-		}
-	}
-	return
 }
 
 var Builtins = map[string]func(args ...Object) []Object{
@@ -429,10 +430,23 @@ var Builtins = map[string]func(args ...Object) []Object{
 	},
 }
 
-func (self *FuncObject) callBuiltin(args ...Object) (results []Object) {
-	fn, ok := Builtins[self.name]
-	if ok {
-		fn(args...)
+func (self *FuncObject) Dispatch(method string, args ...Object) (results []Object) {
+	var is bool
+	if is, results = self.AccessPropMethod(method, args...); is {
+		return
+	}
+
+	switch method {
+	case "__call__":
+		if self.Decl == nil && self.Obj == nil {
+			fn, ok := Builtins[self.name]
+			if ok {
+				fn(args...)
+			}
+		} else {
+			fmt.Println("method", method, args[0])
+			self.Obj.Dispatch(self.name, args...)
+		}
 	}
 	return
 }

@@ -84,7 +84,8 @@ func main() {
 		runTest("test/datatype.d")
 		runTest("test/func.d")
 		runTest("test/cond.d")
-		runTest("test/quicksort.d")
+
 	*/
 	runTest("test/play.d")
+	runTest("test/quicksort.d")
 }

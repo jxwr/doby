@@ -99,6 +99,8 @@ const (
 	GOTO
 	IF
 	IMPORT
+	TRUE
+	FALSE
 
 	INTERFACE
 	MAP
@@ -200,6 +202,8 @@ var Tokens = [...]string{
 	GOTO:   "goto",
 	IF:     "if",
 	IMPORT: "import",
+	TRUE:   "true",
+	FALSE:  "false",
 
 	INTERFACE: "interface",
 	MAP:       "map",

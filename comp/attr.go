@@ -27,8 +27,15 @@ func (self *Attr) debug(node interface{}) {
 func (self *Attr) checkIdentRef(node ast.Expr) {
 	switch arg := node.(type) {
 	case *ast.Ident:
-		_, ok := Builtins[arg.Name]
-		if arg.Name != "_" && self.E.LookUp(arg.Name) == nil && !ok {
+		_, builtin := Builtins[arg.Name]
+
+		keyword := false
+		for i := token.BREAK; i <= token.VAR; i++ {
+			if token.Tokens[i] == arg.Name {
+				keyword = true
+			}
+		}
+		if arg.Name != "_" && self.E.LookUp(arg.Name) == nil && !builtin && !keyword {
 			self.log("'%s' not found", arg.Name)
 		}
 	default:
