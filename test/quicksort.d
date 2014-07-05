@@ -1,7 +1,3 @@
-func println(str) {
-     print(str, "\n")
-}
-
 func filter(list, fn) {
      sublist = []
      for _, elem = range list {
@@ -14,25 +10,18 @@ func filter(list, fn) {
 
 func qsort(list) {
     if list.length() <= 1 {
-        println(list)
         return list
     }
 
     pivot = list[0]
+    list = list[1:]
 
-    left = filter(list, func (x) {
-        if x <= pivot {
-            return true
-        } else {
-            return false
-        }
-    })
-
+    left = filter(list, func (x) { return x <= pivot })
     right = filter(list, func (x) { return x > pivot })
 
-    return qsort(left) + pivot + qsort(right)
+    return qsort(left) + [pivot] + qsort(right)
 }
 
-l = [3,34,1,445,14]
-a = qsort(l)
+lst = [200,299,199,3,4,1,2,7,8,5,6,100,2229]
+a = qsort(lst)
 print(a, "\n")
