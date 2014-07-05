@@ -328,7 +328,9 @@ func (self *ArrayObject) Dispatch(method string, args ...Object) (results []Obje
 
 	switch method {
 	case "__add__":
-		fmt.Println("__add__")
+		vals := append(self.vals[:], args[0].(*ArrayObject).vals...)
+		ret := NewArrayObject(vals)
+		results = append(results, ret)
 	case "__get_index__":
 		idx := args[0].(*IntegerObject)
 		results = append(results, self.vals[idx.val])

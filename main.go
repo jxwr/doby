@@ -87,5 +87,5 @@ func main() {
 
 	*/
 	runTest("test/play.d")
-	runTest("test/quicksort.d")
+	//	runTest("test/quicksort.d")
 }

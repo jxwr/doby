@@ -69,3 +69,5 @@ list = [1,2,3,4]
 list.append(5)
 println(list)
 
+cl = [1,2,3,4] + [5,6,7,8]
+println(cl)
