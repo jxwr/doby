@@ -149,6 +149,7 @@ func (self *Eval) VisitSliceExpr(node *ast.SliceExpr) {
 func (self *Eval) VisitCallExpr(node *ast.CallExpr) {
 	self.debug(node)
 
+	treeCode := false
 	var fnobj Object
 	ident, ok := node.Fun.(*ast.Ident)
 
@@ -182,6 +183,7 @@ func (self *Eval) VisitCallExpr(node *ast.CallExpr) {
 				self.Stack.Push(ret)
 			}
 		} else {
+			treeCode = true
 			fnDecl := fn.Decl
 
 			self.E = NewEnv(self.E)
@@ -194,6 +196,15 @@ func (self *Eval) VisitCallExpr(node *ast.CallExpr) {
 			self.E = self.E.Outer
 		}
 	}
+
+	defer func() {
+		if r := recover(); r != nil {
+			if treeCode {
+				self.E = self.E.Outer
+				self.log("return from function")
+			}
+		}
+	}()
 }
 
 func (self *Eval) VisitUnaryExpr(node *ast.UnaryExpr) {
@@ -334,6 +345,7 @@ func (self *Eval) VisitReturnStmt(node *ast.ReturnStmt) {
 	for _, res := range node.Results {
 		self.evalExpr(res)
 	}
+	panic("return")
 }
 
 func (self *Eval) VisitBranchStmt(node *ast.BranchStmt) {
