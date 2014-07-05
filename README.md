@@ -87,7 +87,7 @@ person.weight = 125
 println(person)
 person.summary(person)
 ```
-> #{name:jiaoxiang,age:28,summary:#<closure>,weight:125}
+> {name:jiaoxiang,age:28,summary:#<closure>,weight:125}
 
 > jiaoxiang:28
 
