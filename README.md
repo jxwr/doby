@@ -46,7 +46,19 @@ func println(str) {
 10.times(func(i){ println(i) })
 
 hundred = -100.abs()
+println(hundred)
 ```
+>0 
+>1 
+>2 
+>3 
+>4 
+>5 
+>6 
+>7 
+>8 
+>9 
+>100
 
 * Object-based_language
 
@@ -58,6 +70,7 @@ list.name = func() {
 
 println(list.name())
 ```
+> hello world 
 
 #### Notes
 
