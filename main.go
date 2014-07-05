@@ -18,7 +18,7 @@ func EvalStmt(stmt *ast.Stmt) {
 func Eval(stmts []ast.Stmt) {
 	pretty := &comp.PrettyPrinter{false, 0, true}
 	attr := &comp.Attr{false, comp.NewEnv(nil)}
-	eval := &comp.Eval{false, comp.NewEnv(nil), comp.NewStack()}
+	eval := &comp.Eval{false, comp.NewEnv(nil), comp.NewStack(), false}
 
 	if false {
 		for _, stmt := range stmts {
@@ -86,6 +86,6 @@ func main() {
 		runTest("test/cond.d")
 
 	*/
-	//runTest("test/play.d")
-	runTest("test/quicksort.d")
+	runTest("test/play.d")
+	//runTest("test/quicksort.d")
 }

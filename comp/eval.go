@@ -42,6 +42,8 @@ type Eval struct {
 	Debug bool
 	E     *Env
 	Stack *Stack
+
+	NeedReturn bool
 }
 
 func (self *Eval) log(fmtstr string, args ...interface{}) {
@@ -144,12 +146,28 @@ func (self *Eval) VisitIndexExpr(node *ast.IndexExpr) {
 
 func (self *Eval) VisitSliceExpr(node *ast.SliceExpr) {
 	self.debug(node)
+
+	self.evalExpr(node.X)
+	obj := self.Stack.Pop()
+
+	var lowObj Object
+	var highObj Object
+
+	if node.Low != nil {
+		self.evalExpr(node.Low)
+		lowObj = self.Stack.Pop()
+	}
+	if node.High != nil {
+		self.evalExpr(node.High)
+		highObj = self.Stack.Pop()
+	}
+
+	rets := obj.Dispatch("__slice__", lowObj, highObj)
+	self.log("slice")
+	self.Stack.Push(rets[0])
 }
 
 func (self *Eval) VisitCallExpr(node *ast.CallExpr) {
-	self.debug(node)
-
-	treeCode := false
 	var fnobj Object
 	ident, ok := node.Fun.(*ast.Ident)
 
@@ -183,7 +201,6 @@ func (self *Eval) VisitCallExpr(node *ast.CallExpr) {
 				self.Stack.Push(ret)
 			}
 		} else {
-			treeCode = true
 			fnDecl := fn.Decl
 
 			self.E = NewEnv(self.E)
@@ -191,20 +208,12 @@ func (self *Eval) VisitCallExpr(node *ast.CallExpr) {
 				self.evalExpr(arg)
 				self.E.Put(fnDecl.Args[i].Name, self.Stack.Pop())
 			}
-
+			self.NeedReturn = false
 			fnDecl.Body.Accept(self)
+			self.NeedReturn = false
 			self.E = self.E.Outer
 		}
 	}
-
-	defer func() {
-		if r := recover(); r != nil {
-			if treeCode {
-				self.E = self.E.Outer
-				self.log("return from function")
-			}
-		}
-	}()
 }
 
 func (self *Eval) VisitUnaryExpr(node *ast.UnaryExpr) {
@@ -345,7 +354,8 @@ func (self *Eval) VisitReturnStmt(node *ast.ReturnStmt) {
 	for _, res := range node.Results {
 		self.evalExpr(res)
 	}
-	panic("return")
+
+	self.NeedReturn = true
 }
 
 func (self *Eval) VisitBranchStmt(node *ast.BranchStmt) {
@@ -354,7 +364,11 @@ func (self *Eval) VisitBranchStmt(node *ast.BranchStmt) {
 
 func (self *Eval) VisitBlockStmt(node *ast.BlockStmt) {
 	self.E = NewEnv(self.E)
+
 	for _, stmt := range node.List {
+		if self.NeedReturn {
+			break
+		}
 		stmt.Accept(self)
 	}
 	self.E = self.E.Outer

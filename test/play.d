@@ -56,7 +56,7 @@ a.b++
 println(a)
 println(a.b)
 
-for i = 0; i < 100; i++ {
+for i = 0; i < 3; i++ {
     println(i)
 }
 
@@ -71,3 +71,4 @@ println(list)
 
 cl = [1,2,3,4] + [5,6,7,8]
 println(cl)
+println(cl[1:8])

@@ -82,8 +82,12 @@ func (self *Attr) VisitSliceExpr(node *ast.SliceExpr) {
 	self.debug(node)
 
 	self.checkIdentRef(node.X)
-	self.checkIdentRef(node.Low)
-	self.checkIdentRef(node.High)
+	if node.Low != nil {
+		self.checkIdentRef(node.Low)
+	}
+	if node.High != nil {
+		self.checkIdentRef(node.High)
+	}
 }
 
 func (self *Attr) VisitCallExpr(node *ast.CallExpr) {

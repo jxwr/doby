@@ -87,6 +87,10 @@ selector_expr : expr PERIOD ident      	{ $$ = &ast.SelectorExpr{$1, $3.(*ast.Id
 
 slice_expr : expr LBRACK expr COLON expr RBRACK	
 	     { $$ = &ast.SliceExpr{$1, 0, $3, $5, 0} }
+           | expr LBRACK COLON expr RBRACK	
+	     { $$ = &ast.SliceExpr{$1, 0, nil, $4, 0} }
+           | expr LBRACK expr COLON RBRACK	
+	     { $$ = &ast.SliceExpr{$1, 0, $3, nil, 0} }
 
 index_expr : expr LBRACK expr RBRACK    
 	     { $$ = &ast.IndexExpr{$1, 0, $3, 0} }

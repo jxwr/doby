@@ -13,9 +13,8 @@ func filter(list, fn) {
 }
 
 func qsort(list) {
-    println(list)
-
     if list.length() <= 1 {
+        println(list)
         return list
     }
 

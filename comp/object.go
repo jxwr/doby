@@ -339,6 +339,22 @@ func (self *ArrayObject) Dispatch(method string, args ...Object) (results []Obje
 		idx := args[0].(*IntegerObject)
 		val := args[1]
 		self.vals[idx.val] = val
+	case "__slice__":
+		low := 0
+		high := len(self.vals)
+
+		lo := args[0]
+		if lo != nil {
+			low = lo.(*IntegerObject).val
+		}
+		ho := args[1]
+		if ho != nil {
+			high = ho.(*IntegerObject).val
+		}
+
+		vals := self.vals[low:high]
+		ret := NewArrayObject(vals)
+		results = append(results, ret)
 	case "append":
 		val := args[0]
 		self.vals = append(self.vals, val)
