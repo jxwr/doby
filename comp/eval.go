@@ -356,6 +356,18 @@ func (self *Eval) VisitSelectStmt(node *ast.SelectStmt) {
 
 func (self *Eval) VisitForStmt(node *ast.ForStmt) {
 	self.debug(node)
+
+	node.Init.Accept(self)
+
+	for {
+		self.evalExpr(node.Cond)
+		cond := self.Stack.Pop()
+		if !cond.(*BoolObject).val {
+			break
+		}
+		node.Body.Accept(self)
+		node.Post.Accept(self)
+	}
 }
 
 func (self *Eval) VisitRangeStmt(node *ast.RangeStmt) {

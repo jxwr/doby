@@ -55,3 +55,7 @@ a.b++
 a.b++
 println(a)
 println(a.b)
+
+for i = 0; i < 100; i++ {
+    println(i)
+}
