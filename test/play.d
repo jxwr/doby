@@ -59,3 +59,7 @@ println(a.b)
 for i = 0; i < 100; i++ {
     println(i)
 }
+
+for i, v = range c {
+    print(i, "=", v, "\n")
+}

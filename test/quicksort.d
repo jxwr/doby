@@ -1,7 +1,4 @@
 
-true = 1
-false = 0
-
 func filter(list, fn) {
      sublist = []
      for _, elem = range list {

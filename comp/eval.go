@@ -372,4 +372,30 @@ func (self *Eval) VisitForStmt(node *ast.ForStmt) {
 
 func (self *Eval) VisitRangeStmt(node *ast.RangeStmt) {
 	self.debug(node)
+
+	self.evalExpr(node.X)
+	obj := self.Stack.Pop()
+
+	keyName := node.KeyValue[0].(*ast.Ident).Name
+	valName := node.KeyValue[1].(*ast.Ident).Name
+
+	self.E = NewEnv(self.E)
+
+	switch v := obj.(type) {
+	case *ArrayObject:
+		for i, val := range v.vals {
+			self.E.Put(keyName, NewIntegerObject(i))
+			self.E.Put(valName, val)
+			node.Body.Accept(self)
+		}
+	case *SetObject:
+		for i, val := range v.vals {
+			self.E.Put(keyName, NewIntegerObject(i))
+			self.E.Put(valName, val)
+			node.Body.Accept(self)
+		}
+
+	}
+
+	self.E = self.E.Outer
 }
