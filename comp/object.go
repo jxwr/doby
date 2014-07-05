@@ -163,7 +163,6 @@ func (self *IntegerObject) classMethods(ctx *Eval, method string, args ...Object
 			val = 0 - val
 		}
 		results = append(results, NewIntegerObject(val))
-		fmt.Println(len(results))
 	}
 	return
 }

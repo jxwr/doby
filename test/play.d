@@ -1,5 +1,3 @@
-
-
 a = 100 + 3 * 123 
 b = a + 2
 
@@ -57,7 +55,7 @@ println(a)
 println(a.b)
 
 for i = 0; i < 3; i++ {
-    println(i)
+    print(i,"")
 }
 
 for i, v = range c {
@@ -65,7 +63,7 @@ for i, v = range c {
     return true
 }
 
-list = [1,2,3,4]]]]]]]
+list = [1,2,3,4]
 list.append(5)
 println(list)
 
@@ -74,9 +72,12 @@ println(cl)
 println(cl[1:8])
 
 base = 99
-10.times(func(i){ println(i) })
-
-println(-100.abs())
+print(-100.abs())
+11.times(func(i){b 
+  if i % 2 == 0 { 
+    print(i, "") 
+  }
+})
 
 list = ["hello", "world"]
 list.name = func() {
@@ -109,7 +110,7 @@ i = 0
 
 for i < 10 {
     i++
-    println(i)
+    print(i, "")
 }
 println(220)
 

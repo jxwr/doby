@@ -65,11 +65,11 @@ type Tok struct {
 %left OR
 %left AND XOR
 %left ADD SUB
+%left NEQ LEQ GEQ EQL
 %left MUL QUO REM
-%left NEQ LEQ GEQ
 %left LSS GTR
 %left NOT 
-%left LAND LOR ARROW INC DEC EQL
+%left LAND LOR ARROW INC DEC 
 %left LPAREN
 %left UMINUS
 %left LBRACK
