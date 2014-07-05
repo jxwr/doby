@@ -91,6 +91,23 @@ person.summary(person)
 
 > jiaoxiang:28
 
+* Error Report
+
+```
+=============>  test/play.d  <=============
+Syntax Error: Line:68 Col:15 NEARLINES:
+  64)     print(i, "=", v, "\n")
+  65)     return true
+  66) }
+  67) 
+* 68) list = [1,2,3,4]]]]]]]
+  69) list.append(5)
+  70) println(list)
+  71) 
+  72) cl = [1,2,3,4] + [5,6,7,8]
+  73) println(cl)
+```
+
 #### Notes
 
 > See notes and tests

@@ -65,7 +65,7 @@ for i, v = range c {
     return true
 }
 
-list = [1,2,3,4]
+list = [1,2,3,4]]]]]]]
 list.append(5)
 println(list)
 
@@ -108,9 +108,11 @@ person.summary(person)
 i = 0
 
 for i < 10 {
-    println(i)
     i++
+    println(i)
 }
+println(220)
 
 // custom print function
 println(220)
+

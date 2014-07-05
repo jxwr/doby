@@ -15,6 +15,13 @@ type Lexer struct {
 	Col  int
 
 	SavedToks []*Tok
+	lines     []string
+}
+
+func NewLexer(src string) *Lexer {
+	lex := &Lexer{Src: src, Pos: 0, Line: 1, Col: 0}
+	lex.lines = strings.Split(lex.Src, "\n")
+	return lex
 }
 
 var (
@@ -194,8 +201,8 @@ var (
 func (l *Lexer) MkTok(lit string) Tok {
 	t := Tok{lit, l.Line, l.Col, token.Pos(l.Pos)}
 	l.SavedToks = append(l.SavedToks, &t)
-	if len(l.SavedToks) > 5 {
-		l.SavedToks = l.SavedToks[len(l.SavedToks)-5:]
+	if len(l.SavedToks) > 16 {
+		l.SavedToks = l.SavedToks[len(l.SavedToks)-16:]
 	}
 	return t
 }
@@ -210,34 +217,34 @@ func (l *Lexer) Lex(lval *DoubiSymType) int {
 	l.Pos += len(src) - len(cur)
 
 	if cur[0] == '\n' {
+		lval.tok = l.MkTok("\n")
 		l.Pos++
 		l.Line++
 		l.Col = 0
-		lval.tok = l.MkTok("\n")
 		return EOL
 	}
 
 	m := lineCommentRe.FindString(cur)
 	if m != "" {
+		lval.tok = l.MkTok(m)
 		l.Col += len(m)
 		l.Pos += len(m)
-		lval.tok = l.MkTok(m)
 		return EOL
 	}
 
 	m = floatRe.FindString(cur)
 	if m != "" {
+		lval.tok = l.MkTok(m)
 		l.Col += len(m)
 		l.Pos += len(m)
-		lval.tok = l.MkTok(m)
 		return FLOAT
 	}
 
 	m = intRe.FindString(cur)
 	if m != "" {
+		lval.tok = l.MkTok(m)
 		l.Col += len(m)
 		l.Pos += len(m)
-		lval.tok = l.MkTok(m)
 		return INT
 	}
 
@@ -245,18 +252,18 @@ func (l *Lexer) Lex(lval *DoubiSymType) int {
 		op := OpTokenMap[tok]
 
 		if strings.HasPrefix(cur, op) {
+			lval.tok = l.MkTok(op)
 			l.Col += len(op)
 			l.Pos += len(op)
-			lval.tok = l.MkTok(op)
 			return tok
 		}
 	}
 
 	for tok, kw := range KeywordTokenMap {
 		if strings.HasPrefix(cur, kw) {
+			lval.tok = l.MkTok(kw)
 			l.Col += len(kw)
 			l.Pos += len(kw)
-			lval.tok = l.MkTok(kw)
 			return tok
 		}
 	}
@@ -278,25 +285,25 @@ func (l *Lexer) Lex(lval *DoubiSymType) int {
 				return esc
 			}
 		})
+		lval.tok = l.MkTok(n)
 		l.Col += len(m)
 		l.Pos += len(m)
-		lval.tok = l.MkTok(n)
 		return STRING
 	}
 
 	m = charRe.FindString(cur)
 	if m != "" {
+		lval.tok = l.MkTok(m)
 		l.Col += len(m)
 		l.Pos += len(m)
-		lval.tok = l.MkTok(m)
 		return CHAR
 	}
 
 	m = identRe.FindString(cur)
 	if m != "" {
+		lval.tok = l.MkTok(m)
 		l.Col += len(m)
 		l.Pos += len(m)
-		lval.tok = l.MkTok(m)
 		return IDENT
 	}
 
@@ -311,9 +318,19 @@ func (l *Lexer) Lex(lval *DoubiSymType) int {
 }
 
 func (l *Lexer) Error(s string) {
-	before := ""
-	for _, s := range l.SavedToks[:len(l.SavedToks)-1] {
-		before += s.Lit + " "
+	fmt.Printf("Syntax Error: Line:%d Col:%d NEARLINES:\n", l.Line, l.Col)
+
+	line := l.Line - 5
+	if line < 0 {
+		line = 0
 	}
-	fmt.Printf("SYNTAX ERROR: LINE:%d COL:%d NEAR AFTER:\n> %s<error>\n", l.Line, l.Col, before)
+
+	for line < l.Line+5 && line < len(l.lines) {
+		if line == l.Line-1 {
+			fmt.Printf("*%3d) %s\n", line+1, l.lines[line])
+		} else {
+			fmt.Printf(" %3d) %s\n", line+1, l.lines[line])
+		}
+		line++
+	}
 }

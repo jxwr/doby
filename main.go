@@ -40,7 +40,7 @@ func runTest(filename string) {
 	var contents []byte
 	var err error
 
-	fmt.Println("==============> ", filename, " <=============")
+	fmt.Println("=============> ", filename, " <=============")
 
 	contents, err = ioutil.ReadFile(filename)
 	if err != nil {
@@ -48,7 +48,7 @@ func runTest(filename string) {
 	}
 
 	parser.ProgramAst = nil
-	parser.DoubiParse(&parser.Lexer{Src: string(contents)})
+	parser.DoubiParse(parser.NewLexer(string(contents)))
 	Eval(parser.ProgramAst)
 }
 
