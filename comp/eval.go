@@ -163,7 +163,6 @@ func (self *Eval) VisitSliceExpr(node *ast.SliceExpr) {
 	}
 
 	rets := obj.Dispatch("__slice__", lowObj, highObj)
-	self.log("slice")
 	self.Stack.Push(rets[0])
 }
 
