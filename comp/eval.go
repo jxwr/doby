@@ -139,19 +139,29 @@ func (self *Eval) VisitCallExpr(node *ast.CallExpr) {
 		_, exist := Builtins[ident.Name]
 		if exist {
 			fnobj = NewFuncObject(ident.Name, nil)
+			args := []Object{}
+			for _, arg := range node.Args {
+				self.evalExpr(arg)
+				args = append(args, self.Stack.Pop())
+			}
+			fnobj.Dispatch("__call__", args...)
 		}
 	} else {
 		self.evalExpr(node.Fun)
 		fnobj = self.Stack.Pop()
-	}
 
-	args := []Object{}
-	for _, arg := range node.Args {
-		self.evalExpr(arg)
-		args = append(args, self.Stack.Pop())
-	}
+		fn := fnobj.(*FuncObject)
+		fnDecl := fn.Decl
 
-	fnobj.Dispatch("__call__", args...)
+		self.E = NewEnv(self.E)
+		for i, arg := range node.Args {
+			self.evalExpr(arg)
+			self.E.Put(fnDecl.Args[i].Name, self.Stack.Pop())
+		}
+
+		fnDecl.Body.Accept(self)
+		self.E = self.E.Outer
+	}
 }
 
 func (self *Eval) VisitUnaryExpr(node *ast.UnaryExpr) {
@@ -216,6 +226,9 @@ func (self *Eval) VisitDictExpr(node *ast.DictExpr) {
 
 func (self *Eval) VisitFuncDeclExpr(node *ast.FuncDeclExpr) {
 	self.debug(node)
+
+	fname := node.Name.Name
+	self.E.Put(fname, NewFuncObject(fname, node))
 }
 
 // stmts
@@ -265,6 +278,10 @@ func (self *Eval) VisitGoStmt(node *ast.GoStmt) {
 
 func (self *Eval) VisitReturnStmt(node *ast.ReturnStmt) {
 	self.debug(node)
+
+	for _, res := range node.Results {
+		self.evalExpr(res)
+	}
 }
 
 func (self *Eval) VisitBranchStmt(node *ast.BranchStmt) {
@@ -272,7 +289,11 @@ func (self *Eval) VisitBranchStmt(node *ast.BranchStmt) {
 }
 
 func (self *Eval) VisitBlockStmt(node *ast.BlockStmt) {
-	self.debug(node)
+	self.E = NewEnv(self.E)
+	for _, stmt := range node.List {
+		stmt.Accept(self)
+	}
+	self.E = self.E.Outer
 }
 
 func (self *Eval) VisitIfStmt(node *ast.IfStmt) {

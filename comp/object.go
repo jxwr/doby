@@ -228,11 +228,11 @@ func (self *SetObject) Dispatch(method string, args ...Object) (results []Object
 
 type FuncObject struct {
 	name string
-	node *ast.Node
+	Decl *ast.FuncDeclExpr
 }
 
-func NewFuncObject(name string, node *ast.Node) Object {
-	obj := &FuncObject{name, node}
+func NewFuncObject(name string, decl *ast.FuncDeclExpr) Object {
+	obj := &FuncObject{name, decl}
 	return obj
 }
 
@@ -247,7 +247,7 @@ func (self *FuncObject) String() string {
 func (self *FuncObject) Dispatch(method string, args ...Object) (results []Object) {
 	switch method {
 	case "__call__":
-		if self.node == nil {
+		if self.Decl == nil {
 			results = self.callBuiltin(args...)
 		}
 	}
