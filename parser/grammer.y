@@ -100,7 +100,7 @@ slice_expr : expr LBRACK expr COLON expr RBRACK
 	     { $$ = &ast.SliceExpr{$1, $2.Pos, $3, nil, $5.Pos} }
 
 index_expr : expr LBRACK expr RBRACK    
-	     { $$ = &ast.IndexExpr{$1, 0, $3, 0} }
+	     { $$ = &ast.IndexExpr{$1, $2.Pos, $3, $2.Pos} }
 
 expr_list : /* empty */		      	  { $$ = []ast.Expr{} }
 	  | expr			  { $$ = []ast.Expr{$1} }

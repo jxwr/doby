@@ -104,9 +104,13 @@ println(person)
 
 person.summary(person)
 
-i = 0 * 
+//hello
+i = 0
 
-for i < 100 {
+for i < 10 {
     println(i)
     i++
 }
+
+// custom print function
+println(220)

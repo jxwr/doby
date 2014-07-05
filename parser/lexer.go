@@ -217,9 +217,17 @@ func (l *Lexer) Lex(lval *DoubiSymType) int {
 		return EOL
 	}
 
-	m := floatRe.FindString(cur)
+	m := lineCommentRe.FindString(cur)
 	if m != "" {
-		l.Col = len(m)
+		l.Col += len(m)
+		l.Pos += len(m)
+		lval.tok = l.MkTok(m)
+		return EOL
+	}
+
+	m = floatRe.FindString(cur)
+	if m != "" {
+		l.Col += len(m)
 		l.Pos += len(m)
 		lval.tok = l.MkTok(m)
 		return FLOAT
@@ -307,5 +315,5 @@ func (l *Lexer) Error(s string) {
 	for _, s := range l.SavedToks[:len(l.SavedToks)-1] {
 		before += s.Lit + " "
 	}
-	fmt.Printf("SYNTAX ERROR: LINE:%d COL:%d \n> %s<error>\n", l.Line, l.Col, before)
+	fmt.Printf("SYNTAX ERROR: LINE:%d COL:%d NEAR AFTER:\n> %s<error>\n", l.Line, l.Col, before)
 }
