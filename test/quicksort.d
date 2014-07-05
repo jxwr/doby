@@ -1,3 +1,6 @@
+func println(str) {
+     print(str, "\n")
+}
 
 func filter(list, fn) {
      sublist = []
@@ -10,7 +13,9 @@ func filter(list, fn) {
 }
 
 func qsort(list) {
-    if list.len() <= 1 {
+    println(list)
+
+    if list.length() <= 1 {
         return list
     }
 
@@ -29,5 +34,6 @@ func qsort(list) {
     return qsort(left) + pivot + qsort(right)
 }
 
-a = qsort([3,34,1,445,14])
+l = [3,34,1,445,14]
+a = qsort(l)
 print(a, "\n")

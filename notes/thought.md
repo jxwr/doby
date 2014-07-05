@@ -48,3 +48,8 @@ push list
 push len
 call
 ```
+
+1. class-based or object-based
+2. how to add new builtin datetypes and their methods
+3. return
+4. closure

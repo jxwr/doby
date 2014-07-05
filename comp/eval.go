@@ -151,6 +151,7 @@ func (self *Eval) VisitCallExpr(node *ast.CallExpr) {
 
 	var fnobj Object
 	ident, ok := node.Fun.(*ast.Ident)
+
 	if ok && self.E.LookUp(ident.Name) == nil {
 		_, exist := Builtins[ident.Name]
 		if exist {
@@ -160,7 +161,10 @@ func (self *Eval) VisitCallExpr(node *ast.CallExpr) {
 				self.evalExpr(arg)
 				args = append(args, self.Stack.Pop())
 			}
-			fnobj.Dispatch("__call__", args...)
+			rets := fnobj.Dispatch("__call__", args...)
+			for _, ret := range rets {
+				self.Stack.Push(ret)
+			}
 		}
 	} else {
 		self.evalExpr(node.Fun)
@@ -173,7 +177,10 @@ func (self *Eval) VisitCallExpr(node *ast.CallExpr) {
 				self.evalExpr(arg)
 				args = append(args, self.Stack.Pop())
 			}
-			fnobj.Dispatch("__call__", args...)
+			rets := fnobj.Dispatch("__call__", args...)
+			for _, ret := range rets {
+				self.Stack.Push(ret)
+			}
 		} else {
 			fnDecl := fn.Decl
 
@@ -210,16 +217,19 @@ var BinaryFuncs = map[token.Token]string{
 	token.EQL:     "__eql__",
 	token.LSS:     "__lss__",
 	token.GTR:     "__gtr__",
+	token.LEQ:     "__leq__",
+	token.GEQ:     "__geq__",
+	token.NEQ:     "__neq__",
 }
 
 func (self *Eval) VisitBinaryExpr(node *ast.BinaryExpr) {
 	self.debug(node)
 
-	self.evalExpr(node.Y)
 	self.evalExpr(node.X)
+	self.evalExpr(node.Y)
 
-	lobj := self.Stack.Pop()
 	robj := self.Stack.Pop()
+	lobj := self.Stack.Pop()
 
 	objs := lobj.Dispatch(BinaryFuncs[node.Op], robj)
 	self.Stack.Push(objs[0])

@@ -299,6 +299,7 @@ type ArrayObject struct {
 func NewArrayObject(vals []Object) Object {
 	obj := &ArrayObject{Property(map[string]Object{}), vals}
 	obj.SetProp("append", NewBuiltinFuncObject("append", obj))
+	obj.SetProp("length", NewBuiltinFuncObject("length", obj))
 
 	return obj
 }
@@ -443,11 +444,10 @@ func (self *FuncObject) Dispatch(method string, args ...Object) (results []Objec
 		if self.Decl == nil && self.Obj == nil {
 			fn, ok := Builtins[self.name]
 			if ok {
-				fn(args...)
+				results = fn(args...)
 			}
 		} else {
-			fmt.Println("method", method, args[0])
-			self.Obj.Dispatch(self.name, args...)
+			results = self.Obj.Dispatch(self.name, args...)
 		}
 	}
 	return
