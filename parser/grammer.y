@@ -9,6 +9,13 @@ import (
 
 var ProgramAst []ast.Stmt
 
+type Tok struct {
+    Lit string
+    Line int
+    Col int
+    Pos token.Pos
+}
+
 %}
 
 // fields inside this union end up as the fields in a structure known
@@ -22,7 +29,7 @@ var ProgramAst []ast.Stmt
     field *ast.Field
     field_list []*ast.Field
     ident_list []*ast.Ident
-    lit string
+    tok Tok
 }
 
 %type <expr> expr ident basiclit
@@ -38,21 +45,21 @@ var ProgramAst []ast.Stmt
 %type <stmt> case_clause case_block switch_stmt select_stmt for_stmt range_stmt
 %type <stmt_list> stmt_list case_clause_list prog
 
-%token <lit> EOF EOL COMMENT
-%token <lit> IDENT INT FLOAT STRING CHAR 
-%token <lit> SHL SHR AND_NOT 
-%token <lit> ADD_ASSIGN SUB_ASSIGN MUL_ASSIGN QUO_ASSIGN REM_ASSIGN
-%token <lit> AND_ASSIGN OR_ASSIGN XOR_ASSIGN SHL_ASSIGN SHR_ASSIGN AND_NOT_ASSIGN
-%token <lit> LAND LOR ARROW INC DEC EQL
-%token <lit> NEQ LEQ GEQ DEFINE ELLIPSIS ADD SUB MUL QUO REM AND OR XOR
-%token <lit> LSS GTR ASSIGN NOT 
-%token <lit> LPAREN LBRACK LBRACE COMMA PERIOD RPAREN RBRACK RBRACE
-%token <lit> SEMICOLON COLON
+%token <tok> EOF EOL COMMENT
+%token <tok> IDENT INT FLOAT STRING CHAR 
+%token <tok> SHL SHR AND_NOT 
+%token <tok> ADD_ASSIGN SUB_ASSIGN MUL_ASSIGN QUO_ASSIGN REM_ASSIGN
+%token <tok> AND_ASSIGN OR_ASSIGN XOR_ASSIGN SHL_ASSIGN SHR_ASSIGN AND_NOT_ASSIGN
+%token <tok> LAND LOR ARROW INC DEC EQL
+%token <tok> NEQ LEQ GEQ DEFINE ELLIPSIS ADD SUB MUL QUO REM AND OR XOR
+%token <tok> LSS GTR ASSIGN NOT 
+%token <tok> LPAREN LBRACK LBRACE COMMA PERIOD RPAREN RBRACK RBRACE
+%token <tok> SEMICOLON COLON
 
-%token <lit> BREAK CASE CHAN CONTINUE CONST
-%token <lit> DEFAULT DEFER ELSE FALLTHROUGH FOR
-%token <lit> FUNC GO GOTO IF IMPORT INTERFACE MAP PACKAGE RANGE RETURN 
-%token <lit> SELECT STRUCT SWITCH TYPE VAR 
+%token <tok> BREAK CASE CHAN CONTINUE CONST
+%token <tok> DEFAULT DEFER ELSE FALLTHROUGH FOR
+%token <tok> FUNC GO GOTO IF IMPORT INTERFACE MAP PACKAGE RANGE RETURN 
+%token <tok> SELECT STRUCT SWITCH TYPE VAR 
 
 %left SHL SHR AND_NOT 
 %left OR
@@ -74,23 +81,23 @@ var ProgramAst []ast.Stmt
 
 %%
 
-ident : IDENT				{ $$ = &ast.Ident{0, $1} }
+ident : IDENT				{ $$ = &ast.Ident{$1.Pos, $1.Lit} }
 
-basiclit : INT				{ $$ = &ast.BasicLit{0, token.INT, $1} }
-	 | FLOAT			{ $$ = &ast.BasicLit{0, token.FLOAT, $1} }
-	 | STRING 			{ $$ = &ast.BasicLit{0, token.STRING, $1} }
-	 | CHAR				{ $$ = &ast.BasicLit{0, token.CHAR, $1} }
+basiclit : INT				{ $$ = &ast.BasicLit{$1.Pos, token.INT, $1.Lit} }
+	 | FLOAT			{ $$ = &ast.BasicLit{$1.Pos, token.FLOAT, $1.Lit} }
+	 | STRING 			{ $$ = &ast.BasicLit{$1.Pos, token.STRING, $1.Lit} }
+	 | CHAR				{ $$ = &ast.BasicLit{$1.Pos, token.CHAR, $1.Lit} }
 
-paren_expr : LPAREN expr RPAREN		{ $$ = &ast.ParenExpr{0, $2, 0} }
+paren_expr : LPAREN expr RPAREN		{ $$ = &ast.ParenExpr{$1.Pos, $2, $3.Pos} }
 
 selector_expr : expr PERIOD ident      	{ $$ = &ast.SelectorExpr{$1, $3.(*ast.Ident)} }
 
 slice_expr : expr LBRACK expr COLON expr RBRACK	
-	     { $$ = &ast.SliceExpr{$1, 0, $3, $5, 0} }
+	     { $$ = &ast.SliceExpr{$1, $2.Pos, $3, $5, $6.Pos} }
            | expr LBRACK COLON expr RBRACK	
-	     { $$ = &ast.SliceExpr{$1, 0, nil, $4, 0} }
+	     { $$ = &ast.SliceExpr{$1, $2.Pos, nil, $4, $5.Pos} }
            | expr LBRACK expr COLON RBRACK	
-	     { $$ = &ast.SliceExpr{$1, 0, $3, nil, 0} }
+	     { $$ = &ast.SliceExpr{$1, $2.Pos, $3, nil, $5.Pos} }
 
 index_expr : expr LBRACK expr RBRACK    
 	     { $$ = &ast.IndexExpr{$1, 0, $3, 0} }
@@ -156,17 +163,17 @@ dict_expr : '#' LBRACE field_list RBRACE
 ident_list : /* empty */
    	     { $$ = []*ast.Ident{} }
 	   | IDENT
-	     { $$ = []*ast.Ident{&ast.Ident{0, $1}} }
+	     { $$ = []*ast.Ident{&ast.Ident{0, $1.Lit}} }
 	   | ident_list COMMA IDENT
-	     { $$ = append($1, &ast.Ident{0, $3}) }
+	     { $$ = append($1, &ast.Ident{0, $3.Lit}) }
 
 func_decl_expr : FUNC LPAREN ident_list RPAREN block_stmt
 	       	 { $$ = &ast.FuncDeclExpr{0, nil, nil, nil, $3, $5.(*ast.BlockStmt)} }
 	       | FUNC IDENT LPAREN ident_list RPAREN block_stmt
-	       	 { $$ = &ast.FuncDeclExpr{0, nil, nil, &ast.Ident{0, $2}, $4, $6.(*ast.BlockStmt)} }
+	       	 { $$ = &ast.FuncDeclExpr{0, nil, nil, &ast.Ident{0, $2.Lit}, $4, $6.(*ast.BlockStmt)} }
 	       | FUNC LPAREN IDENT IDENT RPAREN IDENT LPAREN ident_list RPAREN block_stmt
-	       	 { $$ = &ast.FuncDeclExpr{0, &ast.Ident{0, $3}, &ast.Ident{0, $4},
-		                        &ast.Ident{0, $6}, $8, $10.(*ast.BlockStmt)} }
+	       	 { $$ = &ast.FuncDeclExpr{0, &ast.Ident{0, $3.Lit}, &ast.Ident{0, $4.Lit},
+		                        &ast.Ident{0, $6.Lit}, $8, $10.(*ast.BlockStmt)} }
 
 expr : ident
      | basiclit
@@ -232,6 +239,10 @@ select_stmt : SELECT case_block			{ $$ = &ast.SelectStmt{0, $2.(*ast.BlockStmt)}
 
 for_stmt : FOR stmt SEMICOLON expr SEMICOLON stmt block_stmt
 	   { $$ = &ast.ForStmt{0, $2, $4, $6, $7.(*ast.BlockStmt)} }
+         | FOR SEMICOLON expr SEMICOLON stmt block_stmt
+	   { $$ = &ast.ForStmt{0, nil, $3, $5, $6.(*ast.BlockStmt)} }
+         | FOR expr block_stmt
+	   { $$ = &ast.ForStmt{0, nil, $2, nil, $3.(*ast.BlockStmt)} }
 
 range_stmt : FOR expr_list ASSIGN RANGE expr block_stmt 
 	     { $$ = &ast.RangeStmt{0, $2, $5, $6.(*ast.BlockStmt)} }

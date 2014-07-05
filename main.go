@@ -60,7 +60,7 @@ func repl() {
 
 		fmt.Printf("> ")
 		if src, ok = readGist(fi); ok {
-			parser.DoubiParse(&parser.Lexer{Src: src})
+			parser.DoubiParse(&parser.Lexer{Src: src, Line: 1, Pos: 0})
 			Eval(parser.ProgramAst)
 		} else {
 			break

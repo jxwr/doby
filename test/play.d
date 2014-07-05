@@ -103,3 +103,10 @@ person.weight = 125
 println(person)
 
 person.summary(person)
+
+i = 0 * 
+
+for i < 100 {
+    println(i)
+    i++
+}

@@ -4,20 +4,27 @@ import (
 	"fmt"
 	"regexp"
 	"strings"
+
+	"github.com/jxwr/doubi/token"
 )
 
 type Lexer struct {
-	Src string
-	Pos int
+	Src  string
+	Pos  int
+	Line int
+	Col  int
+
+	SavedToks []*Tok
 }
 
 var (
-	floatRe  = regexp.MustCompile("^[0-9]+\\.[0-9]+")
-	intRe    = regexp.MustCompile("^[-0-9]+")
-	stringRe = regexp.MustCompile("^\"[^\"]*\"")
-	charRe   = regexp.MustCompile("^'.*'")
-	identRe  = regexp.MustCompile("^[a-zA-Z_][a-zA-Z0-9_]*")
-	escapeRe = regexp.MustCompile("\\\\.")
+	floatRe       = regexp.MustCompile("^[0-9]+\\.[0-9]+")
+	intRe         = regexp.MustCompile("^[-0-9]+")
+	stringRe      = regexp.MustCompile("^\"[^\"]*\"")
+	charRe        = regexp.MustCompile("^'.*'")
+	identRe       = regexp.MustCompile("^[a-zA-Z_][a-zA-Z0-9_]*")
+	escapeRe      = regexp.MustCompile("\\\\.")
+	lineCommentRe = regexp.MustCompile("^//.*")
 
 	SpecTokens = map[int]string{
 		EOF:     "EOF",
@@ -184,6 +191,15 @@ var (
 	}
 )
 
+func (l *Lexer) MkTok(lit string) Tok {
+	t := Tok{lit, l.Line, l.Col, token.Pos(l.Pos)}
+	l.SavedToks = append(l.SavedToks, &t)
+	if len(l.SavedToks) > 5 {
+		l.SavedToks = l.SavedToks[len(l.SavedToks)-5:]
+	}
+	return t
+}
+
 func (l *Lexer) Lex(lval *DoubiSymType) int {
 	if l.Pos >= len(l.Src) {
 		return 0
@@ -194,22 +210,26 @@ func (l *Lexer) Lex(lval *DoubiSymType) int {
 	l.Pos += len(src) - len(cur)
 
 	if cur[0] == '\n' {
-		lval.lit = "\n"
 		l.Pos++
+		l.Line++
+		l.Col = 0
+		lval.tok = l.MkTok("\n")
 		return EOL
 	}
 
 	m := floatRe.FindString(cur)
 	if m != "" {
-		lval.lit = m
+		l.Col = len(m)
 		l.Pos += len(m)
+		lval.tok = l.MkTok(m)
 		return FLOAT
 	}
 
 	m = intRe.FindString(cur)
 	if m != "" {
-		lval.lit = m
+		l.Col += len(m)
 		l.Pos += len(m)
+		lval.tok = l.MkTok(m)
 		return INT
 	}
 
@@ -217,16 +237,18 @@ func (l *Lexer) Lex(lval *DoubiSymType) int {
 		op := OpTokenMap[tok]
 
 		if strings.HasPrefix(cur, op) {
-			lval.lit = op
+			l.Col += len(op)
 			l.Pos += len(op)
+			lval.tok = l.MkTok(op)
 			return tok
 		}
 	}
 
 	for tok, kw := range KeywordTokenMap {
 		if strings.HasPrefix(cur, kw) {
-			lval.lit = kw
+			l.Col += len(kw)
 			l.Pos += len(kw)
+			lval.tok = l.MkTok(kw)
 			return tok
 		}
 	}
@@ -248,27 +270,30 @@ func (l *Lexer) Lex(lval *DoubiSymType) int {
 				return esc
 			}
 		})
-		lval.lit = n
-
+		l.Col += len(m)
 		l.Pos += len(m)
+		lval.tok = l.MkTok(n)
 		return STRING
 	}
 
 	m = charRe.FindString(cur)
 	if m != "" {
-		lval.lit = m
+		l.Col += len(m)
 		l.Pos += len(m)
+		lval.tok = l.MkTok(m)
 		return CHAR
 	}
 
 	m = identRe.FindString(cur)
 	if m != "" {
-		lval.lit = m
+		l.Col += len(m)
 		l.Pos += len(m)
+		lval.tok = l.MkTok(m)
 		return IDENT
 	}
 
 	// otherwise
+	l.Col++
 	l.Pos++
 	if len(cur) > 0 {
 		return int(cur[0])
@@ -278,5 +303,9 @@ func (l *Lexer) Lex(lval *DoubiSymType) int {
 }
 
 func (l *Lexer) Error(s string) {
-	fmt.Printf("syntax error: %s\n", s)
+	before := ""
+	for _, s := range l.SavedToks[:len(l.SavedToks)-1] {
+		before += s.Lit + " "
+	}
+	fmt.Printf("SYNTAX ERROR: LINE:%d COL:%d \n> %s<error>\n", l.Line, l.Col, before)
 }

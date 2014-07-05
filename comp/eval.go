@@ -422,7 +422,9 @@ func (self *Eval) VisitSelectStmt(node *ast.SelectStmt) {
 func (self *Eval) VisitForStmt(node *ast.ForStmt) {
 	self.debug(node)
 
-	node.Init.Accept(self)
+	if node.Init != nil {
+		node.Init.Accept(self)
+	}
 
 	for {
 		self.evalExpr(node.Cond)
@@ -431,7 +433,9 @@ func (self *Eval) VisitForStmt(node *ast.ForStmt) {
 			break
 		}
 		node.Body.Accept(self)
-		node.Post.Accept(self)
+		if node.Post != nil {
+			node.Post.Accept(self)
+		}
 	}
 }
 

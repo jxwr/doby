@@ -253,7 +253,9 @@ func (self *Attr) VisitSelectStmt(node *ast.SelectStmt) {
 func (self *Attr) VisitForStmt(node *ast.ForStmt) {
 	self.debug(node)
 
-	node.Init.Accept(self)
+	if node.Init != nil {
+		node.Init.Accept(self)
+	}
 	self.checkIdentRef(node.Cond)
 	node.Body.Accept(self)
 }
