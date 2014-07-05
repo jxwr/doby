@@ -70,11 +70,19 @@ func (self *Eval) debug(node interface{}) {
 func (self *Eval) VisitIdent(node *ast.Ident) {
 	self.debug(node)
 
-	obj := self.E.LookUp(node.Name)
-	if obj != nil {
-		self.Stack.Push(obj.(Object))
+	if node.Name == "true" {
+		obj := NewBoolObject(true)
+		self.Stack.Push(obj)
+	} else if node.Name == "false" {
+		obj := NewBoolObject(false)
+		self.Stack.Push(obj)
 	} else {
-		panic(node.Name + " not found")
+		obj := self.E.LookUp(node.Name)
+		if obj != nil {
+			self.Stack.Push(obj.(Object))
+		} else {
+			panic(node.Name + " not found")
+		}
 	}
 }
 
@@ -176,6 +184,25 @@ func (self *Eval) VisitUnaryExpr(node *ast.UnaryExpr) {
 	self.debug(node)
 }
 
+var BinaryFuncs = map[token.Token]string{
+	token.ADD:     "__add__",
+	token.SUB:     "__sub__",
+	token.MUL:     "__mul__",
+	token.QUO:     "__quo__",
+	token.REM:     "__rem__",
+	token.AND:     "__and__",
+	token.OR:      "__or__",
+	token.XOR:     "__xor__",
+	token.SHL:     "__shl__",
+	token.SHR:     "__shr__",
+	token.AND_NOT: "__and_not__",
+	token.LAND:    "__land__",
+	token.LOR:     "__lor__",
+	token.EQL:     "__eql__",
+	token.LSS:     "__lss__",
+	token.GTR:     "__gtr__",
+}
+
 func (self *Eval) VisitBinaryExpr(node *ast.BinaryExpr) {
 	self.debug(node)
 
@@ -185,23 +212,8 @@ func (self *Eval) VisitBinaryExpr(node *ast.BinaryExpr) {
 	lobj := self.Stack.Pop()
 	robj := self.Stack.Pop()
 
-	switch node.Op {
-	case token.ADD:
-		objs := lobj.Dispatch("__add__", robj)
-		self.Stack.Push(objs[0])
-	case token.SUB:
-		objs := lobj.Dispatch("__sub__", robj)
-		self.Stack.Push(objs[0])
-	case token.MUL:
-		objs := lobj.Dispatch("__mul__", robj)
-		self.Stack.Push(objs[0])
-	case token.QUO:
-		objs := lobj.Dispatch("__quo__", robj)
-		self.Stack.Push(objs[0])
-	case token.REM:
-		objs := lobj.Dispatch("__rem__", robj)
-		self.Stack.Push(objs[0])
-	}
+	objs := lobj.Dispatch(BinaryFuncs[node.Op], robj)
+	self.Stack.Push(objs[0])
 }
 
 func (self *Eval) VisitArrayExpr(node *ast.ArrayExpr) {
@@ -257,6 +269,15 @@ func (self *Eval) VisitSendStmt(node *ast.SendStmt) {
 
 func (self *Eval) VisitIncDecStmt(node *ast.IncDecStmt) {
 	self.debug(node)
+
+	self.evalExpr(node.X)
+	obj := self.Stack.Pop()
+
+	if node.Tok == token.INC {
+		obj.Dispatch("__inc__")
+	} else if node.Tok == token.DEC {
+		obj.Dispatch("__dec__")
+	}
 }
 
 func (self *Eval) VisitAssignStmt(node *ast.AssignStmt) {
@@ -310,6 +331,15 @@ func (self *Eval) VisitBlockStmt(node *ast.BlockStmt) {
 
 func (self *Eval) VisitIfStmt(node *ast.IfStmt) {
 	self.debug(node)
+
+	self.evalExpr(node.Cond)
+	cond := self.Stack.Pop()
+
+	if cond.(*BoolObject).val {
+		node.Body.Accept(self)
+	} else if node.Else != nil {
+		node.Else.Accept(self)
+	}
 }
 
 func (self *Eval) VisitCaseClause(node *ast.CaseClause) {

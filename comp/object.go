@@ -22,6 +22,20 @@ func (self *Property) GetProp(key string) Object {
 	return (*self)[key]
 }
 
+func (self *Property) AccessPropMethod(method string, args ...Object) (isPropMethod bool, results []Object) {
+	if method == "__get_property__" {
+		idx := args[0].(*StringObject)
+		results = append(results, self.GetProp(idx.val))
+		isPropMethod = true
+	} else if method == "__set_property__" {
+		idx := args[0].(*StringObject)
+		val := args[1]
+		self.SetProp(idx.val, val)
+		isPropMethod = true
+	}
+	return
+}
+
 /// string
 
 type StringObject struct {
@@ -44,11 +58,57 @@ func (self *StringObject) String() string {
 }
 
 func (self *StringObject) Dispatch(method string, args ...Object) (results []Object) {
+	var is bool
+	if is, results = self.AccessPropMethod(method, args...); is {
+		return
+	}
+
 	switch method {
 	case "__add__":
 		obj := NewStringObject(self.val + args[0].String())
 		results = append(results, obj)
 	}
+	return
+}
+
+/// bool
+
+type BoolObject struct {
+	Property
+
+	val bool
+}
+
+func NewBoolObject(val bool) Object {
+	obj := &BoolObject{Property(map[string]Object{}), val}
+	return obj
+}
+
+func (self *BoolObject) Name() string {
+	return "bool"
+}
+
+func (self *BoolObject) String() string {
+	return fmt.Sprintf("%v", self.val)
+}
+
+func (self *BoolObject) Dispatch(method string, args ...Object) (results []Object) {
+	var is bool
+	if is, results = self.AccessPropMethod(method, args...); is {
+		return
+	}
+
+	var val bool
+	switch method {
+	case "__ladd__":
+		val = self.val && val
+	case "__lor__":
+		val = self.val || val
+	case "__not__":
+		val = !self.val
+	}
+
+	results = append(results, NewBoolObject(val))
 	return
 }
 
@@ -74,8 +134,22 @@ func (self *IntegerObject) String() string {
 }
 
 func (self *IntegerObject) Dispatch(method string, args ...Object) (results []Object) {
+	var is bool
+	if is, results = self.AccessPropMethod(method, args...); is {
+		return
+	}
+
 	isFloat := false
 	var val float64
+
+	if len(args) == 0 {
+		if method == "__inc__" {
+			self.val++
+		} else if method == "__dec__" {
+			self.val--
+		}
+		return
+	}
 
 	switch arg := args[0].(type) {
 	case *IntegerObject:
@@ -106,6 +180,30 @@ func (self *IntegerObject) Dispatch(method string, args ...Object) (results []Ob
 		val = float64(uint(self.val) << uint(val))
 	case "__shr__":
 		val = float64(uint(self.val) >> uint(val))
+	case "__eql__":
+		cmp := float64(self.val) == val
+		results = append(results, NewBoolObject(cmp))
+		return
+	case "__lss__":
+		cmp := float64(self.val) < val
+		results = append(results, NewBoolObject(cmp))
+		return
+	case "__gtr__":
+		cmp := float64(self.val) > val
+		results = append(results, NewBoolObject(cmp))
+		return
+	case "__leq__":
+		cmp := float64(self.val) <= val
+		results = append(results, NewBoolObject(cmp))
+		return
+	case "__geq__":
+		cmp := float64(self.val) >= val
+		results = append(results, NewBoolObject(cmp))
+		return
+	case "__neq__":
+		cmp := float64(self.val) != val
+		results = append(results, NewBoolObject(cmp))
+		return
 	}
 
 	if isFloat {
@@ -138,6 +236,11 @@ func (self *FloatObject) String() string {
 }
 
 func (self *FloatObject) Dispatch(method string, args ...Object) (results []Object) {
+	var is bool
+	if is, results = self.AccessPropMethod(method, args...); is {
+		return
+	}
+
 	var val float64
 
 	switch arg := args[0].(type) {
@@ -156,6 +259,30 @@ func (self *FloatObject) Dispatch(method string, args ...Object) (results []Obje
 		val = self.val * val
 	case "__quo__":
 		val = self.val / val
+	case "__eql__":
+		cmp := self.val == val
+		results = append(results, NewBoolObject(cmp))
+		return
+	case "__lss__":
+		cmp := self.val < val
+		results = append(results, NewBoolObject(cmp))
+		return
+	case "__gtr__":
+		cmp := self.val > val
+		results = append(results, NewBoolObject(cmp))
+		return
+	case "__leq__":
+		cmp := self.val <= val
+		results = append(results, NewBoolObject(cmp))
+		return
+	case "__geq__":
+		cmp := self.val >= val
+		results = append(results, NewBoolObject(cmp))
+		return
+	case "__neq__":
+		cmp := self.val != val
+		results = append(results, NewBoolObject(cmp))
+		return
 	}
 	results = append(results, NewFloatObject(val))
 	return
@@ -192,6 +319,11 @@ func (self *ArrayObject) String() string {
 }
 
 func (self *ArrayObject) Dispatch(method string, args ...Object) (results []Object) {
+	var is bool
+	if is, results = self.AccessPropMethod(method, args...); is {
+		return
+	}
+
 	switch method {
 	case "__add__":
 		fmt.Println("__add__")
@@ -202,13 +334,6 @@ func (self *ArrayObject) Dispatch(method string, args ...Object) (results []Obje
 		idx := args[0].(*IntegerObject)
 		val := args[1]
 		self.vals[idx.val] = val
-	case "__get_property__":
-		idx := args[0].(*StringObject)
-		results = append(results, self.GetProp(idx.val))
-	case "__set_property__":
-		idx := args[0].(*StringObject)
-		val := args[1]
-		self.SetProp(idx.val, val)
 	}
 	return
 }
@@ -244,6 +369,11 @@ func (self *SetObject) String() string {
 }
 
 func (self *SetObject) Dispatch(method string, args ...Object) (results []Object) {
+	var is bool
+	if is, results = self.AccessPropMethod(method, args...); is {
+		return
+	}
+
 	switch method {
 	case "__add__":
 		fmt.Println("__add__")
@@ -274,6 +404,11 @@ func (self *FuncObject) String() string {
 }
 
 func (self *FuncObject) Dispatch(method string, args ...Object) (results []Object) {
+	var is bool
+	if is, results = self.AccessPropMethod(method, args...); is {
+		return
+	}
+
 	switch method {
 	case "__call__":
 		if self.Decl == nil {

@@ -34,3 +34,24 @@ c.len = func() {
 println(c.len())
 c[0] = 132
 println(c.len())
+
+if 2 > 1 {
+  println("true")
+} else {
+  println("false")
+}
+
+if false {
+  println("true")
+} else {
+  println("false")
+}
+
+a = 500
+a++
+a++
+a.b = 998
+a.b++
+a.b++
+println(a)
+println(a.b)
