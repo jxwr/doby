@@ -2,7 +2,7 @@
 
 #### Examples:
 
-1. quicksort
+* quicksort
 
 ```go
 func filter(list, fn) {
@@ -34,13 +34,9 @@ a = qsort(lst)
 print(a, "\n")
 
 ```
+> [1,2,3,4,5,6,7,8,100,199,200,299,2229] 
 
-Output:
-```go
-[1,2,3,4,5,6,7,8,100,199,200,299,2229] 
-```
-
-2. A little ruby like syntax
+* A little ruby like syntax
 
 ```go
 func println(str) {
@@ -52,7 +48,8 @@ func println(str) {
 hundred = -100.abs()
 ```
 
-3. Object-based_language
+* Object-based_language
+
 ```
 list = ["hello", "world"]
 list.name = func() {
