@@ -60,10 +60,44 @@ func (self *IntegerObject) String() string {
 }
 
 func (self *IntegerObject) Dispatch(method string, args ...Object) (results []Object) {
+	isFloat := false
+	var val float64
+
+	switch arg := args[0].(type) {
+	case *IntegerObject:
+		val = float64(arg.val)
+	case *FloatObject:
+		isFloat = true
+		val = arg.val
+	}
+
 	switch method {
 	case "__add__":
-		val := self.val + args[0].(*IntegerObject).val
-		results = append(results, NewIntegerObject(val))
+		val = float64(self.val) + val
+	case "__sub__":
+		val = float64(self.val) - val
+	case "__mul__":
+		val = float64(self.val) * val
+	case "__quo__":
+		val = float64(self.val) / val
+	case "__rem__":
+		val = float64(self.val % int(val))
+	case "__and__":
+		val = float64(self.val & int(val))
+	case "__or__":
+		val = float64(self.val | int(val))
+	case "__xor__":
+		val = float64(self.val ^ int(val))
+	case "__shl__":
+		val = float64(uint(self.val) << uint(val))
+	case "__shr__":
+		val = float64(uint(self.val) >> uint(val))
+	}
+
+	if isFloat {
+		results = append(results, NewFloatObject(val))
+	} else {
+		results = append(results, NewIntegerObject(int(val)))
 	}
 	return
 }
@@ -88,17 +122,26 @@ func (self *FloatObject) String() string {
 }
 
 func (self *FloatObject) Dispatch(method string, args ...Object) (results []Object) {
+	var val float64
+
+	switch arg := args[0].(type) {
+	case *IntegerObject:
+		val = float64(arg.val)
+	case *FloatObject:
+		val = arg.val
+	}
+
 	switch method {
 	case "__add__":
-		var val float64
-		switch arg := args[0].(type) {
-		case *IntegerObject:
-			val = self.val + float64(arg.val)
-		case *FloatObject:
-			val = self.val + arg.val
-		}
-		results = append(results, NewFloatObject(val))
+		val = self.val + val
+	case "__sub__":
+		val = self.val - val
+	case "__mul__":
+		val = self.val * val
+	case "__quo__":
+		val = self.val / val
 	}
+	results = append(results, NewFloatObject(val))
 	return
 }
 
@@ -134,6 +177,13 @@ func (self *ArrayObject) Dispatch(method string, args ...Object) (results []Obje
 	switch method {
 	case "__add__":
 		fmt.Println("__add__")
+	case "__get_index__":
+		idx := args[0].(*IntegerObject)
+		results = append(results, self.vals[idx.val])
+	case "__set_index__":
+		idx := args[0].(*IntegerObject)
+		val := args[1]
+		self.vals[idx.val] = val
 	}
 	return
 }

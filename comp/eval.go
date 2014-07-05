@@ -117,6 +117,13 @@ func (self *Eval) VisitSelectorExpr(node *ast.SelectorExpr) {
 
 func (self *Eval) VisitIndexExpr(node *ast.IndexExpr) {
 	self.debug(node)
+
+	self.evalExpr(node.X)
+	obj := self.Stack.Pop()
+	self.evalExpr(node.Index)
+	index := self.Stack.Pop()
+	rets := obj.Dispatch("__get_index__", index)
+	self.Stack.Push(rets[0])
 }
 
 func (self *Eval) VisitSliceExpr(node *ast.SliceExpr) {
@@ -171,10 +178,10 @@ func (self *Eval) VisitBinaryExpr(node *ast.BinaryExpr) {
 		objs := lobj.Dispatch("__mul__", robj)
 		self.Stack.Push(objs[0])
 	case token.QUO:
-		objs := lobj.Dispatch("__QUO__", robj)
+		objs := lobj.Dispatch("__quo__", robj)
 		self.Stack.Push(objs[0])
 	case token.REM:
-		objs := lobj.Dispatch("__REM__", robj)
+		objs := lobj.Dispatch("__rem__", robj)
 		self.Stack.Push(objs[0])
 	}
 }
