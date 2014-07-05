@@ -109,10 +109,18 @@ func (self *Eval) VisitBasicLit(node *ast.BasicLit) {
 
 func (self *Eval) VisitParenExpr(node *ast.ParenExpr) {
 	self.debug(node)
+
+	node.X.Accept(self)
 }
 
 func (self *Eval) VisitSelectorExpr(node *ast.SelectorExpr) {
 	self.debug(node)
+
+	self.evalExpr(node.X)
+	obj := self.Stack.Pop()
+	prop := NewStringObject(node.Sel.Name)
+	rets := obj.Dispatch("__get_property__", prop)
+	self.Stack.Push(rets[0])
 }
 
 func (self *Eval) VisitIndexExpr(node *ast.IndexExpr) {
@@ -227,8 +235,12 @@ func (self *Eval) VisitDictExpr(node *ast.DictExpr) {
 func (self *Eval) VisitFuncDeclExpr(node *ast.FuncDeclExpr) {
 	self.debug(node)
 
-	fname := node.Name.Name
-	self.E.Put(fname, NewFuncObject(fname, node))
+	if node.Name != nil {
+		fname := node.Name.Name
+		self.E.Put(fname, NewFuncObject(fname, node))
+	} else {
+		self.Stack.Push(NewFuncObject("closure", node))
+	}
 }
 
 // stmts

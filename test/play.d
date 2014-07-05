@@ -23,3 +23,14 @@ func add(a, b) {
 }
 
 println(add(1, 200))
+
+c[0] = 1000
+println(c[0])
+
+c.len = func() {
+         return 2 * (c[0] + 1)
+}
+
+println(c.len())
+c[0] = 132
+println(c.len())

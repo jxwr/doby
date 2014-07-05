@@ -12,14 +12,26 @@ type Object interface {
 	String() string
 }
 
+type Property map[string]Object
+
+func (self *Property) SetProp(key string, val Object) {
+	(*self)[key] = val
+}
+
+func (self *Property) GetProp(key string) Object {
+	return (*self)[key]
+}
+
 /// string
 
 type StringObject struct {
+	Property
+
 	val string
 }
 
 func NewStringObject(val string) Object {
-	obj := &StringObject{val}
+	obj := &StringObject{Property(map[string]Object{}), val}
 	return obj
 }
 
@@ -43,11 +55,13 @@ func (self *StringObject) Dispatch(method string, args ...Object) (results []Obj
 /// integer
 
 type IntegerObject struct {
+	Property
+
 	val int
 }
 
 func NewIntegerObject(val int) Object {
-	obj := &IntegerObject{val}
+	obj := &IntegerObject{Property(map[string]Object{}), val}
 	return obj
 }
 
@@ -105,11 +119,13 @@ func (self *IntegerObject) Dispatch(method string, args ...Object) (results []Ob
 /// float
 
 type FloatObject struct {
+	Property
+
 	val float64
 }
 
 func NewFloatObject(val float64) Object {
-	obj := &FloatObject{val}
+	obj := &FloatObject{Property(map[string]Object{}), val}
 	return obj
 }
 
@@ -148,11 +164,13 @@ func (self *FloatObject) Dispatch(method string, args ...Object) (results []Obje
 /// array
 
 type ArrayObject struct {
+	Property
+
 	vals []Object
 }
 
 func NewArrayObject(vals []Object) Object {
-	obj := &ArrayObject{vals}
+	obj := &ArrayObject{Property(map[string]Object{}), vals}
 	return obj
 }
 
@@ -184,6 +202,13 @@ func (self *ArrayObject) Dispatch(method string, args ...Object) (results []Obje
 		idx := args[0].(*IntegerObject)
 		val := args[1]
 		self.vals[idx.val] = val
+	case "__get_property__":
+		idx := args[0].(*StringObject)
+		results = append(results, self.GetProp(idx.val))
+	case "__set_property__":
+		idx := args[0].(*StringObject)
+		val := args[1]
+		self.SetProp(idx.val, val)
 	}
 	return
 }
@@ -191,11 +216,13 @@ func (self *ArrayObject) Dispatch(method string, args ...Object) (results []Obje
 /// set
 
 type SetObject struct {
+	Property
+
 	vals []Object
 }
 
 func NewSetObject(vals []Object) Object {
-	obj := &SetObject{vals}
+	obj := &SetObject{Property(map[string]Object{}), vals}
 	return obj
 }
 
@@ -227,12 +254,14 @@ func (self *SetObject) Dispatch(method string, args ...Object) (results []Object
 /// function
 
 type FuncObject struct {
+	Property
+
 	name string
 	Decl *ast.FuncDeclExpr
 }
 
 func NewFuncObject(name string, decl *ast.FuncDeclExpr) Object {
-	obj := &FuncObject{name, decl}
+	obj := &FuncObject{Property(map[string]Object{}), name, decl}
 	return obj
 }
 
