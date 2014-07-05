@@ -1,5 +1,6 @@
 
 
-a = 100
+a = 100 + 1
 
-print("hello")
+print(a)
+print("\n")

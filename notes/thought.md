@@ -11,7 +11,7 @@ func add(a, b) {
      return d
 }
 
-d = add(100, 200)
+nd = add(100, 200)
 
 add sym
 code:

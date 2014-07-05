@@ -1,7 +1,6 @@
 package comp
 
 import (
-	"github.com/jxwr/doubi/ast"
 	"github.com/jxwr/doubi/symtab"
 )
 
@@ -15,11 +14,11 @@ func NewEnv(outer *Env) *Env {
 	return e
 }
 
-func (e *Env) Put(name string, node ast.Node) {
+func (e *Env) Put(name string, node interface{}) {
 	e.Symtab.Put(name, node)
 }
 
-func (e *Env) LookUp(name string) ast.Node {
+func (e *Env) LookUp(name string) interface{} {
 	env := e
 	for env != nil {
 		ne := env.Symtab.LookUp(name)

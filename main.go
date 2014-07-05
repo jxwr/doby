@@ -17,17 +17,23 @@ func EvalStmt(stmt *ast.Stmt) {
 
 func Eval(stmts []ast.Stmt) {
 	pretty := &comp.PrettyPrinter{false, 0, true}
-	attr := &comp.Attr{}
-	attr.Debug = false
-	attr.E = comp.NewEnv(nil)
+	attr := &comp.Attr{false, comp.NewEnv(nil)}
+	eval := &comp.Eval{false, comp.NewEnv(nil), comp.NewStack()}
 
-	for _, stmt := range stmts {
-		stmt.Accept(pretty)
+	if false {
+		for _, stmt := range stmts {
+			stmt.Accept(pretty)
+		}
 	}
 
 	for _, stmt := range stmts {
 		stmt.Accept(attr)
 	}
+
+	for _, stmt := range stmts {
+		stmt.Accept(eval)
+	}
+
 }
 
 func runTest(filename string) {
@@ -73,12 +79,12 @@ func readGist(fi *bufio.Reader) (string, bool) {
 }
 
 func main() {
-	runTest("test/vars.d")
-	runTest("test/datatype.d")
-	runTest("test/func.d")
-	runTest("test/cond.d")
-	runTest("test/quicksort.d")
+	/*
+		runTest("test/vars.d")
+		runTest("test/datatype.d")
+		runTest("test/func.d")
+		runTest("test/cond.d")
+		runTest("test/quicksort.d")
+	*/
 	runTest("test/play.d")
-
-	//	repl()
 }

@@ -17,6 +17,7 @@ var (
 	stringRe = regexp.MustCompile("^\"[^\"]*\"")
 	charRe   = regexp.MustCompile("^'.*'")
 	identRe  = regexp.MustCompile("^[a-zA-Z_][a-zA-Z0-9_]*")
+	escapeRe = regexp.MustCompile("\\\\.")
 
 	SpecTokens = map[int]string{
 		EOF:     "EOF",
@@ -238,7 +239,23 @@ func (l *Lexer) Lex(lval *DoubiSymType) int {
 
 	m = stringRe.FindString(cur)
 	if m != "" {
-		lval.lit = m
+		n := escapeRe.ReplaceAllStringFunc(m, func(s string) string {
+			esc := strings.TrimPrefix(s, "\\")
+			switch esc {
+			case "n":
+				return "\n"
+			case "t":
+				return "\t"
+			case "r":
+				return "\r"
+			case "\"":
+				return "\""
+			default:
+				return esc
+			}
+		})
+		lval.lit = n
+
 		l.Pos += len(m)
 		return STRING
 	}

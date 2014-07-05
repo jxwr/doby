@@ -27,7 +27,8 @@ func (self *Attr) debug(node interface{}) {
 func (self *Attr) checkIdentRef(node ast.Expr) {
 	switch arg := node.(type) {
 	case *ast.Ident:
-		if arg.Name != "_" && self.E.LookUp(arg.Name) == nil {
+		_, ok := Builtins[arg.Name]
+		if arg.Name != "_" && self.E.LookUp(arg.Name) == nil && !ok {
 			self.log("'%s' not found", arg.Name)
 		}
 	default:
@@ -249,8 +250,11 @@ func (self *Attr) VisitForStmt(node *ast.ForStmt) {
 func (self *Attr) VisitRangeStmt(node *ast.RangeStmt) {
 	self.debug(node)
 
-	self.E.Put(node.KeyValue[0].(*ast.Ident).Name, node.KeyValue[0])
-	self.E.Put(node.KeyValue[1].(*ast.Ident).Name, node.KeyValue[1])
+	key := node.KeyValue[0].(*ast.Ident)
+	self.E.Put(key.Name, key)
+
+	val := node.KeyValue[1].(*ast.Ident)
+	self.E.Put(val.Name, val)
 
 	self.checkIdentRef(node.X)
 	self.Enter()
