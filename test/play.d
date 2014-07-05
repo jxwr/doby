@@ -84,3 +84,22 @@ list.name = func() {
 }
 
 println(list.name())
+
+func printA() {
+     for i = 0; i< 1000; i {
+     	 print("A")
+     }
+}
+
+person = #{
+  "name": "jiaoxiang",
+  "age": 28,
+  "summary": func(obj) {
+     println(obj["name"] + ":" + obj["age"])
+  }
+}
+
+person.weight = 125
+println(person)
+
+person.summary(person)

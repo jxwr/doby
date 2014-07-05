@@ -53,3 +53,11 @@ call
 2. how to add new builtin datetypes and their methods
 3. return
 4. closure
+5. builtins
+
+### feature
+1. concurrent
+2. go reflection
+3. ruby-like object extention
+4. pattern matching
+5. more like go

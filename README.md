@@ -72,6 +72,25 @@ println(list.name())
 ```
 > hello world 
 
+* Dict
+
+```go
+person = #{
+  "name": "jiaoxiang",
+  "age": 28,
+  "summary": func(obj) {
+     println(obj["name"] + ":" + obj["age"])
+  }
+}
+
+person.weight = 125
+println(person)
+person.summary(person)
+```
+> #{name:jiaoxiang,age:28,summary:#<closure>,weight:125}
+
+> jiaoxiang:28
+
 #### Notes
 
 > See notes and tests

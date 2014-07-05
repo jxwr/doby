@@ -288,6 +288,17 @@ func (self *Eval) VisitSetExpr(node *ast.SetExpr) {
 
 func (self *Eval) VisitDictExpr(node *ast.DictExpr) {
 	self.debug(node)
+
+	fieldMap := map[string]Object{}
+	for _, field := range node.Fields {
+		self.evalExpr(field.Name)
+		key := self.Stack.Pop()
+		self.evalExpr(field.Value)
+		val := self.Stack.Pop()
+		fieldMap[key.HashCode()] = val
+	}
+	obj := NewDictObject(&fieldMap)
+	self.Stack.Push(obj)
 }
 
 func (self *Eval) VisitFuncDeclExpr(node *ast.FuncDeclExpr) {
@@ -297,7 +308,7 @@ func (self *Eval) VisitFuncDeclExpr(node *ast.FuncDeclExpr) {
 		fname := node.Name.Name
 		self.E.Put(fname, NewFuncObject(fname, node))
 	} else {
-		self.Stack.Push(NewFuncObject("closure", node))
+		self.Stack.Push(NewFuncObject("#<closure>", node))
 	}
 }
 
@@ -353,6 +364,8 @@ func (self *Eval) VisitAssignStmt(node *ast.AssignStmt) {
 
 func (self *Eval) VisitGoStmt(node *ast.GoStmt) {
 	self.debug(node)
+
+	go node.Call.Accept(self)
 }
 
 func (self *Eval) VisitReturnStmt(node *ast.ReturnStmt) {
