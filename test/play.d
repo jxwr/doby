@@ -108,12 +108,37 @@ person.summary(person)
 //hello
 i = 0
 
-for i < 10 {
-    i++
-    print(i, "")
+func testLoop() {
+	for i < 10 {
+		i++
+    
+		if i == 2 {
+			n = 0
+			for n < 5 {
+				n++
+				if n == 3 {
+					break
+					print("break")
+				}
+				print("[", n, "]")	
+			} 
+			continue
+		}
+
+		if i == 9 {
+			println("quit")
+			return i
+			print("never reach here")
+		}
+		print(i, "")
+	}
 }
-println(220)
+
+n = testLoop()
+println("return:"+n)
+
+// 1 [ 1 ] [ 2 ] 3 4 5 6 7 8 quit
+// return: 9
 
 // custom print function
 println(220)
-

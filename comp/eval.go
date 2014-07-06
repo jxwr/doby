@@ -43,7 +43,10 @@ type Eval struct {
 	E     *Env
 	Stack *Stack
 
-	NeedReturn bool
+	NeedReturn   bool
+	LoopDepth    int
+	NeedBreak    bool
+	NeedContinue bool
 }
 
 func (self *Eval) log(fmtstr string, args ...interface{}) {
@@ -213,7 +216,7 @@ func (self *Eval) VisitCallExpr(node *ast.CallExpr) {
 			}
 			self.NeedReturn = false
 			fnDecl.Body.Accept(self)
-			self.NeedReturn = false
+
 			self.E = self.E.Outer
 		}
 	}
@@ -380,13 +383,28 @@ func (self *Eval) VisitReturnStmt(node *ast.ReturnStmt) {
 
 func (self *Eval) VisitBranchStmt(node *ast.BranchStmt) {
 	self.debug(node)
+
+	if node.Tok == token.BREAK {
+		self.NeedBreak = true
+	}
+
+	if node.Tok == token.CONTINUE {
+		self.NeedContinue = true
+	}
+
 }
 
 func (self *Eval) VisitBlockStmt(node *ast.BlockStmt) {
 	self.E = NewEnv(self.E)
-
 	for _, stmt := range node.List {
+		// need break in all loop
 		if self.NeedReturn {
+			break
+		}
+		if self.LoopDepth > 0 && self.NeedBreak {
+			break
+		}
+		if self.LoopDepth > 0 && self.NeedContinue {
 			break
 		}
 		stmt.Accept(self)
@@ -432,7 +450,21 @@ func (self *Eval) VisitForStmt(node *ast.ForStmt) {
 		if !cond.(*BoolObject).val {
 			break
 		}
+
+		self.LoopDepth++
 		node.Body.Accept(self)
+		self.LoopDepth--
+
+		if self.NeedReturn {
+			break
+		}
+		if self.NeedBreak {
+			self.NeedBreak = false
+			break
+		}
+		if self.NeedContinue {
+			self.NeedContinue = false
+		}
 		if node.Post != nil {
 			node.Post.Accept(self)
 		}
@@ -455,15 +487,42 @@ func (self *Eval) VisitRangeStmt(node *ast.RangeStmt) {
 		for i, val := range v.vals {
 			self.E.Put(keyName, NewIntegerObject(i))
 			self.E.Put(valName, val)
+
+			self.LoopDepth++
 			node.Body.Accept(self)
+			self.LoopDepth--
+
+			if self.NeedReturn {
+				break
+			}
+			if self.NeedBreak {
+				self.NeedBreak = false
+				break
+			}
+			if self.NeedContinue {
+				self.NeedContinue = false
+			}
 		}
 	case *SetObject:
 		for i, val := range v.vals {
 			self.E.Put(keyName, NewIntegerObject(i))
 			self.E.Put(valName, val)
-			node.Body.Accept(self)
-		}
 
+			self.LoopDepth++
+			node.Body.Accept(self)
+			self.LoopDepth--
+
+			if self.NeedReturn {
+				break
+			}
+			if self.NeedBreak {
+				self.NeedBreak = false
+				break
+			}
+			if self.NeedContinue {
+				self.NeedContinue = false
+			}
+		}
 	}
 
 	self.E = self.E.Outer

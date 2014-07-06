@@ -108,6 +108,41 @@ Syntax Error: Line:68 Col:15 NEARLINES:
   73) println(cl)
 ```
 
+* misc
+```go
+func testLoop() {
+	for i < 10 {
+		i++
+    
+		if i == 2 {
+			n = 0
+			for n < 5 {
+				n++
+				if n == 3 {
+					break
+					print("break")
+				}
+				print("[", n, "]")	
+			} 
+			continue
+		}
+
+		if i == 9 {
+			println("quit")
+			return i
+			print("never reach here")
+		}
+		print(i, "")
+	}
+}
+
+n = testLoop()
+println("return:"+n)
+```
+> 1 [ 1 ] [ 2 ] 3 4 5 6 7 8 quit
+
+> return: 9
+
 #### Notes
 
 > See notes and tests
