@@ -82,7 +82,7 @@ func (self *Eval) VisitIdent(node *ast.Ident) {
 		obj := NewBoolObject(false)
 		self.Stack.Push(obj)
 	} else {
-		obj := self.E.LookUp(node.Name)
+		obj, _ := self.E.LookUp(node.Name)
 		if obj != nil {
 			self.Stack.Push(obj.(Object))
 		} else {
@@ -173,7 +173,11 @@ func (self *Eval) VisitCallExpr(node *ast.CallExpr) {
 	var fnobj Object
 	ident, ok := node.Fun.(*ast.Ident)
 
-	if ok && self.E.LookUp(ident.Name) == nil {
+	var val interface{}
+	if ok {
+		val, _ = self.E.LookUp(ident.Name)
+	}
+	if ok && val == nil {
 		_, exist := Builtins[ident.Name]
 		if exist {
 			fnobj = NewFuncObject(ident.Name, nil)
@@ -349,7 +353,12 @@ func (self *Eval) VisitAssignStmt(node *ast.AssignStmt) {
 
 		switch v := node.Lhs[i].(type) {
 		case *ast.Ident:
-			self.E.Put(v.Name, robj)
+			val, env := self.E.LookUp(v.Name)
+			if val != nil {
+				env.Put(v.Name, robj)
+			} else {
+				self.E.Put(v.Name, robj)
+			}
 		case *ast.IndexExpr:
 			self.evalExpr(v.X)
 			lobj := self.Stack.Pop()

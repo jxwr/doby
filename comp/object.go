@@ -107,9 +107,9 @@ func (self *BoolObject) Dispatch(ctx *Eval, method string, args ...Object) (resu
 		return
 	}
 
-	var val bool
+	val := args[0].(*BoolObject).val
 	switch method {
-	case "__ladd__":
+	case "__land__":
 		val = self.val && val
 	case "__lor__":
 		val = self.val || val
@@ -383,7 +383,8 @@ func (self *ArrayObject) Dispatch(ctx *Eval, method string, args ...Object) (res
 		results = append(results, ret)
 	case "__get_index__":
 		idx := args[0].(*IntegerObject)
-		results = append(results, self.vals[idx.val])
+		obj := self.vals[idx.val]
+		results = append(results, obj)
 	case "__set_index__":
 		idx := args[0].(*IntegerObject)
 		val := args[1]

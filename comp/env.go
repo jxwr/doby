@@ -18,15 +18,15 @@ func (e *Env) Put(name string, node interface{}) {
 	e.Symtab.Put(name, node)
 }
 
-func (e *Env) LookUp(name string) interface{} {
+func (e *Env) LookUp(name string) (interface{}, *Env) {
 	env := e
 	for env != nil {
 		ne := env.Symtab.LookUp(name)
 		if ne != nil {
-			return ne
+			return ne, env
 		} else {
 			env = env.Outer
 		}
 	}
-	return nil
+	return nil, nil
 }

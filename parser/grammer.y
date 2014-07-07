@@ -61,6 +61,7 @@ type Tok struct {
 %token <tok> FUNC GO GOTO IF IMPORT INTERFACE MAP PACKAGE RANGE RETURN 
 %token <tok> SELECT STRUCT SWITCH TYPE VAR 
 
+%left LAND LOR ARROW
 %left SHL SHR AND_NOT 
 %left OR
 %left AND XOR
@@ -69,7 +70,7 @@ type Tok struct {
 %left MUL QUO REM
 %left LSS GTR
 %left NOT 
-%left LAND LOR ARROW INC DEC 
+%left INC DEC
 %left LPAREN
 %left UMINUS
 %left LBRACK
@@ -196,7 +197,7 @@ expr_stmt : expr			{ $$ = &ast.ExprStmt{$1} }
 send_stmt : expr ARROW expr		{ $$ = &ast.SendStmt{$1, 0, $3} }
 
 incdec_stmt : expr INC 			{ $$ = &ast.IncDecStmt{$1, 0, token.INC} }
-	    | expr DEC			{ $$ = &ast.IncDecStmt{$1, 0, token.DEC } }
+            | expr DEC			{ $$ = &ast.IncDecStmt{$1, 0, token.DEC} }
 
 assign_stmt : expr_list ASSIGN expr_list       		{ $$ = &ast.AssignStmt{$1, 0, token.ASSIGN, $3} }
 	    | expr_list ADD_ASSIGN expr_list		{ $$ = &ast.AssignStmt{$1, 0, token.ADD_ASSIGN, $3} }

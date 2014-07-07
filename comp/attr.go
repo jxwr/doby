@@ -35,7 +35,8 @@ func (self *Attr) checkIdentRef(node ast.Expr) {
 				keyword = true
 			}
 		}
-		if arg.Name != "_" && self.E.LookUp(arg.Name) == nil && !builtin && !keyword {
+		_, env := self.E.LookUp(arg.Name)
+		if arg.Name != "_" && env == nil && !builtin && !keyword {
 			self.log("'%s' not found", arg.Name)
 		}
 	default:

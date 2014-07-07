@@ -2,6 +2,7 @@ package main
 
 import (
 	"bufio"
+	"flag"
 	"fmt"
 	"io/ioutil"
 	"os"
@@ -79,14 +80,23 @@ func readGist(fi *bufio.Reader) (string, bool) {
 	return s, true
 }
 
-func main() {
-	/*
-		runTest("test/vars.d")
-		runTest("test/datatype.d")
-		runTest("test/func.d")
-		runTest("test/cond.d")
+var input string
 
-	*/
-	runTest("test/play.d")
-	//runTest("test/quicksort.d")
+func init() {
+	flag.StringVar(&input, "i", "", "input file")
+}
+
+func main() {
+	flag.Parse()
+
+	if input != "" {
+		runTest(input)
+	} else {
+		//runTest("test/vars.d")
+		//runTest("test/datatype.d")
+		//runTest("test/func.d")
+		//runTest("test/cond.d")
+		//runTest("test/quicksort.d")
+		runTest("test/play.d")
+	}
 }
