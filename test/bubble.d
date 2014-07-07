@@ -13,7 +13,6 @@ func bubble(lst) {
 	     	swapped = true
 	     }
 	 }
-	 print(swapped, "\n")
      }
      return lst
 }
