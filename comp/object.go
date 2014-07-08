@@ -72,6 +72,8 @@ func (self *StringObject) Dispatch(ctx *Eval, method string, args ...Object) (re
 	case "__add__":
 		obj := NewStringObject(self.val + args[0].String())
 		results = append(results, obj)
+	case "__+=__":
+		self.val += args[0].String()
 	}
 	return
 }
@@ -198,6 +200,41 @@ func (self *IntegerObject) Dispatch(ctx *Eval, method string, args ...Object) (r
 	}
 
 	switch method {
+	// xxx_assign
+	case "__+=__":
+		self.val += int(val)
+		return
+	case "__-=__":
+		self.val -= int(val)
+		return
+	case "__*=__":
+		self.val *= int(val)
+		return
+	case "__/=__":
+		self.val /= int(val)
+		return
+	case "__%=__":
+		self.val %= int(val)
+		return
+	case "__|=__":
+		self.val |= int(val)
+		return
+	case "__&=__":
+		self.val &= int(val)
+		return
+	case "__^=__":
+		self.val ^= int(val)
+		return
+	case "__<<=__":
+		self.val <<= uint(val)
+		return
+	case "__>>=__":
+		self.val >>= uint(val)
+		return
+	case "__&^___":
+		self.val &^= int(val)
+		return
+	// binop
 	case "__add__":
 		val = float64(self.val) + val
 	case "__sub__":
@@ -296,6 +333,18 @@ func (self *FloatObject) Dispatch(ctx *Eval, method string, args ...Object) (res
 	}
 
 	switch method {
+	case "__+=__":
+		self.val += val
+		return
+	case "__-=__":
+		self.val -= val
+		return
+	case "__*=__":
+		self.val *= val
+		return
+	case "__/=__":
+		self.val /= val
+		return
 	case "__add__":
 		val = self.val + val
 	case "__sub__":
@@ -381,6 +430,8 @@ func (self *ArrayObject) Dispatch(ctx *Eval, method string, args ...Object) (res
 		vals := append(self.vals[:], args[0].(*ArrayObject).vals...)
 		ret := NewArrayObject(vals)
 		results = append(results, ret)
+	case "__+=__":
+		self.vals = append(self.vals, args[0].(*ArrayObject).vals...)
 	case "__get_index__":
 		idx := args[0].(*IntegerObject)
 		obj := self.vals[idx.val]

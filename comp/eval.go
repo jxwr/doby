@@ -239,26 +239,37 @@ func (self *Eval) VisitUnaryExpr(node *ast.UnaryExpr) {
 	self.Stack.Push(NewIntegerObject(-obj.val))
 }
 
-var BinaryFuncs = map[token.Token]string{
-	token.ADD:     "__add__",
-	token.SUB:     "__sub__",
-	token.MUL:     "__mul__",
-	token.QUO:     "__quo__",
-	token.REM:     "__rem__",
-	token.AND:     "__and__",
-	token.OR:      "__or__",
-	token.XOR:     "__xor__",
-	token.SHL:     "__shl__",
-	token.SHR:     "__shr__",
-	token.AND_NOT: "__and_not__",
-	token.LAND:    "__land__",
-	token.LOR:     "__lor__",
-	token.EQL:     "__eql__",
-	token.LSS:     "__lss__",
-	token.GTR:     "__gtr__",
-	token.LEQ:     "__leq__",
-	token.GEQ:     "__geq__",
-	token.NEQ:     "__neq__",
+var OpFuncs = map[token.Token]string{
+	token.ADD:            "__add__",
+	token.SUB:            "__sub__",
+	token.MUL:            "__mul__",
+	token.QUO:            "__quo__",
+	token.REM:            "__rem__",
+	token.AND:            "__and__",
+	token.OR:             "__or__",
+	token.XOR:            "__xor__",
+	token.SHL:            "__shl__",
+	token.SHR:            "__shr__",
+	token.AND_NOT:        "__and_not__",
+	token.LAND:           "__land__",
+	token.LOR:            "__lor__",
+	token.EQL:            "__eql__",
+	token.LSS:            "__lss__",
+	token.GTR:            "__gtr__",
+	token.LEQ:            "__leq__",
+	token.GEQ:            "__geq__",
+	token.NEQ:            "__neq__",
+	token.ADD_ASSIGN:     "__+=__",
+	token.SUB_ASSIGN:     "__-=__",
+	token.MUL_ASSIGN:     "__*=__",
+	token.QUO_ASSIGN:     "__/=__",
+	token.REM_ASSIGN:     "__%=__",
+	token.AND_ASSIGN:     "__&=__",
+	token.OR_ASSIGN:      "__|=__",
+	token.XOR_ASSIGN:     "__^=__",
+	token.SHL_ASSIGN:     "__<<=__",
+	token.SHR_ASSIGN:     "__>>=__",
+	token.AND_NOT_ASSIGN: "__&^=__",
 }
 
 func (self *Eval) VisitBinaryExpr(node *ast.BinaryExpr) {
@@ -270,7 +281,7 @@ func (self *Eval) VisitBinaryExpr(node *ast.BinaryExpr) {
 	robj := self.Stack.Pop()
 	lobj := self.Stack.Pop()
 
-	objs := lobj.Dispatch(self, BinaryFuncs[node.Op], robj)
+	objs := lobj.Dispatch(self, OpFuncs[node.Op], robj)
 	self.Stack.Push(objs[0])
 }
 
@@ -363,32 +374,59 @@ func ContainsString(ss []string, s string) bool {
 func (self *Eval) VisitAssignStmt(node *ast.AssignStmt) {
 	self.debug(node)
 
-	for i := 0; i < len(node.Lhs); i++ {
-		self.evalExpr(node.Rhs[i])
-		robj := self.Stack.Pop()
+	if node.Tok == token.ASSIGN {
+		for i := 0; i < len(node.Lhs); i++ {
+			self.evalExpr(node.Rhs[i])
+			robj := self.Stack.Pop()
 
-		switch v := node.Lhs[i].(type) {
-		case *ast.Ident:
-			// closure
-			val, env := self.E.LookUp(v.Name)
-			if val == nil {
-				self.E.Put(v.Name, robj)
-			} else if self.Fun != nil && ContainsString(self.Fun.LocalNames, v.Name) && env != self.E {
-				self.E.Put(v.Name, robj)
-			} else {
-				env.Put(v.Name, robj)
+			switch v := node.Lhs[i].(type) {
+			case *ast.Ident:
+				// closure
+				val, env := self.E.LookUp(v.Name)
+				if val == nil {
+					self.E.Put(v.Name, robj)
+				} else if self.Fun != nil && ContainsString(self.Fun.LocalNames, v.Name) && env != self.E {
+					self.E.Put(v.Name, robj)
+				} else {
+					env.Put(v.Name, robj)
+				}
+			case *ast.IndexExpr:
+				self.evalExpr(v.X)
+				lobj := self.Stack.Pop()
+				self.evalExpr(v.Index)
+				idx := self.Stack.Pop()
+				lobj.Dispatch(self, "__set_index__", idx, robj)
+			case *ast.SelectorExpr:
+				self.evalExpr(v.X)
+				lobj := self.Stack.Pop()
+				sel := NewStringObject(v.Sel.Name)
+				lobj.Dispatch(self, "__set_property__", sel, robj)
 			}
-		case *ast.IndexExpr:
-			self.evalExpr(v.X)
-			lobj := self.Stack.Pop()
-			self.evalExpr(v.Index)
-			idx := self.Stack.Pop()
-			lobj.Dispatch(self, "__set_index__", idx, robj)
-		case *ast.SelectorExpr:
-			self.evalExpr(v.X)
-			lobj := self.Stack.Pop()
-			sel := NewStringObject(v.Sel.Name)
-			lobj.Dispatch(self, "__set_property__", sel, robj)
+		}
+	} else {
+		for i := 0; i < len(node.Lhs); i++ {
+			self.evalExpr(node.Rhs[i])
+			robj := self.Stack.Pop()
+
+			switch v := node.Lhs[i].(type) {
+			case *ast.Ident:
+				val, _ := self.E.LookUp(v.Name)
+				val.(Object).Dispatch(self, OpFuncs[node.Tok], robj)
+			case *ast.IndexExpr:
+				// a[b] += c
+				self.evalExpr(v.X)
+				lobj := self.Stack.Pop()
+				self.evalExpr(v.Index)
+				idx := self.Stack.Pop()
+				rets := lobj.Dispatch(self, "__get_index__", idx)
+				rets[0].Dispatch(self, OpFuncs[node.Tok], robj)
+			case *ast.SelectorExpr:
+				self.evalExpr(v.X)
+				lobj := self.Stack.Pop()
+				sel := NewStringObject(v.Sel.Name)
+				rets := lobj.Dispatch(self, "__get_property__", sel)
+				rets[0].Dispatch(self, OpFuncs[node.Tok], robj)
+			}
 		}
 	}
 }

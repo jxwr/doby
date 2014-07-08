@@ -189,15 +189,7 @@ println("return:"+n)
 // custom print function
 println(220)
 
-// 
-
-func test0(n) {
-     sum = 0
-     for i = 0; i < n; i++ {
-         sum += i
-     }
-     return sum
-}
+// closure
 
 func test1() {
      n = 100
@@ -229,6 +221,7 @@ bb = test2(888)
 print(bb, "\n")
 test3()
 
+// fibornacci
 func fib(n) {
     if n < 2 {
         return n
@@ -240,3 +233,38 @@ for i = 0; i < 20; i++ {
     print(fib(i), "")
 }
 print("\n")
+
+// list reverse
+
+func reverse(lst) {
+  if lst.length() < 1 {
+    return lst   
+  }
+  return reverse(lst[1:]) + [lst[0]]
+}
+
+list = [1,2,3,4,5,6,7]
+rlist = reverse(list)
+println(rlist)
+
+// test object
+a = #{}
+a.size = 89
+a.name = "tang"
+a.hello = func() { println("hello") }
+
+a.hello()
+println(a)
+
+// xxx_assign
+a = 33
+a += 11
+println(a)
+
+b = [1,2,3]
+b += [4,5,6]
+println(b)
+
+c = 1.23
+c += 2
+println(c)
