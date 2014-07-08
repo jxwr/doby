@@ -1,3 +1,49 @@
+
+// datatype
+list0 = [1,2,3,4]
+list1 = [1,2,
+      4,5]
+
+empty_dict = #{}
+
+dict = #{ 
+     "name": "jxwr"
+     "age": 123 
+     }
+
+dict = #{ "name": "jxwr",
+     "age": 123 }
+
+dict = #{ "name": "jxwr",
+     "age": 123,
+     }
+
+dict = #{ 
+     "name": "jxwr",
+     "age": 123,
+     }
+
+empty_set = #[]
+
+a,b,c = 8,9,10
+set = #[1,2,3,4,a,b,c]
+
+set = #[1,2,3,4,
+    a,b,c]
+
+set = #[1,
+    2,
+    b,
+    c]
+
+set = #[    
+    1, a, c
+]
+
+print(list0, "\n", list1, "\n", empty_dict, "\n", dict, "\n", set, "\n")
+
+// 
+
 a = 100 + 3 * 123 
 b = a + 2
 
@@ -142,3 +188,43 @@ println("return:"+n)
 
 // custom print function
 println(220)
+
+// 
+
+func test0(n) {
+     sum = 0
+     for i = 0; i < n; i++ {
+         sum += i
+     }
+     return sum
+}
+
+func test1() {
+     n = 100
+
+     a = test0(n)
+
+     print("a", a, "\n")
+
+     b = test0(n)
+     
+     c = a + b
+     print("c", c, "\n")
+}
+
+func test2(n) {
+     a = n
+     print("test2\n")
+     return a + 1
+}
+
+func test3() {
+     print("test3\n")
+     m = test2(123)
+     print(m, "\n")
+}
+
+test1()
+bb = test2(888)
+print(bb, "\n")
+test3()

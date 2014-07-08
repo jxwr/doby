@@ -220,6 +220,7 @@ func (self *Eval) VisitCallExpr(node *ast.CallExpr) {
 			}
 			self.NeedReturn = false
 			fnDecl.Body.Accept(self)
+			self.NeedReturn = false
 
 			self.E = self.E.Outer
 		}
@@ -353,6 +354,7 @@ func (self *Eval) VisitAssignStmt(node *ast.AssignStmt) {
 
 		switch v := node.Lhs[i].(type) {
 		case *ast.Ident:
+			// closure
 			val, env := self.E.LookUp(v.Name)
 			if val != nil {
 				env.Put(v.Name, robj)
