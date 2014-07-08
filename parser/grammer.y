@@ -169,12 +169,12 @@ ident_list : /* empty */
 	     { $$ = append($1, &ast.Ident{0, $3.Lit}) }
 
 func_decl_expr : FUNC LPAREN ident_list RPAREN block_stmt
-	       	 { $$ = &ast.FuncDeclExpr{0, nil, nil, nil, $3, $5.(*ast.BlockStmt)} }
+                 { $$ = &ast.FuncDeclExpr{0, nil, nil, nil, $3, $5.(*ast.BlockStmt), []string{}} }
 	       | FUNC IDENT LPAREN ident_list RPAREN block_stmt
-	       	 { $$ = &ast.FuncDeclExpr{0, nil, nil, &ast.Ident{0, $2.Lit}, $4, $6.(*ast.BlockStmt)} }
+                 { $$ = &ast.FuncDeclExpr{0, nil, nil, &ast.Ident{0, $2.Lit}, $4, $6.(*ast.BlockStmt), []string{}} }
 	       | FUNC LPAREN IDENT IDENT RPAREN IDENT LPAREN ident_list RPAREN block_stmt
 	       	 { $$ = &ast.FuncDeclExpr{0, &ast.Ident{0, $3.Lit}, &ast.Ident{0, $4.Lit},
-		                        &ast.Ident{0, $6.Lit}, $8, $10.(*ast.BlockStmt)} }
+                                          &ast.Ident{0, $6.Lit}, $8, $10.(*ast.BlockStmt), []string{}} }
 
 expr : ident
      | basiclit

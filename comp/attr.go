@@ -11,6 +11,7 @@ import (
 type Attr struct {
 	Debug bool
 	E     *Env
+	Fun   *ast.FuncDeclExpr
 }
 
 func (self *Attr) log(fmtstr string, args ...interface{}) {
@@ -143,7 +144,11 @@ func (self *Attr) VisitFuncDeclExpr(node *ast.FuncDeclExpr) {
 	for _, arg := range node.Args {
 		self.E.Put(arg.Name, arg)
 	}
+
+	fnBak := self.Fun
+	self.Fun = node
 	node.Body.Accept(self)
+	self.Fun = fnBak
 	self.Leave()
 }
 
@@ -178,6 +183,11 @@ func (self *Attr) VisitAssignStmt(node *ast.AssignStmt) {
 	} else {
 		for _, arg := range node.Lhs {
 			if ident, ok := arg.(*ast.Ident); ok {
+				val, _ := self.E.LookUp(ident.Name)
+				// set lexical variable
+				if val == nil && self.Fun != nil {
+					self.Fun.LocalNames = append(self.Fun.LocalNames, ident.Name)
+				}
 				self.E.Put(ident.Name, ident)
 			}
 		}

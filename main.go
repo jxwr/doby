@@ -18,8 +18,8 @@ func EvalStmt(stmt *ast.Stmt) {
 
 func Eval(stmts []ast.Stmt) {
 	pretty := &comp.PrettyPrinter{false, 0, true}
-	attr := &comp.Attr{false, comp.NewEnv(nil)}
-	eval := &comp.Eval{false, comp.NewEnv(nil), comp.NewStack(),
+	attr := &comp.Attr{false, comp.NewEnv(nil), nil}
+	eval := &comp.Eval{false, comp.NewEnv(nil), comp.NewStack(), nil,
 		false, 0, false, false}
 
 	if false {

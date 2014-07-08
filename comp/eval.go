@@ -42,6 +42,7 @@ type Eval struct {
 	Debug bool
 	E     *Env
 	Stack *Stack
+	Fun   *ast.FuncDeclExpr
 
 	NeedReturn   bool
 	LoopDepth    int
@@ -212,6 +213,8 @@ func (self *Eval) VisitCallExpr(node *ast.CallExpr) {
 			}
 		} else {
 			fnDecl := fn.Decl
+			fnBak := self.Fun
+			self.Fun = fnDecl
 
 			self.E = NewEnv(self.E)
 			for i, arg := range node.Args {
@@ -222,6 +225,7 @@ func (self *Eval) VisitCallExpr(node *ast.CallExpr) {
 			fnDecl.Body.Accept(self)
 			self.NeedReturn = false
 
+			self.Fun = fnBak
 			self.E = self.E.Outer
 		}
 	}
@@ -345,6 +349,17 @@ func (self *Eval) VisitIncDecStmt(node *ast.IncDecStmt) {
 	}
 }
 
+func ContainsString(ss []string, s string) bool {
+	found := false
+	for _, v := range ss {
+		if v == s {
+			found = true
+			break
+		}
+	}
+	return found
+}
+
 func (self *Eval) VisitAssignStmt(node *ast.AssignStmt) {
 	self.debug(node)
 
@@ -356,10 +371,12 @@ func (self *Eval) VisitAssignStmt(node *ast.AssignStmt) {
 		case *ast.Ident:
 			// closure
 			val, env := self.E.LookUp(v.Name)
-			if val != nil {
-				env.Put(v.Name, robj)
-			} else {
+			if val == nil {
 				self.E.Put(v.Name, robj)
+			} else if self.Fun != nil && ContainsString(self.Fun.LocalNames, v.Name) && env != self.E {
+				self.E.Put(v.Name, robj)
+			} else {
+				env.Put(v.Name, robj)
 			}
 		case *ast.IndexExpr:
 			self.evalExpr(v.X)

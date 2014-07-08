@@ -112,6 +112,8 @@ type FuncDeclExpr struct {
 	Name     *Ident
 	Args     []*Ident
 	Body     *BlockStmt
+
+	LocalNames []string
 }
 
 func (Ident) exprNode()        {}
