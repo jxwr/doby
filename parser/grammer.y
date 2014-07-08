@@ -231,6 +231,7 @@ if_stmt : IF expr block_stmt  			{ $$ = &ast.IfStmt{0, $2, $3.(*ast.BlockStmt), 
 	| IF expr block_stmt ELSE stmt		{ $$ = &ast.IfStmt{0, $2, $3.(*ast.BlockStmt), $5} }
 
 case_clause : CASE expr_list COLON stmt_list	{ $$ = &ast.CaseClause{0, $2, 0, $4} }
+            | DEFAULT COLON stmt_list           { $$ = &ast.CaseClause{0, nil, 0, $3} }
 
 case_clause_list : EOL	     	   		{ $$ = []ast.Stmt{} }
 		 | case_clause	   		{ $$ = []ast.Stmt{$1} }

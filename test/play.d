@@ -268,3 +268,18 @@ println(b)
 c = 1.23
 c += 2
 println(c)
+
+// switch
+
+a = 11
+
+switch a {
+  case a < 10:
+     print("< 10")
+  case a > 100:
+     print("> 10")
+  case 10:
+     print(10)
+  default:
+     print("default")
+}

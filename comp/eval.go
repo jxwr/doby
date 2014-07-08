@@ -493,10 +493,61 @@ func (self *Eval) VisitIfStmt(node *ast.IfStmt) {
 
 func (self *Eval) VisitCaseClause(node *ast.CaseClause) {
 	self.debug(node)
+
+	initObj := self.Stack.Pop()
+
+	// default
+	if node.List != nil {
+		for _, e := range node.List {
+			_, ok := e.(*ast.BasicLit)
+			self.evalExpr(e)
+			if ok {
+				v := self.Stack.Pop()
+				rets := initObj.Dispatch(self, "__eql__", v)
+				if rets[0].(*BoolObject).val == false {
+					self.Stack.Push(NewBoolObject(false))
+					return
+				}
+			} else {
+				v := self.Stack.Pop().(*BoolObject)
+				if v.val == false {
+					self.Stack.Push(NewBoolObject(false))
+					return
+				}
+			}
+		}
+	}
+
+	for _, s := range node.Body {
+		// need break in all loop
+		if self.NeedReturn {
+			break
+		}
+		if self.LoopDepth > 0 && self.NeedBreak {
+			break
+		}
+		if self.LoopDepth > 0 && self.NeedContinue {
+			break
+		}
+		s.Accept(self)
+	}
+
+	self.Stack.Push(NewBoolObject(true))
 }
 
 func (self *Eval) VisitSwitchStmt(node *ast.SwitchStmt) {
 	self.debug(node)
+
+	node.Init.Accept(self)
+	initObj := self.Stack.Pop()
+	for _, c := range node.Body.List {
+		self.Stack.Push(initObj)
+		c.Accept(self)
+		hit := self.Stack.Pop().(*BoolObject)
+		if hit.val {
+			break
+		}
+	}
 }
 
 func (self *Eval) VisitSelectStmt(node *ast.SelectStmt) {
