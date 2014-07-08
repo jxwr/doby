@@ -26,7 +26,7 @@ func NewLexer(src string) *Lexer {
 
 var (
 	floatRe       = regexp.MustCompile("^[0-9]+\\.[0-9]+")
-	intRe         = regexp.MustCompile("^-?[0-9]+")
+	intRe         = regexp.MustCompile("^[0-9]+")
 	stringRe      = regexp.MustCompile("^\"[^\"]*\"")
 	charRe        = regexp.MustCompile("^'.*'")
 	identRe       = regexp.MustCompile("^[a-zA-Z_][a-zA-Z0-9_]*")
@@ -318,7 +318,7 @@ func (l *Lexer) Lex(lval *DoubiSymType) int {
 }
 
 func (l *Lexer) Error(s string) {
-	fmt.Printf("Syntax Error: Line:%d Col:%d NEARLINES:\n", l.Line, l.Col)
+	fmt.Printf("Syntax Error: Line:%d Col:%d \nToks:%q:\n", l.Line, l.Col, l.SavedToks)
 
 	line := l.Line - 5
 	if line < 0 {

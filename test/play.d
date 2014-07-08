@@ -118,7 +118,7 @@ println(cl)
 println(cl[1:8])
 
 base = 99
-print(-100.abs())
+print("abs:", -100.abs(), "\n")
 11.times(func(i){b 
   if i % 2 == 0 { 
     print(i, "") 
@@ -228,3 +228,15 @@ test1()
 bb = test2(888)
 print(bb, "\n")
 test3()
+
+func fib(n) {
+    if n < 2 {
+        return n
+    }
+    return fib(n-2) + fib(n-1)
+}
+
+for i = 0; i < 20; i++ {
+    print(fib(i), "")
+}
+print("\n")

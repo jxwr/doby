@@ -16,6 +16,10 @@ type Tok struct {
     Pos token.Pos
 }
 
+func (t Tok) String() string {
+    return t.Lit
+}
+
 %}
 
 // fields inside this union end up as the fields in a structure known
@@ -71,8 +75,8 @@ type Tok struct {
 %left LSS GTR
 %left NOT 
 %left INC DEC
-%left LPAREN
 %left UMINUS
+%left LPAREN
 %left LBRACK
 %left PERIOD
 
