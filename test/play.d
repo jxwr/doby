@@ -147,13 +147,13 @@ person = #{
 }
 
 person.weight = 125
-//println(person)
+println(person)
 
 func nnn(obj) {
     println(obj)
 }
 
-//person.summary(person)
+person.summary(person)
 nnn(person)
 
 //hello
@@ -291,4 +291,17 @@ switch a {
      print(10)
   default:
      print("default\n")
+}
+
+//10000.times(func(i){print(i,"")})
+print("\n")
+
+func(yes,no){print(yes,no,"\n")}(true,false)
+
+for index, value = range ["a", "b", "c", "d"] {
+    print(index, value, "\n")
+}
+
+for index, value = range #{"a": 1, "b": 2, "c": 3, "d": 4} {
+    print(index, value, "\n")
 }

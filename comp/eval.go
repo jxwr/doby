@@ -648,6 +648,26 @@ func (self *Eval) VisitRangeStmt(node *ast.RangeStmt) {
 				self.NeedContinue = false
 			}
 		}
+	case *rt.DictObject:
+		for i, val := range v.Property {
+			self.E.Put(keyName, rt.NewStringObject(i))
+			self.E.Put(valName, val)
+
+			self.LoopDepth++
+			node.Body.Accept(self)
+			self.LoopDepth--
+
+			if self.NeedReturn {
+				break
+			}
+			if self.NeedBreak {
+				self.NeedBreak = false
+				break
+			}
+			if self.NeedContinue {
+				self.NeedContinue = false
+			}
+		}
 	}
 
 	self.E = self.E.Outer
