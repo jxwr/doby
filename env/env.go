@@ -26,3 +26,15 @@ func (e *Env) LookUp(name string) (interface{}, *Env) {
 	}
 	return nil, nil
 }
+
+func (e *Env) Dup() *Env {
+	if e == nil {
+		return nil
+	}
+
+	if e.Outer == nil {
+		return &Env{nil, e.tab.Dup()}
+	} else {
+		return &Env{e.Outer.Dup(), e.tab.Dup()}
+	}
+}
