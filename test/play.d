@@ -118,7 +118,7 @@ println(cl)
 println(cl[1:8])
 
 base = 99
-print("abs:", -100.abs(), "\n")
+print("abs:", (-100).abs(), "\n")
 11.times(func(i){
   if i % 2 == 0 { 
     print(i, "") 
@@ -142,14 +142,19 @@ person = #{
   "name": "jiaoxiang",
   "age": 28,
   "summary": func(obj) {
-     println(obj["name"] + ":" + obj["age"])
+    println(obj["name"] + ":" + obj["age"])
   }
 }
 
 person.weight = 125
-println(person)
+//println(person)
 
-person.summary(person)
+func nnn(obj) {
+    println(obj)
+}
+
+//person.summary(person)
+nnn(person)
 
 //hello
 i = 0
@@ -233,7 +238,7 @@ func fib(n) {
     return fib(n-2) + fib(n-1)
 }
 
-for i = 0; i < 20; i++ {
+for i = 0; i < 10; i++ {
     print(fib(i), "")
 }
 print("\n")
@@ -285,5 +290,5 @@ switch a {
   case 10:
      print(10)
   default:
-     print("default")
+     print("default\n")
 }

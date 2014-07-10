@@ -220,18 +220,21 @@ func (self *Eval) VisitCallExpr(node *ast.CallExpr) {
 			fnBak := self.Fun
 			self.Fun = fnDecl
 
-			self.E = env.NewEnv(self.E)
+			newEnv := env.NewEnv(fnobj.E)
 			for i, arg := range node.Args {
 				self.evalExpr(arg)
-				self.E.Put(fnDecl.Args[i].Name, self.Stack.Pop())
+				newEnv.Put(fnDecl.Args[i].Name, self.Stack.Pop())
 			}
+
+			bakEnv := self.E
+			self.E = newEnv
 			self.NeedReturn = false
 			fnobj.E = self.E
 			fnDecl.Body.Accept(self)
 			self.NeedReturn = false
 
 			self.Fun = fnBak
-			self.E = self.E.Outer
+			self.E = bakEnv
 		}
 	}
 }
