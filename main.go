@@ -9,18 +9,19 @@ import (
 
 	"github.com/jxwr/doubi/ast"
 	"github.com/jxwr/doubi/comp"
+	"github.com/jxwr/doubi/env"
 	"github.com/jxwr/doubi/parser"
+	"github.com/jxwr/doubi/rt"
 )
-
-func EvalStmt(stmt *ast.Stmt) {
-	fmt.Printf("%#v\n", *stmt)
-}
 
 func Eval(stmts []ast.Stmt) {
 	pretty := &comp.PrettyPrinter{false, 0, true}
-	attr := &comp.Attr{false, comp.NewEnv(nil), nil}
-	eval := &comp.Eval{false, comp.NewEnv(nil), comp.NewStack(), nil,
+	attr := &comp.Attr{false, env.NewEnv(nil), nil}
+	eval := &comp.Eval{false, env.NewEnv(nil), comp.NewStack(), nil, nil,
 		false, 0, false, false}
+
+	runtime := &rt.Runtime{eval}
+	eval.RT = runtime
 
 	if false {
 		for _, stmt := range stmts {
@@ -92,11 +93,6 @@ func main() {
 	if input != "" {
 		runTest(input)
 	} else {
-		//runTest("test/vars.d")
-		//runTest("test/datatype.d")
-		//runTest("test/func.d")
-		//runTest("test/cond.d")
-		//runTest("test/quicksort.d")
 		runTest("test/play.d")
 	}
 }

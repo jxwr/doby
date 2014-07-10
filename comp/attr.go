@@ -5,12 +5,14 @@ import (
 	"reflect"
 
 	"github.com/jxwr/doubi/ast"
+	"github.com/jxwr/doubi/env"
+	"github.com/jxwr/doubi/rt"
 	"github.com/jxwr/doubi/token"
 )
 
 type Attr struct {
 	Debug bool
-	E     *Env
+	E     *env.Env
 	Fun   *ast.FuncDeclExpr
 }
 
@@ -28,7 +30,7 @@ func (self *Attr) debug(node interface{}) {
 func (self *Attr) checkIdentRef(node ast.Expr) {
 	switch arg := node.(type) {
 	case *ast.Ident:
-		_, builtin := Builtins[arg.Name]
+		_, builtin := rt.Builtins[arg.Name]
 
 		keyword := false
 		for i := token.BREAK; i <= token.VAR; i++ {
@@ -287,7 +289,7 @@ func (self *Attr) VisitRangeStmt(node *ast.RangeStmt) {
 }
 
 func (self *Attr) Enter() {
-	self.E = NewEnv(self.E)
+	self.E = env.NewEnv(self.E)
 }
 
 func (self *Attr) Leave() {

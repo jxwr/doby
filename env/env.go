@@ -1,27 +1,23 @@
-package comp
-
-import (
-	"github.com/jxwr/doubi/symtab"
-)
+package env
 
 type Env struct {
-	Outer  *Env
-	Symtab *symtab.Symtab
+	Outer *Env
+	tab   *Symtab
 }
 
 func NewEnv(outer *Env) *Env {
-	e := &Env{outer, symtab.NewSymtab()}
+	e := &Env{outer, NewSymtab()}
 	return e
 }
 
 func (e *Env) Put(name string, node interface{}) {
-	e.Symtab.Put(name, node)
+	e.tab.Put(name, node)
 }
 
 func (e *Env) LookUp(name string) (interface{}, *Env) {
 	env := e
 	for env != nil {
-		ne := env.Symtab.LookUp(name)
+		ne := env.tab.LookUp(name)
 		if ne != nil {
 			return ne, env
 		} else {

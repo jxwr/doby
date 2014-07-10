@@ -9,10 +9,11 @@ import (
 )
 
 type Lexer struct {
-	Src  string
-	Pos  int
-	Line int
-	Col  int
+	Src     string
+	Pos     int
+	Line    int
+	Col     int
+	LastTok *DoubiSymType
 
 	SavedToks []*Tok
 	lines     []string
@@ -216,6 +217,8 @@ func (l *Lexer) Lex(lval *DoubiSymType) int {
 	cur := strings.TrimLeft(src, " \t\r")
 	l.Pos += len(src) - len(cur)
 
+	l.LastTok = lval
+
 	if cur[0] == '\n' {
 		lval.tok = l.MkTok("\n")
 		l.Pos++
@@ -328,6 +331,10 @@ func (l *Lexer) Error(s string) {
 	for line < l.Line+5 && line < len(l.lines) {
 		if line == l.Line-1 {
 			fmt.Printf("*%3d) %s\n", line+1, l.lines[line])
+			for i := 0; i < l.Col+6+len(l.LastTok.tok.Lit); i++ {
+				fmt.Print(" ")
+			}
+			fmt.Println("^")
 		} else {
 			fmt.Printf(" %3d) %s\n", line+1, l.lines[line])
 		}

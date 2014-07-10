@@ -1,4 +1,4 @@
-package symtab
+package env
 
 type Symtab struct {
 	tab map[string]interface{}

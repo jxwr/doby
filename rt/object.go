@@ -1,13 +1,14 @@
-package comp
+package rt
 
 import (
 	"fmt"
 
 	"github.com/jxwr/doubi/ast"
+	"github.com/jxwr/doubi/env"
 )
 
 type Object interface {
-	Dispatch(ctx *Eval, method string, args ...Object) []Object
+	Dispatch(ctx *Runtime, method string, args ...Object) []Object
 	Name() string
 	String() string
 	HashCode() string
@@ -26,12 +27,12 @@ func (self *Property) GetProp(key string) Object {
 func (self *Property) AccessPropMethod(method string, args ...Object) (isPropMethod bool, results []Object) {
 	if method == "__get_property__" {
 		idx := args[0].(*StringObject)
-		results = append(results, self.GetProp(idx.val))
+		results = append(results, self.GetProp(idx.Val))
 		isPropMethod = true
 	} else if method == "__set_property__" {
 		idx := args[0].(*StringObject)
 		val := args[1]
-		self.SetProp(idx.val, val)
+		self.SetProp(idx.Val, val)
 		isPropMethod = true
 	}
 	return
@@ -42,7 +43,7 @@ func (self *Property) AccessPropMethod(method string, args ...Object) (isPropMet
 type StringObject struct {
 	Property
 
-	val string
+	Val string
 }
 
 func NewStringObject(val string) Object {
@@ -59,10 +60,10 @@ func (self *StringObject) HashCode() string {
 }
 
 func (self *StringObject) String() string {
-	return self.val
+	return self.Val
 }
 
-func (self *StringObject) Dispatch(ctx *Eval, method string, args ...Object) (results []Object) {
+func (self *StringObject) Dispatch(ctx *Runtime, method string, args ...Object) (results []Object) {
 	var is bool
 	if is, results = self.AccessPropMethod(method, args...); is {
 		return
@@ -70,10 +71,10 @@ func (self *StringObject) Dispatch(ctx *Eval, method string, args ...Object) (re
 
 	switch method {
 	case "__add__":
-		obj := NewStringObject(self.val + args[0].String())
+		obj := NewStringObject(self.Val + args[0].String())
 		results = append(results, obj)
 	case "__+=__":
-		self.val += args[0].String()
+		self.Val += args[0].String()
 	}
 	return
 }
@@ -83,7 +84,7 @@ func (self *StringObject) Dispatch(ctx *Eval, method string, args ...Object) (re
 type BoolObject struct {
 	Property
 
-	val bool
+	Val bool
 }
 
 func NewBoolObject(val bool) Object {
@@ -100,23 +101,23 @@ func (self *BoolObject) HashCode() string {
 }
 
 func (self *BoolObject) String() string {
-	return fmt.Sprintf("%v", self.val)
+	return fmt.Sprintf("%v", self.Val)
 }
 
-func (self *BoolObject) Dispatch(ctx *Eval, method string, args ...Object) (results []Object) {
+func (self *BoolObject) Dispatch(ctx *Runtime, method string, args ...Object) (results []Object) {
 	var is bool
 	if is, results = self.AccessPropMethod(method, args...); is {
 		return
 	}
 
-	val := args[0].(*BoolObject).val
+	val := args[0].(*BoolObject).Val
 	switch method {
 	case "__land__":
-		val = self.val && val
+		val = self.Val && val
 	case "__lor__":
-		val = self.val || val
+		val = self.Val || val
 	case "__not__":
-		val = !self.val
+		val = !self.Val
 	}
 
 	results = append(results, NewBoolObject(val))
@@ -128,13 +129,13 @@ func (self *BoolObject) Dispatch(ctx *Eval, method string, args ...Object) (resu
 type IntegerObject struct {
 	Property
 
-	val int
+	Val int
 }
 
 func NewIntegerObject(val int) Object {
 	obj := &IntegerObject{Property(map[string]Object{}), val}
-	obj.SetProp("times", NewBuiltinFuncObject("times", obj))
-	obj.SetProp("abs", NewBuiltinFuncObject("abs", obj))
+	obj.SetProp("times", NewBuiltinFuncObject("times", obj, nil))
+	obj.SetProp("abs", NewBuiltinFuncObject("abs", obj, nil))
 	return obj
 }
 
@@ -147,20 +148,20 @@ func (self *IntegerObject) HashCode() string {
 }
 
 func (self *IntegerObject) String() string {
-	return fmt.Sprintf("%d", self.val)
+	return fmt.Sprintf("%d", self.Val)
 }
 
-func (self *IntegerObject) classMethods(ctx *Eval, method string, args ...Object) (results []Object) {
+func (self *IntegerObject) classMethods(ctx *Runtime, method string, args ...Object) (results []Object) {
 	switch method {
 	case "times":
 		fnobj := args[0].(*FuncObject)
 		fnDecl := fnobj.Decl
-		for i := 0; i < self.val; i++ {
-			ctx.E.Put(fnDecl.Args[0].Name, NewIntegerObject(i))
-			fnDecl.Body.Accept(ctx)
+		for i := 0; i < self.Val; i++ {
+			fnobj.E.Put(fnDecl.Args[0].Name, NewIntegerObject(i))
+			fnDecl.Body.Accept(ctx.Visitor)
 		}
 	case "abs":
-		val := self.val
+		val := self.Val
 		if val < 0 {
 			val = 0 - val
 		}
@@ -170,7 +171,7 @@ func (self *IntegerObject) classMethods(ctx *Eval, method string, args ...Object
 }
 
 // shits
-func (self *IntegerObject) Dispatch(ctx *Eval, method string, args ...Object) (results []Object) {
+func (self *IntegerObject) Dispatch(ctx *Runtime, method string, args ...Object) (results []Object) {
 	var is bool
 	if is, results = self.AccessPropMethod(method, args...); is {
 		return
@@ -181,9 +182,9 @@ func (self *IntegerObject) Dispatch(ctx *Eval, method string, args ...Object) (r
 
 	if len(args) == 0 {
 		if method == "__inc__" {
-			self.val++
+			self.Val++
 		} else if method == "__dec__" {
-			self.val--
+			self.Val--
 		} else {
 			results = self.classMethods(ctx, method, args...)
 			return
@@ -193,90 +194,90 @@ func (self *IntegerObject) Dispatch(ctx *Eval, method string, args ...Object) (r
 
 	switch arg := args[0].(type) {
 	case *IntegerObject:
-		val = float64(arg.val)
+		val = float64(arg.Val)
 	case *FloatObject:
 		isFloat = true
-		val = arg.val
+		val = arg.Val
 	}
 
 	switch method {
 	// xxx_assign
 	case "__+=__":
-		self.val += int(val)
+		self.Val += int(val)
 		return
 	case "__-=__":
-		self.val -= int(val)
+		self.Val -= int(val)
 		return
 	case "__*=__":
-		self.val *= int(val)
+		self.Val *= int(val)
 		return
 	case "__/=__":
-		self.val /= int(val)
+		self.Val /= int(val)
 		return
 	case "__%=__":
-		self.val %= int(val)
+		self.Val %= int(val)
 		return
 	case "__|=__":
-		self.val |= int(val)
+		self.Val |= int(val)
 		return
 	case "__&=__":
-		self.val &= int(val)
+		self.Val &= int(val)
 		return
 	case "__^=__":
-		self.val ^= int(val)
+		self.Val ^= int(val)
 		return
 	case "__<<=__":
-		self.val <<= uint(val)
+		self.Val <<= uint(val)
 		return
 	case "__>>=__":
-		self.val >>= uint(val)
+		self.Val >>= uint(val)
 		return
 	case "__&^___":
-		self.val &^= int(val)
+		self.Val &^= int(val)
 		return
 	// binop
 	case "__add__":
-		val = float64(self.val) + val
+		val = float64(self.Val) + val
 	case "__sub__":
-		val = float64(self.val) - val
+		val = float64(self.Val) - val
 	case "__mul__":
-		val = float64(self.val) * val
+		val = float64(self.Val) * val
 	case "__quo__":
-		val = float64(self.val) / val
+		val = float64(self.Val) / val
 	case "__rem__":
-		val = float64(self.val % int(val))
+		val = float64(self.Val % int(val))
 	case "__and__":
-		val = float64(self.val & int(val))
+		val = float64(self.Val & int(val))
 	case "__or__":
-		val = float64(self.val | int(val))
+		val = float64(self.Val | int(val))
 	case "__xor__":
-		val = float64(self.val ^ int(val))
+		val = float64(self.Val ^ int(val))
 	case "__shl__":
-		val = float64(uint(self.val) << uint(val))
+		val = float64(uint(self.Val) << uint(val))
 	case "__shr__":
-		val = float64(uint(self.val) >> uint(val))
+		val = float64(uint(self.Val) >> uint(val))
 	case "__eql__":
-		cmp := float64(self.val) == val
+		cmp := float64(self.Val) == val
 		results = append(results, NewBoolObject(cmp))
 		return
 	case "__lss__":
-		cmp := float64(self.val) < val
+		cmp := float64(self.Val) < val
 		results = append(results, NewBoolObject(cmp))
 		return
 	case "__gtr__":
-		cmp := float64(self.val) > val
+		cmp := float64(self.Val) > val
 		results = append(results, NewBoolObject(cmp))
 		return
 	case "__leq__":
-		cmp := float64(self.val) <= val
+		cmp := float64(self.Val) <= val
 		results = append(results, NewBoolObject(cmp))
 		return
 	case "__geq__":
-		cmp := float64(self.val) >= val
+		cmp := float64(self.Val) >= val
 		results = append(results, NewBoolObject(cmp))
 		return
 	case "__neq__":
-		cmp := float64(self.val) != val
+		cmp := float64(self.Val) != val
 		results = append(results, NewBoolObject(cmp))
 		return
 	default:
@@ -297,7 +298,7 @@ func (self *IntegerObject) Dispatch(ctx *Eval, method string, args ...Object) (r
 type FloatObject struct {
 	Property
 
-	val float64
+	Val float64
 }
 
 func NewFloatObject(val float64) Object {
@@ -314,10 +315,10 @@ func (self *FloatObject) Name() string {
 }
 
 func (self *FloatObject) String() string {
-	return fmt.Sprintf("%f", self.val)
+	return fmt.Sprintf("%f", self.Val)
 }
 
-func (self *FloatObject) Dispatch(ctx *Eval, method string, args ...Object) (results []Object) {
+func (self *FloatObject) Dispatch(ctx *Runtime, method string, args ...Object) (results []Object) {
 	var is bool
 	if is, results = self.AccessPropMethod(method, args...); is {
 		return
@@ -327,54 +328,54 @@ func (self *FloatObject) Dispatch(ctx *Eval, method string, args ...Object) (res
 
 	switch arg := args[0].(type) {
 	case *IntegerObject:
-		val = float64(arg.val)
+		val = float64(arg.Val)
 	case *FloatObject:
-		val = arg.val
+		val = arg.Val
 	}
 
 	switch method {
 	case "__+=__":
-		self.val += val
+		self.Val += val
 		return
 	case "__-=__":
-		self.val -= val
+		self.Val -= val
 		return
 	case "__*=__":
-		self.val *= val
+		self.Val *= val
 		return
 	case "__/=__":
-		self.val /= val
+		self.Val /= val
 		return
 	case "__add__":
-		val = self.val + val
+		val = self.Val + val
 	case "__sub__":
-		val = self.val - val
+		val = self.Val - val
 	case "__mul__":
-		val = self.val * val
+		val = self.Val * val
 	case "__quo__":
-		val = self.val / val
+		val = self.Val / val
 	case "__eql__":
-		cmp := self.val == val
+		cmp := self.Val == val
 		results = append(results, NewBoolObject(cmp))
 		return
 	case "__lss__":
-		cmp := self.val < val
+		cmp := self.Val < val
 		results = append(results, NewBoolObject(cmp))
 		return
 	case "__gtr__":
-		cmp := self.val > val
+		cmp := self.Val > val
 		results = append(results, NewBoolObject(cmp))
 		return
 	case "__leq__":
-		cmp := self.val <= val
+		cmp := self.Val <= val
 		results = append(results, NewBoolObject(cmp))
 		return
 	case "__geq__":
-		cmp := self.val >= val
+		cmp := self.Val >= val
 		results = append(results, NewBoolObject(cmp))
 		return
 	case "__neq__":
-		cmp := self.val != val
+		cmp := self.Val != val
 		results = append(results, NewBoolObject(cmp))
 		return
 	}
@@ -387,13 +388,13 @@ func (self *FloatObject) Dispatch(ctx *Eval, method string, args ...Object) (res
 type ArrayObject struct {
 	Property
 
-	vals []Object
+	Vals []Object
 }
 
 func NewArrayObject(vals []Object) Object {
 	obj := &ArrayObject{Property(map[string]Object{}), vals}
-	obj.SetProp("append", NewBuiltinFuncObject("append", obj))
-	obj.SetProp("length", NewBuiltinFuncObject("length", obj))
+	obj.SetProp("append", NewBuiltinFuncObject("append", obj, nil))
+	obj.SetProp("length", NewBuiltinFuncObject("length", obj, nil))
 
 	return obj
 }
@@ -408,8 +409,8 @@ func (self *ArrayObject) HashCode() string {
 
 func (self *ArrayObject) String() string {
 	s := "["
-	ln := len(self.vals)
-	for i, val := range self.vals {
+	ln := len(self.Vals)
+	for i, val := range self.Vals {
 		s += val.String()
 		if i < ln-1 {
 			s += ","
@@ -419,7 +420,7 @@ func (self *ArrayObject) String() string {
 	return s
 }
 
-func (self *ArrayObject) Dispatch(ctx *Eval, method string, args ...Object) (results []Object) {
+func (self *ArrayObject) Dispatch(ctx *Runtime, method string, args ...Object) (results []Object) {
 	var is bool
 	if is, results = self.AccessPropMethod(method, args...); is {
 		return
@@ -427,40 +428,40 @@ func (self *ArrayObject) Dispatch(ctx *Eval, method string, args ...Object) (res
 
 	switch method {
 	case "__add__":
-		vals := append(self.vals[:], args[0].(*ArrayObject).vals...)
+		vals := append(self.Vals[:], args[0].(*ArrayObject).Vals...)
 		ret := NewArrayObject(vals)
 		results = append(results, ret)
 	case "__+=__":
-		self.vals = append(self.vals, args[0].(*ArrayObject).vals...)
+		self.Vals = append(self.Vals, args[0].(*ArrayObject).Vals...)
 	case "__get_index__":
 		idx := args[0].(*IntegerObject)
-		obj := self.vals[idx.val]
+		obj := self.Vals[idx.Val]
 		results = append(results, obj)
 	case "__set_index__":
 		idx := args[0].(*IntegerObject)
 		val := args[1]
-		self.vals[idx.val] = val
+		self.Vals[idx.Val] = val
 	case "__slice__":
 		low := 0
-		high := len(self.vals)
+		high := len(self.Vals)
 
 		lo := args[0]
 		if lo != nil {
-			low = lo.(*IntegerObject).val
+			low = lo.(*IntegerObject).Val
 		}
 		ho := args[1]
 		if ho != nil {
-			high = ho.(*IntegerObject).val
+			high = ho.(*IntegerObject).Val
 		}
 
-		vals := self.vals[low:high]
+		vals := self.Vals[low:high]
 		ret := NewArrayObject(vals)
 		results = append(results, ret)
 	case "append":
 		val := args[0]
-		self.vals = append(self.vals, val)
+		self.Vals = append(self.Vals, val)
 	case "length":
-		ret := NewIntegerObject(len(self.vals))
+		ret := NewIntegerObject(len(self.Vals))
 		results = append(results, ret)
 	}
 	return
@@ -471,7 +472,7 @@ func (self *ArrayObject) Dispatch(ctx *Eval, method string, args ...Object) (res
 type SetObject struct {
 	Property
 
-	vals []Object
+	Vals []Object
 }
 
 func NewSetObject(vals []Object) Object {
@@ -489,8 +490,8 @@ func (self *SetObject) HashCode() string {
 
 func (self *SetObject) String() string {
 	s := "#["
-	ln := len(self.vals)
-	for i, val := range self.vals {
+	ln := len(self.Vals)
+	for i, val := range self.Vals {
 		s += val.String()
 		if i < ln-1 {
 			s += ","
@@ -500,7 +501,7 @@ func (self *SetObject) String() string {
 	return s
 }
 
-func (self *SetObject) Dispatch(ctx *Eval, method string, args ...Object) (results []Object) {
+func (self *SetObject) Dispatch(ctx *Runtime, method string, args ...Object) (results []Object) {
 	var is bool
 	if is, results = self.AccessPropMethod(method, args...); is {
 		return
@@ -523,15 +524,16 @@ type FuncObject struct {
 
 	IsBuiltin bool
 	Obj       Object
+	E         *env.Env
 }
 
-func NewFuncObject(name string, decl *ast.FuncDeclExpr) Object {
-	obj := &FuncObject{Property(map[string]Object{}), name, decl, false, nil}
+func NewFuncObject(name string, decl *ast.FuncDeclExpr, e *env.Env) Object {
+	obj := &FuncObject{Property(map[string]Object{}), name, decl, false, nil, e}
 	return obj
 }
 
-func NewBuiltinFuncObject(name string, recv Object) Object {
-	obj := &FuncObject{Property(map[string]Object{}), name, nil, true, recv}
+func NewBuiltinFuncObject(name string, recv Object, e *env.Env) Object {
+	obj := &FuncObject{Property(map[string]Object{}), name, nil, true, recv, e}
 	return obj
 }
 
@@ -558,7 +560,7 @@ var Builtins = map[string]func(args ...Object) []Object{
 	},
 }
 
-func (self *FuncObject) Dispatch(ctx *Eval, method string, args ...Object) (results []Object) {
+func (self *FuncObject) Dispatch(ctx *Runtime, method string, args ...Object) (results []Object) {
 	var is bool
 	if is, results = self.AccessPropMethod(method, args...); is {
 		return
@@ -616,7 +618,7 @@ func (self *DictObject) String() string {
 	return s
 }
 
-func (self *DictObject) Dispatch(ctx *Eval, method string, args ...Object) (results []Object) {
+func (self *DictObject) Dispatch(ctx *Runtime, method string, args ...Object) (results []Object) {
 	var is bool
 	if is, results = self.AccessPropMethod(method, args...); is {
 		return

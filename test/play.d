@@ -119,7 +119,7 @@ println(cl[1:8])
 
 base = 99
 print("abs:", -100.abs(), "\n")
-11.times(func(i){b 
+11.times(func(i){
   if i % 2 == 0 { 
     print(i, "") 
   }
@@ -190,6 +190,10 @@ println("return:"+n)
 println(220)
 
 // closure
+
+func test0(n) {
+     return n
+}
 
 func test1() {
      n = 100
