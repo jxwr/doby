@@ -672,3 +672,7 @@ func (self *Eval) VisitRangeStmt(node *ast.RangeStmt) {
 
 	self.E = self.E.Outer
 }
+
+func (self *Eval) VisitImportStmt(node *ast.ImportStmt) {
+	fmt.Printf("%#v\n", node)
+}

@@ -268,6 +268,11 @@ type RangeStmt struct {
 	Body     *BlockStmt
 }
 
+type ImportStmt struct {
+	Import token.Pos
+	Module string
+}
+
 func (ExprStmt) stmtNode()   {}
 func (SendStmt) stmtNode()   {}
 func (IncDecStmt) stmtNode() {}
@@ -282,6 +287,7 @@ func (SwitchStmt) stmtNode() {}
 func (SelectStmt) stmtNode() {}
 func (ForStmt) stmtNode()    {}
 func (RangeStmt) stmtNode()  {}
+func (ImportStmt) stmtNode() {}
 
 func (n *ExprStmt) Accept(v Visitor) {
 	v.VisitExprStmt(n)
@@ -337,4 +343,8 @@ func (n *ForStmt) Accept(v Visitor) {
 
 func (n *RangeStmt) Accept(v Visitor) {
 	v.VisitRangeStmt(n)
+}
+
+func (n *ImportStmt) Accept(v Visitor) {
+	v.VisitImportStmt(n)
 }

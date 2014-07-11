@@ -46,8 +46,8 @@ func (t Tok) String() string {
 
 %type <stmt> stmt expr_stmt send_stmt incdec_stmt assign_stmt go_stmt
 %type <stmt> return_stmt branch_stmt block_stmt if_stmt 
-%type <stmt> case_clause case_block switch_stmt select_stmt for_stmt range_stmt
-%type <stmt_list> stmt_list case_clause_list prog
+%type <stmt> case_clause case_block switch_stmt select_stmt for_stmt range_stmt import_stmt
+%type <stmt_list> stmt_list case_clause_list prog 
 
 %token <tok> EOF EOL COMMENT
 %token <tok> IDENT INT FLOAT STRING CHAR 
@@ -253,6 +253,9 @@ for_stmt : FOR stmt SEMICOLON expr SEMICOLON stmt block_stmt
 range_stmt : FOR expr_list ASSIGN RANGE expr block_stmt 
 	     { $$ = &ast.RangeStmt{0, $2, $5, $6.(*ast.BlockStmt)} }
 
+import_stmt : IMPORT STRING
+	      { $$ = &ast.ImportStmt{$1.Pos, $2.Lit} }
+
 stmt : expr_stmt
      | send_stmt
      | incdec_stmt
@@ -266,6 +269,7 @@ stmt : expr_stmt
      | select_stmt
      | for_stmt
      | range_stmt
+     | import_stmt
 
 stmt_list : /* empty */			{ $$ = []ast.Stmt{} }
 	  | stmt			{ $$ = []ast.Stmt{$1} }

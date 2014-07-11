@@ -305,12 +305,3 @@ for index, value = range ["a", "b", "c", "d"] {
 for index, value = range #{"a": 1, "b": 2, "c": 3, "d": 4} {
     print(index, value, "\n")
 }
-
-fmt.Println(a, b)
-
-__fmt = #{}
-__fmt.SetProp("Println", NewFuncObject())
-
-env.Put("os", )
-
-fmt.Println("a", b, 1, 2, 3)

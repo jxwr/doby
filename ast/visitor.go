@@ -28,4 +28,5 @@ type Visitor interface {
 	VisitSelectStmt(node *SelectStmt)
 	VisitForStmt(node *ForStmt)
 	VisitRangeStmt(node *RangeStmt)
+	VisitImportStmt(node *ImportStmt)
 }

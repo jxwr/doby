@@ -288,6 +288,9 @@ func (self *Attr) VisitRangeStmt(node *ast.RangeStmt) {
 	self.Leave()
 }
 
+func (self *Attr) VisitImportStmt(node *ast.ImportStmt) {
+}
+
 func (self *Attr) Enter() {
 	self.E = env.NewEnv(self.E)
 }

@@ -366,3 +366,8 @@ func (self *PrettyPrinter) VisitRangeStmt(node *ast.RangeStmt) {
 	node.Body.Accept(self)
 	self.putln()
 }
+
+func (self *PrettyPrinter) VisitImportStmt(node *ast.ImportStmt) {
+	puts("import " + node.Module)
+	self.putln()
+}
