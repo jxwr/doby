@@ -2,26 +2,26 @@
 // datatype
 list0 = [1,2,3,4]
 list1 = [1,2,
-      4,5]
+	4,5]
 
 empty_dict = #{}
 
 dict = #{ 
-     "name": "jxwr"
-     "age": 123 
-     }
+	"name": "jxwr"
+	"age": 123 
+}
 
 dict = #{ "name": "jxwr",
-     "age": 123 }
+	"age": 123 }
 
 dict = #{ "name": "jxwr",
-     "age": 123,
-     }
+	"age": 123,
+}
 
 dict = #{ 
-     "name": "jxwr",
-     "age": 123,
-     }
+	"name": "jxwr",
+	"age": 123,
+}
 
 empty_set = #[]
 
@@ -32,12 +32,12 @@ set = #[1,2,3,4,
     a,b,c]
 
 set = #[1,
-    2,
-    b,
-    c]
+	2,
+	b,
+	c]
 
 set = #[    
-    1, a, c
+	1, a, c
 ]
 
 print(list0, "\n", list1, "\n", empty_dict, "\n", dict, "\n", set, "\n")
@@ -57,13 +57,13 @@ print(100 + c[3], "\n")
 print(c[0] + c[1] + c[2] + c[3], "\n")
 
 func println(str) {
-     print(str, "\n")
+	print(str, "\n")
 }
 
 println("fun decl")
 
 func add(a, b) {
-     return a + b
+	return a + b
 }
 
 println(add(1, 200))
@@ -72,7 +72,7 @@ c[0] = 1000
 println(c[0])
 
 c.len = func() {
-         return 2 * (c[0] + 1)
+	return 2 * (c[0] + 1)
 }
 
 println(c.len())
@@ -80,15 +80,15 @@ c[0] = 132
 println(c.len())
 
 if 2 > 1 {
-  println("true")
+	println("true")
 } else {
-  println("false")
+	println("false")
 }
 
 if false {
-  println("true")
+	println("true")
 } else {
-  println("false")
+	println("false")
 }
 
 a = 500
@@ -120,30 +120,30 @@ println(cl[1:8])
 base = 99
 print("abs:", (-100).abs(), "\n")
 11.times(func(i){
-  if i % 2 == 0 { 
-    print(i, "") 
-  }
+	if i % 2 == 0 { 
+		print(i, "") 
+	}
 })
 
 list = ["hello", "world"]
 list.name = func() {
-  return list[0] + " " + list[1]
+	return list[0] + " " + list[1]
 }
 
 println(list.name())
 
 func printA() {
-     for i = 0; i< 1000; i {
-     	 print("A")
-     }
+	for i = 0; i< 1000; i {
+		print("A")
+	}
 }
 
 person = #{
-  "name": "jiaoxiang",
-  "age": 28,
-  "summary": func(obj) {
-    println(obj["name"] + ":" + obj["age"])
-  }
+	"name": "jiaoxiang",
+	"age": 28,
+	"summary": func(obj) {
+		println(obj["name"] + ":" + obj["age"])
+	}
 }
 
 person.weight = 125
@@ -162,7 +162,7 @@ i = 0
 func testLoop() {
 	for i < 10 {
 		i++
-    
+		
 		if i == 2 {
 			n = 0
 			for n < 5 {
@@ -197,32 +197,32 @@ println(220)
 // closure
 
 func test0(n) {
-     return n
+	return n
 }
 
 func test1() {
-     n = 100
+	n = 100
 
-     a = test0(n)
+	a = test0(n)
 
-     print("a", a, "\n")
+	print("a", a, "\n")
 
-     b = test0(n)
-     
-     c = a + b
-     print("c", c, "\n")
+	b = test0(n)
+	
+	c = a + b
+	print("c", c, "\n")
 }
 
 func test2(n) {
-     a = n
-     print("test2\n")
-     return a + 1
+	a = n
+	print("test2\n")
+	return a + 1
 }
 
 func test3() {
-     print("test3\n")
-     m = test2(123)
-     print(m, "\n")
+	print("test3\n")
+	m = test2(123)
+	print(m, "\n")
 }
 
 test1()
@@ -246,10 +246,10 @@ print("\n")
 // list reverse
 
 func reverse(lst) {
-  if lst.length() < 1 {
-    return lst   
-  }
-  return reverse(lst[1:]) + [lst[0]]
+	if lst.length() < 1 {
+		return lst   
+	}
+	return reverse(lst[1:]) + [lst[0]]
 }
 
 list = [1,2,3,4,5,6,7]
@@ -283,14 +283,14 @@ println(c)
 a = 11
 
 switch a {
-  case a < 10:
-     print("< 10")
-  case a > 100:
-     print("> 10")
-  case 10:
-     print(10)
-  default:
-     print("default\n")
+case a < 10:
+	print("< 10")
+case a > 100:
+	print("> 10")
+case 10:
+	print(10)
+default:
+	print("default\n")
 }
 
 //10000.times(func(i){print(i,"")})
@@ -305,3 +305,12 @@ for index, value = range ["a", "b", "c", "d"] {
 for index, value = range #{"a": 1, "b": 2, "c": 3, "d": 4} {
     print(index, value, "\n")
 }
+
+fmt.Println(a, b)
+
+__fmt = #{}
+__fmt.SetProp("Println", NewFuncObject())
+
+env.Put("os", )
+
+fmt.Println("a", b, 1, 2, 3)
