@@ -383,9 +383,16 @@ func (self *Eval) VisitAssignStmt(node *ast.AssignStmt) {
 	self.debug(node)
 
 	if node.Tok == token.ASSIGN {
-		for i := 0; i < len(node.Lhs); i++ {
+		rhs := []rt.Object{}
+
+		for i := 0; i < len(node.Rhs); i++ {
 			self.evalExpr(node.Rhs[i])
 			robj := self.Stack.Pop()
+			rhs = append(rhs, robj)
+		}
+
+		for i := 0; i < len(node.Lhs); i++ {
+			robj := rhs[i]
 
 			switch v := node.Lhs[i].(type) {
 			case *ast.Ident:
@@ -674,5 +681,5 @@ func (self *Eval) VisitRangeStmt(node *ast.RangeStmt) {
 }
 
 func (self *Eval) VisitImportStmt(node *ast.ImportStmt) {
-	fmt.Printf("%#v\n", node)
+	self.debug(node)
 }

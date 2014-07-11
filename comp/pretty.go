@@ -368,6 +368,14 @@ func (self *PrettyPrinter) VisitRangeStmt(node *ast.RangeStmt) {
 }
 
 func (self *PrettyPrinter) VisitImportStmt(node *ast.ImportStmt) {
-	puts("import " + node.Module)
+	if len(node.Modules) == 1 {
+		puts("import " + node.Modules[0])
+	} else {
+		puts("import (\n")
+		for i := 0; i < len(node.Modules); i++ {
+			puts("  " + node.Modules[i] + "\n")
+		}
+		puts(")")
+	}
 	self.putln()
 }

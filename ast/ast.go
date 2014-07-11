@@ -269,8 +269,8 @@ type RangeStmt struct {
 }
 
 type ImportStmt struct {
-	Import token.Pos
-	Module string
+	Import  token.Pos
+	Modules []string
 }
 
 func (ExprStmt) stmtNode()   {}

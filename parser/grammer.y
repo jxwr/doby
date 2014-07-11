@@ -254,7 +254,7 @@ range_stmt : FOR expr_list ASSIGN RANGE expr block_stmt
 	     { $$ = &ast.RangeStmt{0, $2, $5, $6.(*ast.BlockStmt)} }
 
 import_stmt : IMPORT STRING
-	      { $$ = &ast.ImportStmt{$1.Pos, $2.Lit} }
+              { $$ = &ast.ImportStmt{$1.Pos, []string{$2.Lit}} }
 
 stmt : expr_stmt
      | send_stmt
