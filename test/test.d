@@ -32,3 +32,9 @@ fmt.Println("nerver reach")
 
 /// log
 log.Println("hello", "world")
+
+list = [1,2,3,4]
+list[0], list[1] = list[1], list[0]
+name = "jiao"
+age = 28
+fmt.Println(list, ["hello", "world"], #{"name": name, "age": age})
