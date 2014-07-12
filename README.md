@@ -294,6 +294,98 @@ println("return:"+n)
 
 > return: 9
 
+* sudoku
+
+```go
+import "fmt"
+import "os"
+
+func isValid(board, x, y, c) {
+    for i = 0; i < 9; i++ {
+        if board[x][i] == c {
+            return false
+        }
+        if board[i][y] == c {
+            return false
+        }
+    }
+
+
+    for i = 3*(x/3); i < 3*(x/3+1); i++ {
+        for j = 3*(y/3); j < 3*(y/3+1); j++ {
+            if board[i][j] == c {
+                return false
+            }
+        }
+    }
+    return true
+}
+
+count = 0
+
+func solveSudoku(board) {
+	showBoard(board)
+	count++
+	fmt.Println(count)
+
+    for i = 0; i < board.length(); i++ {
+        for j = 0; j < board[i].length(); j++ {
+            if board[i][j] == "." {
+                for k = 0; k < 9; k++ {
+                    c = "" + (k+1)
+                    if isValid(board, i, j, c) {
+                        board[i][j] = c
+                        if solveSudoku(board) {
+                            return true
+                        }
+                        board[i][j] = "."
+                    }
+                }
+                return false
+            }
+        }
+    }
+    return true
+}
+
+board = [
+	["5","3",".",".","7",".","9",".","."],
+	["6",".",".","1","9","5",".",".","."],
+	[".","9","8",".",".",".",".","6","."],
+	["8",".",".",".","6",".",".",".","3"],
+	["4",".","6","8",".","3","7",".","1"],
+	["7",".",".",".","2",".",".",".","6"],
+	[".","6","1",".",".",".","2","8","."],
+	[".",".",".","4","1","9",".",".","5"],
+	["3",".","5",".","8",".",".","7","9"]
+]
+
+func showBoard(board) {
+	fmt.Println("-----------------------------------")
+	for i, line = range board {
+		fmt.Println(line)
+	}
+}
+
+solveSudoku(board)
+```
+
+Results:
+```go
+...
+-----------------------------------
+[5,3,4,6,7,8,9,1,2]
+[6,7,2,1,9,5,3,4,8]
+[1,9,8,3,4,2,5,6,7]
+[8,5,9,7,6,1,4,2,3]
+[4,2,6,8,5,3,7,9,1]
+[7,1,3,9,2,4,8,5,6]
+[9,6,1,5,3,7,2,8,4]
+[2,8,7,4,1,9,6,3,5]
+[3,4,5,2,8,6,1,7,9]
+730
+```
+
 #### Notes
 
 > See notes and tests
