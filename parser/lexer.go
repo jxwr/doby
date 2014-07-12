@@ -29,7 +29,7 @@ var (
 	floatRe       = regexp.MustCompile("^[0-9]+\\.[0-9]+")
 	intRe         = regexp.MustCompile("^[0-9]+")
 	stringRe      = regexp.MustCompile("^\"[^\"]*\"")
-	charRe        = regexp.MustCompile("^'.*'")
+	charRe        = regexp.MustCompile("^'.'")
 	identRe       = regexp.MustCompile("^[a-zA-Z_][a-zA-Z0-9_]*")
 	escapeRe      = regexp.MustCompile("\\\\.")
 	lineCommentRe = regexp.MustCompile("^//.*")
