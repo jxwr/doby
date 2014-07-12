@@ -49,51 +49,82 @@ func (self *GoFuncObject) callGoFunc(ctx *Runtime, args ...Object) (results []Ob
 	inNum := self.typ.NumIn()
 	inArgs := []reflect.Value{}
 
+	dummy := []interface{}{}
 	for i := 0; i < inNum; i++ {
 		arg := args[i]
-		switch arg := arg.(type) {
-		case *IntegerObject:
-			v := reflect.ValueOf(arg.Val)
-			t := reflect.TypeOf(arg.Val)
-			if t.ConvertibleTo(self.typ.In(i)) {
-				v = v.Convert(self.typ.In(i))
+		if i == inNum-1 && self.typ.In(i) == reflect.TypeOf(dummy) {
+			for j := i; j < len(args); j++ {
+				arg := args[j]
+				switch arg := arg.(type) {
+				case *IntegerObject:
+					v := reflect.ValueOf(arg.Val)
+					inArgs = append(inArgs, v)
+				case *FloatObject:
+					v := reflect.ValueOf(arg.Val)
+					inArgs = append(inArgs, v)
+				case *StringObject:
+					v := reflect.ValueOf(arg.Val)
+					inArgs = append(inArgs, v)
+				case *BoolObject:
+					v := reflect.ValueOf(arg.Val)
+					inArgs = append(inArgs, v)
+				case *GoObject:
+					if arg.obj == nil {
+						var nilObj *NilObject
+						inArgs = append(inArgs, reflect.ValueOf(nilObj))
+					} else {
+						v := reflect.ValueOf(arg.obj)
+						inArgs = append(inArgs, v)
+					}
+				default:
+					inArgs = append(inArgs, reflect.ValueOf(arg))
+				}
 			}
-			inArgs = append(inArgs, v)
-		case *FloatObject:
-			v := reflect.ValueOf(arg.Val)
-			t := reflect.TypeOf(arg.Val)
-			if t.ConvertibleTo(self.typ.In(i)) {
-				v = v.Convert(self.typ.In(i))
+		} else {
+			switch arg := arg.(type) {
+			case *IntegerObject:
+				v := reflect.ValueOf(arg.Val)
+				t := reflect.TypeOf(arg.Val)
+				if t.ConvertibleTo(self.typ.In(i)) {
+					v = v.Convert(self.typ.In(i))
+				}
+				inArgs = append(inArgs, v)
+			case *FloatObject:
+				v := reflect.ValueOf(arg.Val)
+				t := reflect.TypeOf(arg.Val)
+				if t.ConvertibleTo(self.typ.In(i)) {
+					v = v.Convert(self.typ.In(i))
+				}
+				inArgs = append(inArgs, v)
+			case *StringObject:
+				v := reflect.ValueOf(arg.Val)
+				t := reflect.TypeOf(arg.Val)
+				if t.ConvertibleTo(self.typ.In(i)) {
+					v = v.Convert(self.typ.In(i))
+				}
+				inArgs = append(inArgs, v)
+			case *BoolObject:
+				v := reflect.ValueOf(arg.Val)
+				t := reflect.TypeOf(arg.Val)
+				if t.ConvertibleTo(self.typ.In(i)) {
+					v = v.Convert(self.typ.In(i))
+				}
+				inArgs = append(inArgs, v)
+			case *GoObject:
+				v := reflect.ValueOf(arg.obj)
+				t := reflect.TypeOf(arg.obj)
+				if t.ConvertibleTo(self.typ.In(i)) {
+					v = v.Convert(self.typ.In(i))
+				}
+				inArgs = append(inArgs, v)
+			default:
+				v := reflect.ValueOf(arg)
+				t := reflect.TypeOf(arg)
+				if t.ConvertibleTo(self.typ.In(i)) {
+					v = v.Convert(self.typ.In(i))
+				}
+				inArgs = append(inArgs, v)
 			}
-			inArgs = append(inArgs, v)
-		case *StringObject:
-			v := reflect.ValueOf(arg.Val)
-			t := reflect.TypeOf(arg.Val)
-			if t.ConvertibleTo(self.typ.In(i)) {
-				v = v.Convert(self.typ.In(i))
-			}
-			inArgs = append(inArgs, v)
-		case *BoolObject:
-			v := reflect.ValueOf(arg.Val)
-			t := reflect.TypeOf(arg.Val)
-			if t.ConvertibleTo(self.typ.In(i)) {
-				v = v.Convert(self.typ.In(i))
-			}
-			inArgs = append(inArgs, v)
-		case *GoObject:
-			v := reflect.ValueOf(arg.obj)
-			t := reflect.TypeOf(arg.obj)
-			if t.ConvertibleTo(self.typ.In(i)) {
-				v = v.Convert(self.typ.In(i))
-			}
-			inArgs = append(inArgs, v)
-		default:
-			v := reflect.ValueOf(arg)
-			t := reflect.TypeOf(arg)
-			if t.ConvertibleTo(self.typ.In(i)) {
-				v = v.Convert(self.typ.In(i))
-			}
-			inArgs = append(inArgs, v)
 		}
 	}
 

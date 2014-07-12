@@ -30,3 +30,22 @@ func (self *Property) AccessPropMethod(method string, args ...Object) (isPropMet
 	}
 	return
 }
+
+type NilObject struct {
+}
+
+func (self *NilObject) Name() string {
+	return "nil"
+}
+
+func (self *NilObject) HashCode() string {
+	return "nil"
+}
+
+func (self *NilObject) String() string {
+	return "<nil>"
+}
+
+func (self *NilObject) Dispatch(ctx *Runtime, method string, args ...Object) (results []Object) {
+	return
+}

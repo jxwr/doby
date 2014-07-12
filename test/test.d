@@ -1,6 +1,7 @@
 
 import "fmt"
 import "os"
+import "log"
 import "time"
 import "math/rand"
 
@@ -22,8 +23,12 @@ fmt.Println(time.Now())
 
 /// os
 hostname, err = os.Hostname()
+fmt.Println(hostname)
+fmt.Println(err)
 fmt.Println(hostname, err)
 fmt.Println("err", err)
-os.Exit(1)
 
 fmt.Println("nerver reach")
+
+/// log
+log.Println("hello", "world")
