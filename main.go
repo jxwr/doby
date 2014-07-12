@@ -35,7 +35,6 @@ func Eval(stmts []ast.Stmt) {
 	for _, stmt := range stmts {
 		stmt.Accept(eval)
 	}
-
 }
 
 func runTest(filename string) {

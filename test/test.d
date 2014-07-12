@@ -38,3 +38,12 @@ list[0], list[1] = list[1], list[0]
 name = "jiao"
 age = 28
 fmt.Println(list, ["hello", "world"], #{"name": name, "age": age})
+
+str = "abcdefghijklmn"
+ch = str[1:5] + "_bcd"
+
+fmt.Println(ch.length())
+fmt.Println(ch.size())
+
+ch = 'a'
+fmt.Println(ch + 'b')

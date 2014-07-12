@@ -67,12 +67,12 @@ func (t Tok) String() string {
 
 %left LAND LOR ARROW
 %left SHL SHR AND_NOT 
+%left LSS GTR
+%left NEQ LEQ GEQ EQL
 %left OR
 %left AND XOR
 %left ADD SUB
-%left NEQ LEQ GEQ EQL
 %left MUL QUO REM
-%left LSS GTR
 %left NOT 
 %left INC DEC
 %left UMINUS
