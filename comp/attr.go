@@ -3,6 +3,7 @@ package comp
 import (
 	"fmt"
 	"reflect"
+	"strings"
 
 	"github.com/jxwr/doubi/ast"
 	"github.com/jxwr/doubi/env"
@@ -289,6 +290,12 @@ func (self *Attr) VisitRangeStmt(node *ast.RangeStmt) {
 }
 
 func (self *Attr) VisitImportStmt(node *ast.ImportStmt) {
+	if len(node.Modules) == 1 {
+		modname := node.Modules[0]
+		modname = strings.Trim(modname, "\"")
+		xs := strings.Split(modname, "/")
+		self.E.Put(xs[len(xs)-1], node)
+	}
 }
 
 func (self *Attr) Enter() {

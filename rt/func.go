@@ -25,7 +25,7 @@ func NewFuncObject(name string, decl *ast.FuncDeclExpr, e *env.Env) Object {
 	return obj
 }
 
-func NewBuiltinFuncObject(name string, recv Object, e *env.Env) Object {
+func NewBuiltinFuncObject(name string, recv Object, e *env.Env) *FuncObject {
 	obj := &FuncObject{Property(map[string]Object{}), name, nil, true, recv, e}
 	return obj
 }

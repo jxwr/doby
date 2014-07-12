@@ -210,41 +210,56 @@ func (self *Eval) VisitCallExpr(node *ast.CallExpr) {
 		}
 	} else {
 		self.evalExpr(node.Fun)
-		fnobj = self.Stack.Pop().(*rt.FuncObject)
 
-		if fnobj.IsBuiltin {
+		switch fnobj := self.Stack.Pop().(type) {
+		case *rt.FuncObject:
+
+			if fnobj.IsBuiltin {
+				args := []rt.Object{}
+				for _, arg := range node.Args {
+					self.evalExpr(arg)
+					args = append(args, self.Stack.Pop())
+				}
+				self.E = env.NewEnv(self.E)
+				fnobj.E = self.E
+				rets := fnobj.Dispatch(self.RT, "__call__", args...)
+				self.E = self.E.Outer
+				for _, ret := range rets {
+					self.Stack.Push(ret)
+				}
+			} else {
+				fnDecl := fnobj.Decl
+				fnBak := self.Fun
+				self.Fun = fnDecl
+
+				newEnv := env.NewEnv(fnobj.E)
+				for i, arg := range node.Args {
+					self.evalExpr(arg)
+					newEnv.Put(fnDecl.Args[i].Name, self.Stack.Pop())
+				}
+
+				bakEnv := self.E
+				self.E = newEnv
+				self.NeedReturn = false
+				fnobj.E = self.E
+				fnDecl.Body.Accept(self)
+				self.NeedReturn = false
+
+				self.Fun = fnBak
+				self.E = bakEnv
+			}
+		case *rt.GoFuncObject:
 			args := []rt.Object{}
 			for _, arg := range node.Args {
 				self.evalExpr(arg)
 				args = append(args, self.Stack.Pop())
 			}
 			self.E = env.NewEnv(self.E)
-			fnobj.E = self.E
 			rets := fnobj.Dispatch(self.RT, "__call__", args...)
 			self.E = self.E.Outer
 			for _, ret := range rets {
 				self.Stack.Push(ret)
 			}
-		} else {
-			fnDecl := fnobj.Decl
-			fnBak := self.Fun
-			self.Fun = fnDecl
-
-			newEnv := env.NewEnv(fnobj.E)
-			for i, arg := range node.Args {
-				self.evalExpr(arg)
-				newEnv.Put(fnDecl.Args[i].Name, self.Stack.Pop())
-			}
-
-			bakEnv := self.E
-			self.E = newEnv
-			self.NeedReturn = false
-			fnobj.E = self.E
-			fnDecl.Body.Accept(self)
-			self.NeedReturn = false
-
-			self.Fun = fnBak
-			self.E = bakEnv
 		}
 	}
 }
@@ -338,7 +353,7 @@ func (self *Eval) VisitDictExpr(node *ast.DictExpr) {
 		val := self.Stack.Pop()
 		fieldMap[key.HashCode()] = val
 	}
-	obj := rt.NewDictObject(&fieldMap)
+	obj := rt.NewDictObject(fieldMap)
 	self.Stack.Push(obj)
 }
 
@@ -397,12 +412,16 @@ func (self *Eval) VisitAssignStmt(node *ast.AssignStmt) {
 
 		for i := 0; i < len(node.Rhs); i++ {
 			self.evalExpr(node.Rhs[i])
+		}
+
+		llen := len(node.Lhs)
+		for i := 0; i < llen; i++ {
 			robj := self.Stack.Pop()
 			rhs = append(rhs, robj)
 		}
 
-		for i := 0; i < len(node.Lhs); i++ {
-			robj := rhs[i]
+		for i := 0; i < llen; i++ {
+			robj := rhs[llen-i-1]
 
 			switch v := node.Lhs[i].(type) {
 			case *ast.Ident:
@@ -691,5 +710,11 @@ func (self *Eval) VisitRangeStmt(node *ast.RangeStmt) {
 }
 
 func (self *Eval) VisitImportStmt(node *ast.ImportStmt) {
-	self.debug(node)
+	if len(node.Modules) == 1 {
+		modname := node.Modules[0]
+		modname = strings.Trim(modname, "\" ")
+		mod, _ := self.RT.Env.LookUp(modname)
+		xs := strings.Split(modname, "/")
+		self.E.Put(xs[len(xs)-1], mod)
+	}
 }

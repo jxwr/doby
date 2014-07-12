@@ -2,6 +2,68 @@
 
 #### Examples:
 
+* use go module (developing, module level method for now)
+```go
+import "fmt"
+import "os"
+import "time"
+import "math/rand"
+
+/// math/rand
+obj = rand.Float64()
+fmt.Println(obj)
+fmt.Println(rand.Float64)
+
+/// time
+Nanosecond = 1
+Microsecond          = 1000 * Nanosecond
+Millisecond          = 1000 * Microsecond
+Second               = 1000 * Millisecond
+Minute               = 60 * Second
+Hour                 = 60 * Minute
+
+time.Sleep(200 * Millisecond)
+fmt.Println(time.Now())
+
+/// os
+hostname, err = os.Hostname()
+fmt.Println(hostname, err)
+os.Exit(1)
+
+fmt.Println("nerver reach")
+```
+
+this is how to import go modules into doubi enviroment (rt/runtime.go)
+```go
+	env.Put("fmt", NewDictObject(funcMap([]interface{}{
+		fmt.Errorf,
+		fmt.Println, fmt.Print, fmt.Printf,
+		fmt.Fprint, fmt.Fprint, fmt.Fprintln, fmt.Fscan, fmt.Fscanf, fmt.Fscanln,
+		fmt.Scan, fmt.Scanf, fmt.Scanln,
+		fmt.Sscan, fmt.Sscanf, fmt.Sscanln,
+		fmt.Sprint, fmt.Sprintf, fmt.Sprintln,
+	})))
+
+	env.Put("log", NewDictObject(funcMap([]interface{}{
+		log.Fatal, log.Fatalf, log.Fatalln, log.Flags, log.Panic, log.Panicf, log.Panicln,
+		log.Print, log.Printf, log.Println, log.SetFlags, log.SetOutput, log.SetPrefix,
+	})))
+
+	env.Put("os", NewDictObject(funcMap([]interface{}{
+		os.Chdir, os.Chmod, os.Chown, os.Exit, os.Getpid, os.Hostname,
+	})))
+
+	env.Put("time", NewDictObject(funcMap([]interface{}{
+		time.Sleep, time.Now, time.Unix,
+	})))
+
+	env.Put("math/rand", NewDictObject(funcMap([]interface{}{
+		rand.Float64, rand.ExpFloat64, rand.Float32, rand.Int,
+		rand.Int31, rand.Int31n, rand.Int63, rand.Int63n, rand.Intn,
+		rand.NormFloat64, rand.Perm, rand.Seed, rand.Uint32,
+	})))
+```
+
 * quicksort
 
 ```go

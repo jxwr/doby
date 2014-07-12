@@ -10,8 +10,8 @@ type DictObject struct {
 	Property
 }
 
-func NewDictObject(fields *map[string]Object) Object {
-	obj := &DictObject{Property(*fields)}
+func NewDictObject(fields map[string]Object) Object {
+	obj := &DictObject{Property(fields)}
 
 	return obj
 }

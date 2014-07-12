@@ -5,9 +5,7 @@ import (
 	"flag"
 	"fmt"
 	"io/ioutil"
-	"math/rand"
 	"os"
-	"reflect"
 
 	"github.com/jxwr/doubi/ast"
 	"github.com/jxwr/doubi/comp"
@@ -16,20 +14,7 @@ import (
 	"github.com/jxwr/doubi/rt"
 )
 
-func WrapGoFunc(fn interface{}) {
-	typ := reflect.TypeOf(fn)
-
-	if typ.Kind() == reflect.Func {
-		fmt.Println(typ.String())
-		fmt.Println(typ.NumIn())
-		fmt.Println(typ.NumOut())
-	}
-}
-
 func Eval(stmts []ast.Stmt) {
-	WrapGoFunc(fmt.Println)
-	WrapGoFunc(rand.Float64)
-
 	pretty := &comp.PrettyPrinter{false, 0, true}
 	attr := &comp.Attr{false, env.NewEnv(nil), nil}
 
