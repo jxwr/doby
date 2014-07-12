@@ -53,6 +53,16 @@ type Eval struct {
 	NeedContinue bool
 }
 
+func NewEvaluater() *Eval {
+	eval := &Eval{false, env.NewEnv(nil), NewStack(), nil, nil,
+		false, 0, false, false}
+	return eval
+}
+
+func (self *Eval) SetRuntime(rt *rt.Runtime) {
+	self.RT = rt
+}
+
 func (self *Eval) log(fmtstr string, args ...interface{}) {
 	fmt.Printf(fmtstr, args...)
 	fmt.Println()
