@@ -24,6 +24,10 @@ func (self *FloatObject) String() string {
 	return fmt.Sprintf("%f", self.Val)
 }
 
+func (self *FloatObject) ToString(rt *Runtime, args ...Object) []Object {
+	return []Object{rt.NewStringObject(self.String())}
+}
+
 func (self *FloatObject) Abs(rt *Runtime, args ...Object) (results []Object) {
 	val := self.Val
 	if val < 0 {

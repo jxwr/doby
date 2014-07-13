@@ -13,13 +13,19 @@ type Object interface {
 	HashCode() string
 	SetProp(key string, val Object)
 	GetProp(key string) Object
+	ToString(*Runtime, ...Object) []Object
 }
 
 func Invoke(rt *Runtime, obj Object, method string, args ...Object) (results []Object) {
 	if strings.HasPrefix(method, "__") {
 		if method == "__get_property__" {
 			idx := args[0].(*StringObject)
-			results = append(results, obj.GetProp(idx.Val))
+			val := obj.GetProp(idx.Val)
+			fnobj, ok := val.(*FuncObject)
+			if ok {
+				fnobj.Obj = obj
+			}
+			results = append(results, val)
 			return
 		} else if method == "__set_property__" {
 			idx := args[0].(*StringObject)
@@ -89,6 +95,7 @@ func (self *Property) GetProp(key string) Object {
 }
 
 type NilObject struct {
+	Property
 }
 
 func (self *NilObject) Name() string {
@@ -101,4 +108,8 @@ func (self *NilObject) HashCode() string {
 
 func (self *NilObject) String() string {
 	return "<nil>"
+}
+
+func (self *NilObject) ToString(rt *Runtime, args ...Object) []Object {
+	return []Object{rt.NewStringObject(self.String())}
 }

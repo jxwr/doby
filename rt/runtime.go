@@ -17,15 +17,29 @@ import (
 type Runtime struct {
 	Visitor ast.Visitor
 	Env     *env.Env
+	Nil     Object
 
 	integerProperties Property
+	floatProperties   Property
+	stringProperties  Property
+	arrayProperties   Property
+	dictProperties    Property
+	setProperties     Property
+	boolProperties    Property
+	nilProperties     Property
+	funcProperties    Property
+	gofuncProperties  Property
+	goobjProperties   Property
 }
 
 func NewRuntime(visitor ast.Visitor) *Runtime {
 	env := env.NewEnv(nil)
 
 	rt := &Runtime{Visitor: visitor, Env: env}
-	rt.RegisterGlobals(env)
+	rt.registerGlobals(env)
+
+	rt.Nil = &NilObject{}
+	rt.initBuiltinObjectProperties()
 
 	return rt
 }
@@ -36,56 +50,108 @@ func (self *Runtime) NewIntegerObject(val int) *IntegerObject {
 }
 
 func (self *Runtime) NewStringObject(val string) Object {
-	obj := &StringObject{EmptyProperty(), val}
+	obj := &StringObject{MakeProperty(nil, &self.stringProperties), val}
 	return obj
 }
 
 func (self *Runtime) NewFloatObject(val float64) Object {
-	obj := &FloatObject{EmptyProperty(), val}
+	obj := &FloatObject{MakeProperty(nil, &self.floatProperties), val}
 	return obj
 }
 
 func (self *Runtime) NewGoFuncObject(fname string, fn interface{}) *GoFuncObject {
-	gf := &GoFuncObject{EmptyProperty(), fname, reflect.TypeOf(fn), fn}
+	gf := &GoFuncObject{MakeProperty(nil, &self.gofuncProperties), fname, reflect.TypeOf(fn), fn}
 	return gf
 }
 
 func (self *Runtime) NewGoObject(obj interface{}) *GoObject {
-	gobj := &GoObject{EmptyProperty(), obj}
+	gobj := &GoObject{MakeProperty(nil, &self.goobjProperties), obj}
 	return gobj
 }
 
 func (self *Runtime) NewFuncObject(name string, decl *ast.FuncDeclExpr, e *env.Env) Object {
-	obj := &FuncObject{EmptyProperty(), name, decl, false, nil, e}
+	obj := &FuncObject{MakeProperty(nil, &self.funcProperties), name, decl, false, nil, e}
 	return obj
 }
 
 func (self *Runtime) NewBuiltinFuncObject(name string, recv Object, e *env.Env) *FuncObject {
-	obj := &FuncObject{EmptyProperty(), name, nil, true, recv, e}
+	obj := &FuncObject{MakeProperty(nil, &self.funcProperties), name, nil, true, recv, e}
 	return obj
 }
 
 func (self *Runtime) NewDictObject(fields map[string]Object) Object {
-	obj := &DictObject{Property{fields, nil}}
-	return obj
-}
-
-func (self *Runtime) NewBoolObject(val bool) Object {
-	obj := &BoolObject{EmptyProperty(), val}
+	obj := &DictObject{MakeProperty(fields, &self.dictProperties)}
 	return obj
 }
 
 func (self *Runtime) NewArrayObject(vals []Object) Object {
-	obj := &ArrayObject{EmptyProperty(), vals}
+	obj := &ArrayObject{MakeProperty(nil, &self.arrayProperties), vals}
 	return obj
 }
 
 func (self *Runtime) NewSetObject(vals []Object) Object {
-	obj := &SetObject{EmptyProperty(), vals}
+	obj := &SetObject{MakeProperty(nil, &self.setProperties), vals}
 	return obj
 }
 
+func (self *Runtime) NewBoolObject(val bool) Object {
+	obj := &BoolObject{MakeProperty(nil, &self.boolProperties), val}
+	return obj
+}
+
+func (self *Runtime) NewNilObject(vals []Object) Object {
+	return self.Nil
+}
+
 /// init object methods
+
+func (self *Runtime) initObjectProperties(obj Object, prop *Property) {
+	typ := reflect.TypeOf(obj)
+	numMethods := typ.NumMethod()
+
+	to_s, _ := typ.MethodByName("ToString")
+	for i := 0; i < numMethods; i++ {
+		m := typ.Method(i)
+		if m.Type == to_s.Type {
+			fn := self.NewBuiltinFuncObject(m.Name, nil, nil)
+			prop.SetProp(m.Name, fn)
+		}
+	}
+}
+
+func (self *Runtime) initBuiltinObjectProperties() {
+	intObj := self.NewIntegerObject(0)
+	self.initObjectProperties(intObj, &self.integerProperties)
+
+	floatObj := self.NewFloatObject(0)
+	self.initObjectProperties(floatObj, &self.floatProperties)
+
+	stringObj := self.NewStringObject("")
+	self.initObjectProperties(stringObj, &self.stringProperties)
+
+	arrayObj := self.NewArrayObject(nil)
+	self.initObjectProperties(arrayObj, &self.arrayProperties)
+
+	dictObj := self.NewDictObject(nil)
+	self.initObjectProperties(dictObj, &self.dictProperties)
+
+	setObj := self.NewSetObject(nil)
+	self.initObjectProperties(setObj, &self.setProperties)
+
+	boolObj := self.NewBoolObject(false)
+	self.initObjectProperties(boolObj, &self.boolProperties)
+
+	funcObj := self.NewFuncObject("init", nil, nil)
+	self.initObjectProperties(funcObj, &self.funcProperties)
+
+	gofuncObj := self.NewGoFuncObject("init", nil)
+	self.initObjectProperties(gofuncObj, &self.gofuncProperties)
+
+	goObj := self.NewGoObject(nil)
+	self.initObjectProperties(goObj, &self.goobjProperties)
+
+	self.initObjectProperties(self.Nil, &self.nilProperties)
+}
 
 /// register
 
@@ -93,7 +159,7 @@ func (self *Runtime) RegisterFunctions(name string, fns []interface{}) {
 	self.Env.Put(name, self.NewDictObject(self.funcMap(fns)))
 }
 
-func (self *Runtime) RegisterGlobals(env *env.Env) {
+func (self *Runtime) registerGlobals(env *env.Env) {
 	self.RegisterFunctions("fmt", []interface{}{
 		fmt.Errorf,
 		fmt.Println, fmt.Print, fmt.Printf,

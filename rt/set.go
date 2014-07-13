@@ -32,3 +32,7 @@ func (self *SetObject) String() string {
 	s += "]"
 	return s
 }
+
+func (self *SetObject) ToString(rt *Runtime, args ...Object) []Object {
+	return []Object{rt.NewStringObject(self.String())}
+}

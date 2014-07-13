@@ -20,6 +20,10 @@ func (self *GoObject) String() string {
 	return fmt.Sprint(self.obj)
 }
 
+func (self *GoObject) ToString(rt *Runtime, args ...Object) []Object {
+	return []Object{rt.NewStringObject(self.String())}
+}
+
 func (self *GoObject) HashCode() string {
 	return fmt.Sprintf("%p", self.obj)
 }
@@ -146,6 +150,10 @@ func (self *GoFuncObject) Name() string {
 
 func (self *GoFuncObject) String() string {
 	return self.name
+}
+
+func (self *GoFuncObject) ToString(rt *Runtime, args ...Object) []Object {
+	return []Object{rt.NewStringObject(self.String())}
 }
 
 func (self *GoFuncObject) HashCode() string {

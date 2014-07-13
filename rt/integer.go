@@ -24,6 +24,10 @@ func (self *IntegerObject) String() string {
 	return fmt.Sprintf("%d", self.Val)
 }
 
+func (self *IntegerObject) ToString(rt *Runtime, args ...Object) []Object {
+	return []Object{rt.NewStringObject(self.String())}
+}
+
 func (self *IntegerObject) Times(rt *Runtime, args ...Object) (results []Object) {
 	fnobj := args[0].(*FuncObject)
 	fnDecl := fnobj.Decl

@@ -32,6 +32,10 @@ func (self *FuncObject) String() string {
 	return self.name
 }
 
+func (self *FuncObject) ToString(rt *Runtime, args ...Object) []Object {
+	return []Object{rt.NewStringObject(self.String())}
+}
+
 func (self *FuncObject) OP__call__(rt *Runtime, args ...Object) (results []Object) {
 	results = Invoke(rt, self.Obj, self.name, args...)
 	return

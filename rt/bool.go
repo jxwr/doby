@@ -24,6 +24,10 @@ func (self *BoolObject) String() string {
 	return fmt.Sprintf("%v", self.Val)
 }
 
+func (self *BoolObject) ToString(rt *Runtime, args ...Object) []Object {
+	return []Object{rt.NewStringObject(self.String())}
+}
+
 func (self *BoolObject) OP__land__(rt *Runtime, args ...Object) (results []Object) {
 	val := args[0].(*BoolObject).Val
 	val = self.Val && val

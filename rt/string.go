@@ -20,6 +20,10 @@ func (self *StringObject) String() string {
 	return self.Val
 }
 
+func (self *StringObject) ToString(rt *Runtime, args ...Object) []Object {
+	return []Object{rt.NewStringObject(self.String())}
+}
+
 /// methods
 
 func (self *StringObject) Length(rt *Runtime, args ...Object) (results []Object) {

@@ -33,6 +33,10 @@ func (self *ArrayObject) String() string {
 	return s
 }
 
+func (self *ArrayObject) ToString(rt *Runtime, args ...Object) []Object {
+	return []Object{rt.NewStringObject(self.String())}
+}
+
 func (self *ArrayObject) Append(rt *Runtime, args ...Object) (results []Object) {
 	val := args[0]
 	self.Vals = append(self.Vals, val)

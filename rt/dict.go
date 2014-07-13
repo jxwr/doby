@@ -36,6 +36,10 @@ func (self *DictObject) String() string {
 	return s
 }
 
+func (self *DictObject) ToString(rt *Runtime, args ...Object) []Object {
+	return []Object{rt.NewStringObject(self.String())}
+}
+
 func (self *DictObject) OP__get_index__(rt *Runtime, args ...Object) (results []Object) {
 	idx := args[0]
 	results = append(results, self.GetProp(idx.HashCode()))

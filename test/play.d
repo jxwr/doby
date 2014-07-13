@@ -236,7 +236,7 @@ func fib(n) {
 }
 
 for i = 0; i < 10; i++ {
-    fmt.Print(fib(i), "")
+    fmt.Println(i, fib(i))
 }
 fmt.Print("\n")
 
