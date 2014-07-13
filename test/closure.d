@@ -1,6 +1,7 @@
+import "fmt"
 
-10.times(func(i){
-  print(i,"\n")
+10.Times(func(i){
+  fmt.Println(i)
 })
 
 func add_n(n) {
@@ -11,7 +12,7 @@ add_100 = add_n(100)
 add_150 = add_n(150)
 c = add_100(20)
 d = add_150(20)
-print(c, d, "\n")
+fmt.Println(c, d)
 
 func f0() {
      c = 100
@@ -24,12 +25,12 @@ func f0() {
      }
      d = f1()
      e = f2()
-     print(d, e,"\n")
+     fmt.Print(d, e,"\n")
 }
 
 f0()
 
-func q(n) { print(n["name"]+"\n") }
+func q(n) { fmt.Println(n["name"]) }
 
 func p(str) { q(str) }
 

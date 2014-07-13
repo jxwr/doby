@@ -2,6 +2,7 @@ package rt
 
 import (
 	"fmt"
+	"os"
 	"reflect"
 	"strings"
 )
@@ -33,16 +34,18 @@ func Invoke(rt *Runtime, obj Object, method string, args ...Object) (results []O
 	theMethod := reflect.ValueOf(obj).MethodByName(method)
 	if !theMethod.IsValid() {
 		fmt.Printf("Error: Unknown Method %s for %s\n", method, obj)
+		os.Exit(1)
 	}
 
 	theArgs := []reflect.Value{reflect.ValueOf(rt)}
 
 	if args != nil {
 		for _, arg := range args {
-			theArgs = append(theArgs, reflect.ValueOf(arg))
+			if arg != nil {
+				theArgs = append(theArgs, reflect.ValueOf(arg))
+			}
 		}
 	}
-
 	vals := theMethod.Call(theArgs)
 	results = vals[0].Interface().([]Object)
 	return
@@ -55,7 +58,11 @@ func (self *Property) SetProp(key string, val Object) {
 }
 
 func (self *Property) GetProp(key string) Object {
-	return (*self)[key]
+	val, ok := (*self)[key]
+	if !ok {
+		panic(fmt.Sprintf("Error: no property named %s\n", key))
+	}
+	return val
 }
 
 type NilObject struct {

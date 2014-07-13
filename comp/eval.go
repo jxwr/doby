@@ -15,11 +15,12 @@ import (
 
 type Stack struct {
 	cur  int
+	mark int
 	vals []rt.Object
 }
 
 func NewStack() *Stack {
-	stack := &Stack{0, []rt.Object{}}
+	stack := &Stack{0, 0, []rt.Object{}}
 	return stack
 }
 
@@ -38,6 +39,14 @@ func (self *Stack) Pop() rt.Object {
 	}
 	self.cur--
 	return self.vals[self.cur]
+}
+
+func (self *Stack) Mark() {
+	self.mark = self.cur
+}
+
+func (self *Stack) Rewind() {
+	self.cur = self.mark
 }
 
 type Eval struct {
@@ -188,6 +197,7 @@ func (self *Eval) VisitCallExpr(node *ast.CallExpr) {
 
 	switch fnobj := self.Stack.Pop().(type) {
 	case *rt.FuncObject:
+		// class methods
 		if fnobj.IsBuiltin {
 			args := []rt.Object{}
 			for _, arg := range node.Args {
@@ -249,8 +259,15 @@ func (self *Eval) VisitUnaryExpr(node *ast.UnaryExpr) {
 		}
 	} else if node.Op == token.SUB {
 		self.evalExpr(node.X)
-		obj := self.Stack.Pop().(*rt.IntegerObject)
-		self.Stack.Push(rt.NewIntegerObject(-obj.Val))
+		obj := self.Stack.Pop()
+		var val rt.Object
+		switch obj := obj.(type) {
+		case *rt.IntegerObject:
+			val = rt.NewIntegerObject(-obj.Val)
+		case *rt.FloatObject:
+			val = rt.NewFloatObject(-obj.Val)
+		}
+		self.Stack.Push(val)
 	}
 }
 
@@ -356,7 +373,9 @@ func (self *Eval) VisitFuncDeclExpr(node *ast.FuncDeclExpr) {
 func (self *Eval) VisitExprStmt(node *ast.ExprStmt) {
 	self.debug(node)
 
+	self.Stack.Mark()
 	node.X.Accept(self)
+	self.Stack.Rewind()
 }
 
 func (self *Eval) VisitSendStmt(node *ast.SendStmt) {

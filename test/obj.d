@@ -17,7 +17,8 @@ if a * 3 == 81 / 3 {
 }
 
 // list
-list = [1,2,3,4]
+list = [] + [1,2,3,4] + [3,4,5] + [a] + []
+fmt.Println(list[1:] + [2])
 
 fmt.Println("list length", list.Length())
 list.Append(6)
@@ -43,5 +44,12 @@ fmt.Println(a, a[str], a[100])
 a = true       // true
 b = a && false // false
 c = a || b     // true
-d = !c || a        // false
+d = !c||a        // false
 fmt.Println(a,b,c,d)
+
+// float 
+a = 0.1
+b = -0.2
+
+c = a + b
+fmt.Println(c)

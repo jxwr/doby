@@ -89,12 +89,12 @@ func (self *ArrayObject) OP__slice__(ctx *Runtime, args ...Object) (results []Ob
 	low := 0
 	high := len(self.Vals)
 
-	lo := args[0]
-	if lo != nil {
+	if len(args) > 0 {
+		lo := args[0]
 		low = lo.(*IntegerObject).Val
 	}
-	ho := args[1]
-	if ho != nil {
+	if len(args) > 1 {
+		ho := args[1]
 		high = ho.(*IntegerObject).Val
 	}
 

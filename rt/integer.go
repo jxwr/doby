@@ -168,12 +168,6 @@ func (self *IntegerObject) OP__or__(rt *Runtime, args ...Object) (results []Obje
 	return
 }
 
-// !
-func (self *IntegerObject) OP__not__(rt *Runtime, args ...Object) (results []Object) {
-	results = self.binary("__not__", args[0])
-	return
-}
-
 // ^
 func (self *IntegerObject) OP__xor__(rt *Runtime, args ...Object) (results []Object) {
 	results = self.binary("__xor__", args[0])
@@ -195,18 +189,6 @@ func (self *IntegerObject) OP__shr__(rt *Runtime, args ...Object) (results []Obj
 // &^
 func (self *IntegerObject) OP__and_not__(rt *Runtime, args ...Object) (results []Object) {
 	results = self.binary("__and_not__", args[0])
-	return
-}
-
-// &&
-func (self *IntegerObject) OP__land__(rt *Runtime, args ...Object) (results []Object) {
-	results = self.logic("__land__", args[0])
-	return
-}
-
-// ||
-func (self *IntegerObject) OP__lor__(rt *Runtime, args ...Object) (results []Object) {
-	results = self.logic("__lor__", args[0])
 	return
 }
 

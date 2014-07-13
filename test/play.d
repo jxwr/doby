@@ -1,3 +1,4 @@
+import "fmt"
 
 // datatype
 list0 = [1,2,3,4]
@@ -40,55 +41,51 @@ set = #[
 	1, a, c
 ]
 
-print(list0, "\n", list1, "\n", empty_dict, "\n", dict, "\n", set, "\n")
+fmt.Print(list0, "\n", list1, "\n", empty_dict, "\n", dict, "\n", set, "\n")
 
 // 
 
 a = 100 + 3 * 123 
 b = a + 2
 
-print("a", a, "\n")
-print("b", b, "\n")
+fmt.Print("a", a, "\n")
+fmt.Print("b", b, "\n")
 
 c = [1,2,3,4]
 
-print(c, "\n")
-print(100 + c[3], "\n")
-print(c[0] + c[1] + c[2] + c[3], "\n")
+fmt.Print(c, "\n")
+fmt.Print(100 + c[3], "\n")
+fmt.Print(c[0] + c[1] + c[2] + c[3], "\n")
 
-func println(str) {
-	print(str, "\n")
-}
-
-println("fun decl")
+fmt.Println("fun decl")
 
 func add(a, b) {
 	return a + b
 }
 
-println(add(1, 200))
+fmt.Println(add(1, 200))
 
 c[0] = 1000
-println(c[0])
+fmt.Println(c[0])
 
 c.len = func() {
 	return 2 * (c[0] + 1)
 }
 
-println(c.len())
+fmt.Println(c.len())
 c[0] = 132
-println(c.len())
+fmt.Println(c.len())
 
 if 2 > 1 {
-	println("true")
+	fmt.Println("true")
 } else {
-	println("false")
+	fmt.Println("false")
 }
 
 if false {
-	println("true")
+	fmt.Println("true")
 } else {
-	println("false")
+	fmt.Println("false")
 }
 
 a = 500
@@ -97,31 +94,31 @@ a++
 a.b = 998
 a.b++
 a.b++
-println(a)
-println(a.b)
+fmt.Println(a)
+fmt.Println(a.b)
 
 for i = 0; i < 3; i++ {
-    print(i,"")
+    fmt.Print(i,"")
 }
 
 for i, v = range c {
-    print(i, "=", v, "\n")
+    fmt.Print(i, "=", v, "\n")
     return true
 }
 
 list = [1,2,3,4]
-list.append(5)
-println(list)
+list.Append(5)
+fmt.Println(list)
 
 cl = [1,2,3,4] + [5,6,7,8]
-println(cl)
-println(cl[1:8])
+fmt.Println(cl)
+fmt.Println(cl[1:8])
 
 base = 99
-print("abs:", (-100).abs(), "\n")
-11.times(func(i){
+fmt.Print("abs:", (-100).Abs(), "\n")
+11.Times(func(i){
 	if i % 2 == 0 { 
-		print(i, "") 
+		fmt.Print(i, "") 
 	}
 })
 
@@ -130,11 +127,11 @@ list.name = func() {
 	return list[0] + " " + list[1]
 }
 
-println(list.name())
+fmt.Println(list.name())
 
 func printA() {
 	for i = 0; i< 1000; i {
-		print("A")
+		fmt.Print("A")
 	}
 }
 
@@ -142,15 +139,15 @@ person = #{
 	"name": "jiaoxiang",
 	"age": 28,
 	"summary": func(obj) {
-		println(obj["name"] + ":" + obj["age"])
+		fmt.Println(obj["name"] + ":" + obj["age"])
 	}
 }
 
 person.weight = 125
-println(person)
+fmt.Println(person)
 
 func nnn(obj) {
-    println(obj)
+    fmt.Println(obj)
 }
 
 person.summary(person)
@@ -169,30 +166,30 @@ func testLoop() {
 				n++
 				if n == 3 {
 					break
-					print("break")
+					fmt.Print("break")
 				}
-				print("[", n, "]")	
+				fmt.Print("[", n, "]")	
 			} 
 			continue
 		}
 
 		if i == 9 {
-			println("quit")
+			fmt.Println("quit")
 			return i
-			print("never reach here")
+			fmt.Print("never reach here")
 		}
-		print(i, "")
+		fmt.Print(i, "")
 	}
 }
 
 n = testLoop()
-println("return:"+n)
+fmt.Println("return:"+n)
 
 // 1 [ 1 ] [ 2 ] 3 4 5 6 7 8 quit
 // return: 9
 
-// custom print function
-println(220)
+// custom fmt.Print function
+fmt.Println(220)
 
 // closure
 
@@ -205,29 +202,29 @@ func test1() {
 
 	a = test0(n)
 
-	print("a", a, "\n")
+	fmt.Print("a", a, "\n")
 
 	b = test0(n)
 	
 	c = a + b
-	print("c", c, "\n")
+	fmt.Print("c", c, "\n")
 }
 
 func test2(n) {
 	a = n
-	print("test2\n")
+	fmt.Print("test2\n")
 	return a + 1
 }
 
 func test3() {
-	print("test3\n")
+	fmt.Print("test3\n")
 	m = test2(123)
-	print(m, "\n")
+	fmt.Print(m, "\n")
 }
 
 test1()
 bb = test2(888)
-print(bb, "\n")
+fmt.Print(bb, "\n")
 test3()
 
 // fibornacci
@@ -239,14 +236,14 @@ func fib(n) {
 }
 
 for i = 0; i < 10; i++ {
-    print(fib(i), "")
+    fmt.Print(fib(i), "")
 }
-print("\n")
+fmt.Print("\n")
 
 // list reverse
 
 func reverse(lst) {
-	if lst.length() < 1 {
+	if lst.Length() < 1 {
 		return lst   
 	}
 	return reverse(lst[1:]) + [lst[0]]
@@ -254,29 +251,29 @@ func reverse(lst) {
 
 list = [1,2,3,4,5,6,7]
 rlist = reverse(list)
-println(rlist)
+fmt.Println(rlist)
 
 // test object
 a = #{}
 a.size = 89
 a.name = "tang"
-a.hello = func() { println("hello") }
+a.hello = func() { fmt.Println("hello") }
 
 a.hello()
-println(a)
+fmt.Println(a)
 
 // xxx_assign
 a = 33
 a += 11
-println(a)
+fmt.Println(a)
 
 b = [1,2,3]
 b += [4,5,6]
-println(b)
+fmt.Println(b)
 
 c = 1.23
 c += 2
-println(c)
+fmt.Println(c)
 
 // switch
 
@@ -284,24 +281,24 @@ a = 11
 
 switch a {
 case a < 10:
-	print("< 10")
+	fmt.Print("< 10")
 case a > 100:
-	print("> 10")
+	fmt.Print("> 10")
 case 10:
-	print(10)
+	fmt.Print(10)
 default:
-	print("default\n")
+	fmt.Print("default\n")
 }
 
-//10000.times(func(i){print(i,"")})
-print("\n")
+//10000.times(func(i){fmt.Print(i,"")})
+fmt.Print("\n")
 
-func(yes,no){print(yes,no,"\n")}(true,false)
+func(yes,no){fmt.Print(yes,no,"\n")}(true,false)
 
 for index, value = range ["a", "b", "c", "d"] {
-    print(index, value, "\n")
+    fmt.Print(index, value, "\n")
 }
 
 for index, value = range #{"a": 1, "b": 2, "c": 3, "d": 4} {
-    print(index, value, "\n")
+    fmt.Print(index, value, "\n")
 }
