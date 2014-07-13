@@ -1,3 +1,8 @@
+## Soon
+
+* [ ] remove Property in each object
+* [ ] add golang type register support
+
 ## Tasks
 
 * [ ] fix bugs, there must be lots of bugs
