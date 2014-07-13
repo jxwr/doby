@@ -279,6 +279,10 @@ fmt.Println(c)
 
 a = 11
 
+for i = 0; i < 20; i++ {
+	fmt.Print(i)
+}
+
 switch a {
 case a < 10:
 	fmt.Print("< 10")

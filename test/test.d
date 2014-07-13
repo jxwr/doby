@@ -42,8 +42,8 @@ fmt.Println(list, ["hello", "world"], #{"name": name, "age": age})
 str = "abcdefghijklmn"
 ch = str[1:5] + "_bcd"
 
-fmt.Println(ch.length())
-fmt.Println(ch.size())
+fmt.Println(ch.Length())
+fmt.Println(ch.Size())
 
 ch = 'a'
 fmt.Println(ch + 'b')

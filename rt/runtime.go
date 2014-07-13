@@ -28,6 +28,10 @@ func NewRuntime(visitor ast.Visitor) *Runtime {
 	return rt
 }
 
+func (self *Runtime) RegisterFunctions(name string, fns []interface{}) {
+	self.Env.Put(name, NewDictObject(funcMap(fns)))
+}
+
 func funcMap(funcList []interface{}) (fm map[string]Object) {
 	fm = map[string]Object{}
 	for _, f := range funcList {

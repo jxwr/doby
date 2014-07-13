@@ -584,7 +584,8 @@ func (self *Eval) VisitCaseClause(node *ast.CaseClause) {
 func (self *Eval) VisitSwitchStmt(node *ast.SwitchStmt) {
 	self.debug(node)
 
-	node.Init.Accept(self)
+	// dirty hack, we need keep the stack clean
+	node.Init.(*ast.ExprStmt).X.Accept(self)
 	initObj := self.Stack.Pop()
 	for _, c := range node.Body.List {
 		self.Stack.Push(initObj)
