@@ -65,7 +65,9 @@ func (t Tok) String() string {
 %token <tok> FUNC GO GOTO IF IMPORT INTERFACE MAP PACKAGE RANGE RETURN 
 %token <tok> SELECT STRUCT SWITCH TYPE VAR 
 
-%left LAND LOR ARROW
+%left LOR ARROW
+%left LAND 
+%left NOT 
 %left SHL SHR AND_NOT 
 %left LSS GTR
 %left NEQ LEQ GEQ EQL
@@ -73,7 +75,6 @@ func (t Tok) String() string {
 %left AND XOR
 %left ADD SUB
 %left MUL QUO REM
-%left NOT 
 %left INC DEC
 %left UMINUS
 %left LPAREN
@@ -115,6 +116,7 @@ expr_list : /* empty */		      	  { $$ = []ast.Expr{} }
 call_expr : expr LPAREN expr_list RPAREN  { $$ = &ast.CallExpr{$1, 0, $3, 0} }
 
 unary_expr : SUB expr %prec UMINUS	  { $$ = &ast.UnaryExpr{0, token.SUB, $2 } }
+           | NOT expr                     { $$ = &ast.UnaryExpr{0, token.NOT, $2 } }
 
 binary_expr : expr ADD expr 		  { $$ = &ast.BinaryExpr{$1, 0, token.ADD, $3 } }
             | expr SUB expr		  { $$ = &ast.BinaryExpr{$1, 0, token.SUB, $3 } }

@@ -16,12 +16,14 @@ if a * 3 == 81 / 3 {
 	fmt.Println(true)
 }
 
+// list
 list = [1,2,3,4]
 
 fmt.Println("list length", list.Length())
 list.Append(6)
 fmt.Println(list)
 
+// str
 str = "1n2n3n5"
 subs = str[1:4]
 fmt.Println(subs)
@@ -32,6 +34,14 @@ if str == "1n2n3n5" {
 	fmt.Println(false)
 }
 
+// dict
 a = #{str: 100, 100: 200}
-
 fmt.Println(a, a[str], a[100])
+
+// bool
+
+a = true       // true
+b = a && false // false
+c = a || b     // true
+d = !c || a        // false
+fmt.Println(a,b,c,d)

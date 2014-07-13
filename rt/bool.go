@@ -29,17 +29,22 @@ func (self *BoolObject) String() string {
 	return fmt.Sprintf("%v", self.Val)
 }
 
-func (self *BoolObject) Dispatch(ctx *Runtime, method string, args ...Object) (results []Object) {
+func (self *BoolObject) OP__land__(rt *Runtime, args ...Object) (results []Object) {
 	val := args[0].(*BoolObject).Val
-	switch method {
-	case "__land__":
-		val = self.Val && val
-	case "__lor__":
-		val = self.Val || val
-	case "__not__":
-		val = !self.Val
-	}
+	val = self.Val && val
+	results = append(results, NewBoolObject(val))
+	return
+}
 
+func (self *BoolObject) OP__lor__(rt *Runtime, args ...Object) (results []Object) {
+	val := args[0].(*BoolObject).Val
+	val = self.Val || val
+	results = append(results, NewBoolObject(val))
+	return
+}
+
+func (self *BoolObject) OP__not__(rt *Runtime, args ...Object) (results []Object) {
+	val := !self.Val
 	results = append(results, NewBoolObject(val))
 	return
 }

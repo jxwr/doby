@@ -37,11 +37,3 @@ func (self *SetObject) String() string {
 	s += "]"
 	return s
 }
-
-func (self *SetObject) Dispatch(ctx *Runtime, method string, args ...Object) (results []Object) {
-	switch method {
-	case "__add__":
-		fmt.Println("__add__")
-	}
-	return
-}

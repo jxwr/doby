@@ -240,9 +240,18 @@ func (self *Eval) VisitCallExpr(node *ast.CallExpr) {
 func (self *Eval) VisitUnaryExpr(node *ast.UnaryExpr) {
 	self.debug(node)
 
-	self.evalExpr(node.X)
-	obj := self.Stack.Pop().(*rt.IntegerObject)
-	self.Stack.Push(rt.NewIntegerObject(-obj.Val))
+	if node.Op == token.NOT {
+		self.evalExpr(node.X)
+		obj := self.Stack.Pop()
+		rets := rt.Invoke(self.RT, obj, "__not__")
+		for _, ret := range rets {
+			self.Stack.Push(ret)
+		}
+	} else if node.Op == token.SUB {
+		self.evalExpr(node.X)
+		obj := self.Stack.Pop().(*rt.IntegerObject)
+		self.Stack.Push(rt.NewIntegerObject(-obj.Val))
+	}
 }
 
 var OpFuncs = map[token.Token]string{
