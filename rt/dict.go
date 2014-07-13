@@ -42,15 +42,15 @@ func (self *DictObject) String() string {
 	return s
 }
 
-func (self *DictObject) Dispatch(ctx *Runtime, method string, args ...Object) (results []Object) {
-	switch method {
-	case "__get_index__":
-		idx := args[0]
-		results = append(results, self.GetProp(idx.HashCode()))
-	case "__set_index__":
-		idx := args[0]
-		val := args[1]
-		self.SetProp(idx.HashCode(), val)
-	}
+func (self *DictObject) OP__get_index__(rt *Runtime, args ...Object) (results []Object) {
+	idx := args[0]
+	results = append(results, self.GetProp(idx.HashCode()))
+	return
+}
+
+func (self *DictObject) OP__set_index__(rt *Runtime, args ...Object) (results []Object) {
+	idx := args[0]
+	val := args[1]
+	self.SetProp(idx.HashCode(), val)
 	return
 }

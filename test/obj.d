@@ -31,3 +31,7 @@ if str == "1n2n3n5" {
 } else {
 	fmt.Println(false)
 }
+
+a = #{str: 100, 100: 200}
+
+fmt.Println(a, a[str], a[100])
