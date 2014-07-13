@@ -99,10 +99,10 @@ func (self *Eval) VisitIdent(node *ast.Ident) {
 	self.debug(node)
 
 	if node.Name == "true" {
-		obj := rt.NewBoolObject(true)
+		obj := self.RT.NewBoolObject(true)
 		self.Stack.Push(obj)
 	} else if node.Name == "false" {
-		obj := rt.NewBoolObject(false)
+		obj := self.RT.NewBoolObject(false)
 		self.Stack.Push(obj)
 	} else {
 		obj, _ := self.E.LookUp(node.Name)
@@ -123,22 +123,22 @@ func (self *Eval) VisitBasicLit(node *ast.BasicLit) {
 		if err != nil {
 			self.fatal("%s convert to int failed: %v", node.Value, err)
 		}
-		obj := rt.NewIntegerObject(val)
+		obj := self.RT.NewIntegerObject(val)
 		self.Stack.Push(obj)
 	case token.FLOAT:
 		val, err := strconv.ParseFloat(node.Value, 64)
 		if err != nil {
 			self.fatal("%s convert to float failed: %v", node.Value, err)
 		}
-		obj := rt.NewFloatObject(val)
+		obj := self.RT.NewFloatObject(val)
 		self.Stack.Push(obj)
 	case token.STRING:
 		val := strings.Trim(node.Value, "\"")
-		obj := rt.NewStringObject(val)
+		obj := self.RT.NewStringObject(val)
 		self.Stack.Push(obj)
 	case token.CHAR:
 		val := strings.Trim(node.Value, "'")
-		obj := rt.NewStringObject(val)
+		obj := self.RT.NewStringObject(val)
 		self.Stack.Push(obj)
 	}
 }
@@ -154,7 +154,7 @@ func (self *Eval) VisitSelectorExpr(node *ast.SelectorExpr) {
 
 	self.evalExpr(node.X)
 	obj := self.Stack.Pop()
-	prop := rt.NewStringObject(node.Sel.Name)
+	prop := self.RT.NewStringObject(node.Sel.Name)
 	rets := rt.Invoke(self.RT, obj, "__get_property__", prop)
 	self.Stack.Push(rets[0])
 }
@@ -263,9 +263,9 @@ func (self *Eval) VisitUnaryExpr(node *ast.UnaryExpr) {
 		var val rt.Object
 		switch obj := obj.(type) {
 		case *rt.IntegerObject:
-			val = rt.NewIntegerObject(-obj.Val)
+			val = self.RT.NewIntegerObject(-obj.Val)
 		case *rt.FloatObject:
-			val = rt.NewFloatObject(-obj.Val)
+			val = self.RT.NewFloatObject(-obj.Val)
 		}
 		self.Stack.Push(val)
 	}
@@ -326,7 +326,7 @@ func (self *Eval) VisitArrayExpr(node *ast.ArrayExpr) {
 		self.evalExpr(elem)
 		elems = append(elems, self.Stack.Pop())
 	}
-	obj := rt.NewArrayObject(elems)
+	obj := self.RT.NewArrayObject(elems)
 	self.Stack.Push(obj)
 }
 
@@ -338,7 +338,7 @@ func (self *Eval) VisitSetExpr(node *ast.SetExpr) {
 		self.evalExpr(elem)
 		elems = append(elems, self.Stack.Pop())
 	}
-	obj := rt.NewSetObject(elems)
+	obj := self.RT.NewSetObject(elems)
 	self.Stack.Push(obj)
 }
 
@@ -353,7 +353,7 @@ func (self *Eval) VisitDictExpr(node *ast.DictExpr) {
 		val := self.Stack.Pop()
 		fieldMap[key.HashCode()] = val
 	}
-	obj := rt.NewDictObject(fieldMap)
+	obj := self.RT.NewDictObject(fieldMap)
 	self.Stack.Push(obj)
 }
 
@@ -362,9 +362,9 @@ func (self *Eval) VisitFuncDeclExpr(node *ast.FuncDeclExpr) {
 
 	if node.Name != nil {
 		fname := node.Name.Name
-		self.E.Put(fname, rt.NewFuncObject(fname, node, self.E))
+		self.E.Put(fname, self.RT.NewFuncObject(fname, node, self.E))
 	} else {
-		self.Stack.Push(rt.NewFuncObject("#<closure>", node, self.E))
+		self.Stack.Push(self.RT.NewFuncObject("#<closure>", node, self.E))
 	}
 }
 
@@ -445,7 +445,7 @@ func (self *Eval) VisitAssignStmt(node *ast.AssignStmt) {
 			case *ast.SelectorExpr:
 				self.evalExpr(v.X)
 				lobj := self.Stack.Pop()
-				sel := rt.NewStringObject(v.Sel.Name)
+				sel := self.RT.NewStringObject(v.Sel.Name)
 				rt.Invoke(self.RT, lobj, "__set_property__", sel, robj)
 			}
 		}
@@ -469,7 +469,7 @@ func (self *Eval) VisitAssignStmt(node *ast.AssignStmt) {
 			case *ast.SelectorExpr:
 				self.evalExpr(v.X)
 				lobj := self.Stack.Pop()
-				sel := rt.NewStringObject(v.Sel.Name)
+				sel := self.RT.NewStringObject(v.Sel.Name)
 				rets := rt.Invoke(self.RT, lobj, "__get_property__", sel)
 				rt.Invoke(self.RT, rets[0], OpFuncs[node.Tok], robj)
 			}
@@ -551,13 +551,13 @@ func (self *Eval) VisitCaseClause(node *ast.CaseClause) {
 				v := self.Stack.Pop()
 				rets := rt.Invoke(self.RT, initObj, "__eql__", v)
 				if rets[0].(*rt.BoolObject).Val == false {
-					self.Stack.Push(rt.NewBoolObject(false))
+					self.Stack.Push(self.RT.NewBoolObject(false))
 					return
 				}
 			} else {
 				v := self.Stack.Pop().(*rt.BoolObject)
 				if v.Val == false {
-					self.Stack.Push(rt.NewBoolObject(false))
+					self.Stack.Push(self.RT.NewBoolObject(false))
 					return
 				}
 			}
@@ -578,7 +578,7 @@ func (self *Eval) VisitCaseClause(node *ast.CaseClause) {
 		s.Accept(self)
 	}
 
-	self.Stack.Push(rt.NewBoolObject(true))
+	self.Stack.Push(self.RT.NewBoolObject(true))
 }
 
 func (self *Eval) VisitSwitchStmt(node *ast.SwitchStmt) {
@@ -649,7 +649,7 @@ func (self *Eval) VisitRangeStmt(node *ast.RangeStmt) {
 	switch v := obj.(type) {
 	case *rt.ArrayObject:
 		for i, val := range v.Vals {
-			self.E.Put(keyName, rt.NewIntegerObject(i))
+			self.E.Put(keyName, self.RT.NewIntegerObject(i))
 			self.E.Put(valName, val)
 
 			self.LoopDepth++
@@ -669,7 +669,7 @@ func (self *Eval) VisitRangeStmt(node *ast.RangeStmt) {
 		}
 	case *rt.SetObject:
 		for i, val := range v.Vals {
-			self.E.Put(keyName, rt.NewIntegerObject(i))
+			self.E.Put(keyName, self.RT.NewIntegerObject(i))
 			self.E.Put(valName, val)
 
 			self.LoopDepth++
@@ -688,8 +688,8 @@ func (self *Eval) VisitRangeStmt(node *ast.RangeStmt) {
 			}
 		}
 	case *rt.DictObject:
-		for i, val := range v.Property {
-			self.E.Put(keyName, rt.NewStringObject(i))
+		for i, val := range v.Property.Slots {
+			self.E.Put(keyName, self.RT.NewStringObject(i))
 			self.E.Put(valName, val)
 
 			self.LoopDepth++

@@ -12,11 +12,6 @@ type SetObject struct {
 	Vals []Object
 }
 
-func NewSetObject(vals []Object) Object {
-	obj := &SetObject{Property(map[string]Object{}), vals}
-	return obj
-}
-
 func (self *SetObject) Name() string {
 	return "set"
 }

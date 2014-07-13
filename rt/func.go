@@ -20,16 +20,6 @@ type FuncObject struct {
 	E         *env.Env
 }
 
-func NewFuncObject(name string, decl *ast.FuncDeclExpr, e *env.Env) Object {
-	obj := &FuncObject{Property(map[string]Object{}), name, decl, false, nil, e}
-	return obj
-}
-
-func NewBuiltinFuncObject(name string, recv Object, e *env.Env) *FuncObject {
-	obj := &FuncObject{Property(map[string]Object{}), name, nil, true, recv, e}
-	return obj
-}
-
 func (self *FuncObject) Name() string {
 	return "function"
 }

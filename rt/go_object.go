@@ -12,15 +12,6 @@ type GoObject struct {
 	obj interface{}
 }
 
-func NewGoObject(obj interface{}) *GoObject {
-	gobj := &GoObject{nil, obj}
-	return gobj
-}
-
-func (self *GoObject) Dispatch(ctx *Runtime, method string, args ...Object) (results []Object) {
-	return
-}
-
 func (self *GoObject) Name() string {
 	return "goobj"
 }
@@ -42,12 +33,7 @@ type GoFuncObject struct {
 	fn   interface{}
 }
 
-func NewGoFuncObject(fname string, fn interface{}) *GoFuncObject {
-	gf := &GoFuncObject{nil, fname, reflect.TypeOf(fn), fn}
-	return gf
-}
-
-func (self *GoFuncObject) callGoFunc(ctx *Runtime, args ...Object) (results []Object) {
+func (self *GoFuncObject) callGoFunc(rt *Runtime, args ...Object) (results []Object) {
 	inNum := self.typ.NumIn()
 	inArgs := []reflect.Value{}
 
@@ -134,23 +120,23 @@ func (self *GoFuncObject) callGoFunc(ctx *Runtime, args ...Object) (results []Ob
 	for _, val := range outVals {
 		switch val.Kind() {
 		case reflect.Bool:
-			results = append(results, NewBoolObject(val.Bool()))
+			results = append(results, rt.NewBoolObject(val.Bool()))
 		case reflect.String:
-			results = append(results, NewStringObject(val.String()))
+			results = append(results, rt.NewStringObject(val.String()))
 		case reflect.Int, reflect.Int16, reflect.Int32, reflect.Int64:
-			results = append(results, NewIntegerObject(int(val.Int())))
+			results = append(results, rt.NewIntegerObject(int(val.Int())))
 		case reflect.Float64, reflect.Float32:
-			results = append(results, NewFloatObject(val.Float()))
+			results = append(results, rt.NewFloatObject(val.Float()))
 		default:
-			results = append(results, NewGoObject(val.Interface()))
+			results = append(results, rt.NewGoObject(val.Interface()))
 		}
 	}
 
 	return
 }
 
-func (self *GoFuncObject) OP__call__(ctx *Runtime, args ...Object) (results []Object) {
-	results = self.callGoFunc(ctx, args...)
+func (self *GoFuncObject) OP__call__(rt *Runtime, args ...Object) (results []Object) {
+	results = self.callGoFunc(rt, args...)
 	return
 }
 

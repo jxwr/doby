@@ -51,18 +51,41 @@ func Invoke(rt *Runtime, obj Object, method string, args ...Object) (results []O
 	return
 }
 
-type Property map[string]Object
+type Property struct {
+	Slots  map[string]Object
+	Parent *Property
+}
+
+func MakeProperty(slots map[string]Object, parent *Property) Property {
+	return Property{slots, parent}
+}
+
+func EmptyProperty() Property {
+	return Property{nil, nil}
+}
 
 func (self *Property) SetProp(key string, val Object) {
-	(*self)[key] = val
+	if self.Slots == nil {
+		self.Slots = map[string]Object{}
+	}
+	self.Slots[key] = val
 }
 
 func (self *Property) GetProp(key string) Object {
-	val, ok := (*self)[key]
-	if !ok {
-		panic(fmt.Sprintf("Error: no property named %s\n", key))
+	s := self
+	for {
+		val, ok := s.Slots[key]
+		if !ok {
+			if s.Parent != nil {
+				s = self.Parent
+				continue
+			} else {
+				panic(fmt.Sprintf("Error: no property named %s\n", key))
+			}
+		}
+		return val
 	}
-	return val
+	return nil
 }
 
 type NilObject struct {

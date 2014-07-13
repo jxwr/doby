@@ -10,12 +10,6 @@ type DictObject struct {
 	Property
 }
 
-func NewDictObject(fields map[string]Object) Object {
-	obj := &DictObject{Property(fields)}
-
-	return obj
-}
-
 func (self *DictObject) Name() string {
 	return "dict"
 }
@@ -27,9 +21,9 @@ func (self *DictObject) HashCode() string {
 func (self *DictObject) String() string {
 	s := "#{"
 
-	ln := len(self.Property)
+	ln := len(self.Property.Slots)
 	idx := 0
-	for key, val := range self.Property {
+	for key, val := range self.Property.Slots {
 		s += key
 		s += ":"
 		s += val.String()

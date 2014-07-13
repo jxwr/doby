@@ -8,13 +8,6 @@ type StringObject struct {
 	Val string
 }
 
-func NewStringObject(val string) Object {
-	obj := &StringObject{Property(map[string]Object{}), val}
-	obj.SetProp("Length", NewBuiltinFuncObject("Length", obj, nil))
-	obj.SetProp("Size", NewBuiltinFuncObject("Size", obj, nil))
-	return obj
-}
-
 func (self *StringObject) Name() string {
 	return "string"
 }
@@ -29,14 +22,14 @@ func (self *StringObject) String() string {
 
 /// methods
 
-func (self *StringObject) Length(ctx *Runtime, args ...Object) (results []Object) {
-	ret := NewIntegerObject(len(self.Val))
+func (self *StringObject) Length(rt *Runtime, args ...Object) (results []Object) {
+	ret := rt.NewIntegerObject(len(self.Val))
 	results = append(results, ret)
 	return
 }
 
-func (self *StringObject) Size(ctx *Runtime, args ...Object) (results []Object) {
-	ret := NewIntegerObject(len(self.Val))
+func (self *StringObject) Size(rt *Runtime, args ...Object) (results []Object) {
+	ret := rt.NewIntegerObject(len(self.Val))
 	results = append(results, ret)
 	return
 }
@@ -44,7 +37,7 @@ func (self *StringObject) Size(ctx *Runtime, args ...Object) (results []Object) 
 /// operators
 
 func (self *StringObject) OP__add__(rt *Runtime, args ...Object) (results []Object) {
-	obj := NewStringObject(self.Val + args[0].String())
+	obj := rt.NewStringObject(self.Val + args[0].String())
 	results = append(results, obj)
 	return
 }
@@ -56,20 +49,20 @@ func (self *StringObject) OP__add_assign__(rt *Runtime, args ...Object) (results
 
 func (self *StringObject) OP__eql__(rt *Runtime, args ...Object) (results []Object) {
 	cmp := self.Val == args[0].String()
-	results = append(results, NewBoolObject(cmp))
+	results = append(results, rt.NewBoolObject(cmp))
 	return
 }
 
 func (self *StringObject) OP__neq__(rt *Runtime, args ...Object) (results []Object) {
 	cmp := self.Val != args[0].String()
-	results = append(results, NewBoolObject(cmp))
+	results = append(results, rt.NewBoolObject(cmp))
 	return
 }
 
 func (self *StringObject) OP__get_index__(rt *Runtime, args ...Object) (results []Object) {
 	idx := args[0].(*IntegerObject)
 	ch := string(self.Val[idx.Val])
-	obj := NewStringObject(ch)
+	obj := rt.NewStringObject(ch)
 	results = append(results, obj)
 	return
 }
@@ -87,7 +80,7 @@ func (self *StringObject) OP__slice__(rt *Runtime, args ...Object) (results []Ob
 		high = ho.(*IntegerObject).Val
 	}
 
-	ret := NewStringObject(self.Val[low:high])
+	ret := rt.NewStringObject(self.Val[low:high])
 	results = append(results, ret)
 	return
 }
