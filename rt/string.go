@@ -10,8 +10,8 @@ type StringObject struct {
 
 func NewStringObject(val string) Object {
 	obj := &StringObject{Property(map[string]Object{}), val}
-	obj.SetProp("length", NewBuiltinFuncObject("length", obj, nil))
-	obj.SetProp("size", NewBuiltinFuncObject("size", obj, nil))
+	obj.SetProp("Length", NewBuiltinFuncObject("Length", obj, nil))
+	obj.SetProp("Size", NewBuiltinFuncObject("Size", obj, nil))
 	return obj
 }
 
@@ -27,39 +27,67 @@ func (self *StringObject) String() string {
 	return self.Val
 }
 
-func (self *StringObject) Dispatch(ctx *Runtime, method string, args ...Object) (results []Object) {
-	switch method {
-	case "__add__":
-		obj := NewStringObject(self.Val + args[0].String())
-		results = append(results, obj)
-	case "__+=__":
-		self.Val += args[0].String()
-	case "__eql__":
-		cmp := self.Val == args[0].String()
-		results = append(results, NewBoolObject(cmp))
-	case "length", "size":
-		ret := NewIntegerObject(len(self.Val))
-		results = append(results, ret)
-	case "__get_index__":
-		idx := args[0].(*IntegerObject)
-		ch := string(self.Val[idx.Val])
-		obj := NewStringObject(ch)
-		results = append(results, obj)
-	case "__slice__":
-		low := 0
-		high := len(self.Val)
+/// methods
 
-		lo := args[0]
-		if lo != nil {
-			low = lo.(*IntegerObject).Val
-		}
-		ho := args[1]
-		if ho != nil {
-			high = ho.(*IntegerObject).Val
-		}
+func (self *StringObject) Length(ctx *Runtime, args ...Object) (results []Object) {
+	ret := NewIntegerObject(len(self.Val))
+	results = append(results, ret)
+	return
+}
 
-		ret := NewStringObject(self.Val[low:high])
-		results = append(results, ret)
+func (self *StringObject) Size(ctx *Runtime, args ...Object) (results []Object) {
+	ret := NewIntegerObject(len(self.Val))
+	results = append(results, ret)
+	return
+}
+
+/// operators
+
+func (self *StringObject) OP__add__(rt *Runtime, args ...Object) (results []Object) {
+	obj := NewStringObject(self.Val + args[0].String())
+	results = append(results, obj)
+	return
+}
+
+func (self *StringObject) OP__add_assign__(rt *Runtime, args ...Object) (results []Object) {
+	self.Val += args[0].String()
+	return
+}
+
+func (self *StringObject) OP__eql__(rt *Runtime, args ...Object) (results []Object) {
+	cmp := self.Val == args[0].String()
+	results = append(results, NewBoolObject(cmp))
+	return
+}
+
+func (self *StringObject) OP__neq__(rt *Runtime, args ...Object) (results []Object) {
+	cmp := self.Val != args[0].String()
+	results = append(results, NewBoolObject(cmp))
+	return
+}
+
+func (self *StringObject) OP__get_index__(rt *Runtime, args ...Object) (results []Object) {
+	idx := args[0].(*IntegerObject)
+	ch := string(self.Val[idx.Val])
+	obj := NewStringObject(ch)
+	results = append(results, obj)
+	return
+}
+
+func (self *StringObject) OP__slice__(rt *Runtime, args ...Object) (results []Object) {
+	low := 0
+	high := len(self.Val)
+
+	lo := args[0]
+	if lo != nil {
+		low = lo.(*IntegerObject).Val
 	}
+	ho := args[1]
+	if ho != nil {
+		high = ho.(*IntegerObject).Val
+	}
+
+	ret := NewStringObject(self.Val[low:high])
+	results = append(results, ret)
 	return
 }

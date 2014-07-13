@@ -21,3 +21,13 @@ list = [1,2,3,4]
 fmt.Println("list length", list.Length())
 list.Append(6)
 fmt.Println(list)
+
+str = "1n2n3n5"
+subs = str[1:4]
+fmt.Println(subs)
+
+if str == "1n2n3n5" {
+	fmt.Println(true, str[1])
+} else {
+	fmt.Println(false)
+}
