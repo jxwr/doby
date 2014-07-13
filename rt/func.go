@@ -53,22 +53,14 @@ var Builtins = map[string]func(args ...Object) []Object{
 	},
 }
 
-func (self *FuncObject) Dispatch(ctx *Runtime, method string, args ...Object) (results []Object) {
-	var is bool
-	if is, results = self.AccessPropMethod(method, args...); is {
-		return
-	}
-
-	switch method {
-	case "__call__":
-		if self.Decl == nil && self.Obj == nil {
-			fn, ok := Builtins[self.name]
-			if ok {
-				results = fn(args...)
-			}
-		} else {
-			results = self.Obj.Dispatch(ctx, self.name, args...)
+func (self *FuncObject) OP__call__(rt *Runtime, args ...Object) (results []Object) {
+	if self.Decl == nil && self.Obj == nil {
+		fn, ok := Builtins[self.name]
+		if ok {
+			results = fn(args...)
 		}
+	} else {
+		results = Invoke(rt, self.Obj, self.name, args...)
 	}
 	return
 }

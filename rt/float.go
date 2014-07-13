@@ -30,11 +30,6 @@ func (self *FloatObject) String() string {
 }
 
 func (self *FloatObject) Dispatch(ctx *Runtime, method string, args ...Object) (results []Object) {
-	var is bool
-	if is, results = self.AccessPropMethod(method, args...); is {
-		return
-	}
-
 	var val float64
 
 	switch arg := args[0].(type) {

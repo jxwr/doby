@@ -146,7 +146,7 @@ func (self *Eval) VisitSelectorExpr(node *ast.SelectorExpr) {
 	self.evalExpr(node.X)
 	obj := self.Stack.Pop()
 	prop := rt.NewStringObject(node.Sel.Name)
-	rets := obj.Dispatch(self.RT, "__get_property__", prop)
+	rets := rt.Invoke(self.RT, obj, "__get_property__", prop)
 	self.Stack.Push(rets[0])
 }
 
@@ -157,7 +157,7 @@ func (self *Eval) VisitIndexExpr(node *ast.IndexExpr) {
 	obj := self.Stack.Pop()
 	self.evalExpr(node.Index)
 	index := self.Stack.Pop()
-	rets := obj.Dispatch(self.RT, "__get_index__", index)
+	rets := rt.Invoke(self.RT, obj, "__get_index__", index)
 	self.Stack.Push(rets[0])
 }
 
@@ -179,7 +179,7 @@ func (self *Eval) VisitSliceExpr(node *ast.SliceExpr) {
 		highObj = self.Stack.Pop()
 	}
 
-	rets := obj.Dispatch(self.RT, "__slice__", lowObj, highObj)
+	rets := rt.Invoke(self.RT, obj, "__slice__", lowObj, highObj)
 	self.Stack.Push(rets[0])
 }
 
@@ -202,7 +202,7 @@ func (self *Eval) VisitCallExpr(node *ast.CallExpr) {
 			}
 			self.E = env.NewEnv(self.E)
 			fnobj.E = self.E
-			rets := fnobj.Dispatch(self.RT, "__call__", args...)
+			rets := rt.Invoke(self.RT, fnobj, "__call__", args...)
 			self.E = self.E.Outer
 			for _, ret := range rets {
 				self.Stack.Push(ret)
@@ -222,7 +222,7 @@ func (self *Eval) VisitCallExpr(node *ast.CallExpr) {
 				}
 				self.E = env.NewEnv(self.E)
 				fnobj.E = self.E
-				rets := fnobj.Dispatch(self.RT, "__call__", args...)
+				rets := rt.Invoke(self.RT, fnobj, "__call__", args...)
 				self.E = self.E.Outer
 				for _, ret := range rets {
 					self.Stack.Push(ret)
@@ -255,7 +255,7 @@ func (self *Eval) VisitCallExpr(node *ast.CallExpr) {
 				args = append(args, self.Stack.Pop())
 			}
 			self.E = env.NewEnv(self.E)
-			rets := fnobj.Dispatch(self.RT, "__call__", args...)
+			rets := rt.Invoke(self.RT, fnobj, "__call__", args...)
 			self.E = self.E.Outer
 			for _, ret := range rets {
 				self.Stack.Push(ret)
@@ -280,6 +280,7 @@ var OpFuncs = map[token.Token]string{
 	token.REM:            "__rem__",
 	token.AND:            "__and__",
 	token.OR:             "__or__",
+	token.NOT:            "__not__",
 	token.XOR:            "__xor__",
 	token.SHL:            "__shl__",
 	token.SHR:            "__shr__",
@@ -292,17 +293,17 @@ var OpFuncs = map[token.Token]string{
 	token.LEQ:            "__leq__",
 	token.GEQ:            "__geq__",
 	token.NEQ:            "__neq__",
-	token.ADD_ASSIGN:     "__+=__",
-	token.SUB_ASSIGN:     "__-=__",
-	token.MUL_ASSIGN:     "__*=__",
-	token.QUO_ASSIGN:     "__/=__",
-	token.REM_ASSIGN:     "__%=__",
-	token.AND_ASSIGN:     "__&=__",
-	token.OR_ASSIGN:      "__|=__",
-	token.XOR_ASSIGN:     "__^=__",
-	token.SHL_ASSIGN:     "__<<=__",
-	token.SHR_ASSIGN:     "__>>=__",
-	token.AND_NOT_ASSIGN: "__&^=__",
+	token.ADD_ASSIGN:     "__add_assign__",
+	token.SUB_ASSIGN:     "__sub_assign__",
+	token.MUL_ASSIGN:     "__mul_assign__",
+	token.QUO_ASSIGN:     "__quo_assign__",
+	token.REM_ASSIGN:     "__rem_assign__",
+	token.AND_ASSIGN:     "__and_assign__",
+	token.OR_ASSIGN:      "__or_assign__",
+	token.XOR_ASSIGN:     "__xor_assign__",
+	token.SHL_ASSIGN:     "__shl_assign__",
+	token.SHR_ASSIGN:     "__shr_assign__",
+	token.AND_NOT_ASSIGN: "__and_not_assign__",
 }
 
 func (self *Eval) VisitBinaryExpr(node *ast.BinaryExpr) {
@@ -314,7 +315,7 @@ func (self *Eval) VisitBinaryExpr(node *ast.BinaryExpr) {
 	robj := self.Stack.Pop()
 	lobj := self.Stack.Pop()
 
-	objs := lobj.Dispatch(self.RT, OpFuncs[node.Op], robj)
+	objs := rt.Invoke(self.RT, lobj, OpFuncs[node.Op], robj)
 	self.Stack.Push(objs[0])
 }
 
@@ -387,9 +388,9 @@ func (self *Eval) VisitIncDecStmt(node *ast.IncDecStmt) {
 	obj := self.Stack.Pop()
 
 	if node.Tok == token.INC {
-		obj.Dispatch(self.RT, "__inc__")
+		rt.Invoke(self.RT, obj, "__inc__")
 	} else if node.Tok == token.DEC {
-		obj.Dispatch(self.RT, "__dec__")
+		rt.Invoke(self.RT, obj, "__dec__")
 	}
 }
 
@@ -439,12 +440,12 @@ func (self *Eval) VisitAssignStmt(node *ast.AssignStmt) {
 				lobj := self.Stack.Pop()
 				self.evalExpr(v.Index)
 				idx := self.Stack.Pop()
-				lobj.Dispatch(self.RT, "__set_index__", idx, robj)
+				rt.Invoke(self.RT, lobj, "__set_index__", idx, robj)
 			case *ast.SelectorExpr:
 				self.evalExpr(v.X)
 				lobj := self.Stack.Pop()
 				sel := rt.NewStringObject(v.Sel.Name)
-				lobj.Dispatch(self.RT, "__set_property__", sel, robj)
+				rt.Invoke(self.RT, lobj, "__set_property__", sel, robj)
 			}
 		}
 	} else {
@@ -455,21 +456,21 @@ func (self *Eval) VisitAssignStmt(node *ast.AssignStmt) {
 			switch v := node.Lhs[i].(type) {
 			case *ast.Ident:
 				val, _ := self.E.LookUp(v.Name)
-				val.(rt.Object).Dispatch(self.RT, OpFuncs[node.Tok], robj)
+				rt.Invoke(self.RT, val.(rt.Object), OpFuncs[node.Tok], robj)
 			case *ast.IndexExpr:
 				// a[b] += c
 				self.evalExpr(v.X)
 				lobj := self.Stack.Pop()
 				self.evalExpr(v.Index)
 				idx := self.Stack.Pop()
-				rets := lobj.Dispatch(self.RT, "__get_index__", idx)
-				rets[0].Dispatch(self.RT, OpFuncs[node.Tok], robj)
+				rets := rt.Invoke(self.RT, lobj, "__get_index__", idx)
+				rt.Invoke(self.RT, rets[0], OpFuncs[node.Tok], robj)
 			case *ast.SelectorExpr:
 				self.evalExpr(v.X)
 				lobj := self.Stack.Pop()
 				sel := rt.NewStringObject(v.Sel.Name)
-				rets := lobj.Dispatch(self.RT, "__get_property__", sel)
-				rets[0].Dispatch(self.RT, OpFuncs[node.Tok], robj)
+				rets := rt.Invoke(self.RT, lobj, "__get_property__", sel)
+				rt.Invoke(self.RT, rets[0], OpFuncs[node.Tok], robj)
 			}
 		}
 	}
@@ -547,7 +548,7 @@ func (self *Eval) VisitCaseClause(node *ast.CaseClause) {
 			self.evalExpr(e)
 			if ok {
 				v := self.Stack.Pop()
-				rets := initObj.Dispatch(self.RT, "__eql__", v)
+				rets := rt.Invoke(self.RT, initObj, "__eql__", v)
 				if rets[0].(*rt.BoolObject).Val == false {
 					self.Stack.Push(rt.NewBoolObject(false))
 					return

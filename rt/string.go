@@ -28,11 +28,6 @@ func (self *StringObject) String() string {
 }
 
 func (self *StringObject) Dispatch(ctx *Runtime, method string, args ...Object) (results []Object) {
-	var is bool
-	if is, results = self.AccessPropMethod(method, args...); is {
-		return
-	}
-
 	switch method {
 	case "__add__":
 		obj := NewStringObject(self.Val + args[0].String())

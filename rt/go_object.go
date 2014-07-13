@@ -8,11 +8,12 @@ import (
 /// go object wrapper
 
 type GoObject struct {
+	Property
 	obj interface{}
 }
 
 func NewGoObject(obj interface{}) *GoObject {
-	gobj := &GoObject{obj}
+	gobj := &GoObject{nil, obj}
 	return gobj
 }
 
@@ -35,13 +36,14 @@ func (self *GoObject) HashCode() string {
 /// function
 
 type GoFuncObject struct {
+	Property
 	name string
 	typ  reflect.Type
 	fn   interface{}
 }
 
 func NewGoFuncObject(fname string, fn interface{}) *GoFuncObject {
-	gf := &GoFuncObject{fname, reflect.TypeOf(fn), fn}
+	gf := &GoFuncObject{nil, fname, reflect.TypeOf(fn), fn}
 	return gf
 }
 
@@ -147,11 +149,8 @@ func (self *GoFuncObject) callGoFunc(ctx *Runtime, args ...Object) (results []Ob
 	return
 }
 
-func (self *GoFuncObject) Dispatch(ctx *Runtime, method string, args ...Object) (results []Object) {
-	switch method {
-	case "__call__":
-		results = self.callGoFunc(ctx, args...)
-	}
+func (self *GoFuncObject) OP__call__(ctx *Runtime, args ...Object) (results []Object) {
+	results = self.callGoFunc(ctx, args...)
 	return
 }
 
