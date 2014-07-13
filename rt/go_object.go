@@ -42,7 +42,7 @@ func (self *GoFuncObject) callGoFunc(rt *Runtime, args ...Object) (results []Obj
 	inArgs := []reflect.Value{}
 
 	dummy := []interface{}{}
-	for i := 0; i < inNum; i++ {
+	for i := 0; i < inNum && i < len(args); i++ {
 		arg := args[i]
 		if i == inNum-1 && self.typ.In(i) == reflect.TypeOf(dummy) {
 			for j := i; j < len(args); j++ {

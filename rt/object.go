@@ -38,22 +38,44 @@ func Invoke(rt *Runtime, obj Object, method string, args ...Object) (results []O
 	}
 
 	theMethod := reflect.ValueOf(obj).MethodByName(method)
-	if !theMethod.IsValid() {
-		fmt.Printf("Error: Unknown Method %s for %s\n", method, obj)
-		os.Exit(1)
-	}
-
-	theArgs := []reflect.Value{reflect.ValueOf(rt)}
-
-	if args != nil {
-		for _, arg := range args {
-			if arg != nil {
-				theArgs = append(theArgs, reflect.ValueOf(arg))
+	if theMethod.IsValid() {
+		// doubi object methods
+		theArgs := []reflect.Value{reflect.ValueOf(rt)}
+		if args != nil {
+			for _, arg := range args {
+				if arg != nil {
+					theArgs = append(theArgs, reflect.ValueOf(arg))
+				}
 			}
 		}
+		vals := theMethod.Call(theArgs)
+		results = vals[0].Interface().([]Object)
+		return
+	} else {
+		// go object methods
+		gobj, ok := obj.(*GoObject)
+		if ok {
+			theMethod = reflect.ValueOf(gobj.obj).MethodByName(method)
+			if !theMethod.IsValid() {
+				goto err
+			}
+			theArgs := []reflect.Value{}
+			for _, arg := range args {
+				theArgs = append(theArgs, ObjectToValue(arg))
+			}
+			rets := theMethod.Call(theArgs)
+			for _, ret := range rets {
+				results = append(results, rt.NewGoObject(ret.Interface()))
+			}
+		} else {
+			goto err
+		}
 	}
-	vals := theMethod.Call(theArgs)
-	results = vals[0].Interface().([]Object)
+	return
+
+err:
+	fmt.Printf("Error: Unknown Method %s for %s\n", method, obj.String())
+	os.Exit(1)
 	return
 }
 

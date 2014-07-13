@@ -14,8 +14,8 @@ func main() {
 	fmt.Println()
 	// To make the pseudorandom generator deterministic,
 	// give it a well-known seed.
-	s1 := rand.NewSource(42)
-	r1 := rand.New(s1)
+	s1 = rand.NewSource(42)
+	r1 = rand.New(s1)
 
 	// Call the resulting `rand.Source` just like the
 	// functions on the `rand` package.
@@ -25,8 +25,8 @@ func main() {
 
 	// If you seed a source with the same number, it
 	// produces the same sequence of random numbers.
-	s2 := rand.NewSource(42)
-	r2 := rand.New(s2)
+	s2 = rand.NewSource(42)
+	r2 = rand.New(s2)
 	fmt.Print(r2.Intn(100), ",")
 	fmt.Print(r2.Intn(100))
 	fmt.Println()

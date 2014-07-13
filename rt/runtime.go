@@ -19,6 +19,8 @@ type Runtime struct {
 	Env     *env.Env
 	Nil     Object
 
+	goTypeMap map[string]*Property
+
 	integerProperties Property
 	floatProperties   Property
 	stringProperties  Property
@@ -39,6 +41,7 @@ func NewRuntime(visitor ast.Visitor) *Runtime {
 	rt.registerGlobals(env)
 
 	rt.Nil = &NilObject{}
+	rt.goTypeMap = map[string]*Property{}
 	rt.initBuiltinObjectProperties()
 
 	return rt
@@ -66,6 +69,18 @@ func (self *Runtime) NewGoFuncObject(fname string, fn interface{}) *GoFuncObject
 
 func (self *Runtime) NewGoObject(obj interface{}) *GoObject {
 	gobj := &GoObject{MakeProperty(nil, &self.goobjProperties), obj}
+	val := reflect.ValueOf(obj)
+
+	if obj != nil && val.Kind() > reflect.Invalid && val.Kind() <= reflect.UnsafePointer {
+		key := reflect.Indirect(val).Type().PkgPath() + "::" + reflect.Indirect(val).Type().String()
+		_, ok := self.goTypeMap[key]
+		if !ok {
+			prop := MakeProperty(nil, &self.goobjProperties)
+			self.addObjectProperties(obj, &prop)
+			self.goTypeMap[key] = &prop
+		}
+		gobj = &GoObject{MakeProperty(nil, self.goTypeMap[key]), obj}
+	}
 	return gobj
 }
 
@@ -103,16 +118,48 @@ func (self *Runtime) NewNilObject(vals []Object) Object {
 	return self.Nil
 }
 
+func ObjectToValue(obj Object) reflect.Value {
+	var v reflect.Value
+	switch obj := obj.(type) {
+	case *IntegerObject:
+		v = reflect.ValueOf(obj.Val)
+	case *FloatObject:
+		v = reflect.ValueOf(obj.Val)
+	case *StringObject:
+		v = reflect.ValueOf(obj.Val)
+	case *BoolObject:
+		v = reflect.ValueOf(obj.Val)
+	case *GoObject:
+		if obj.obj == nil {
+			var nilObj *NilObject
+			v = reflect.ValueOf(nilObj)
+		} else {
+			v = reflect.ValueOf(obj.obj)
+		}
+	default:
+		v = reflect.ValueOf(obj)
+	}
+	return v
+}
+
 /// init object methods
 
-func (self *Runtime) initObjectProperties(obj Object, prop *Property) {
+func (self *Runtime) addObjectProperties(obj interface{}, prop *Property) {
 	typ := reflect.TypeOf(obj)
 	numMethods := typ.NumMethod()
 
-	to_s, _ := typ.MethodByName("ToString")
-	for i := 0; i < numMethods; i++ {
-		m := typ.Method(i)
-		if m.Type == to_s.Type {
+	to_s, ok := typ.MethodByName("ToString")
+	if ok {
+		for i := 0; i < numMethods; i++ {
+			m := typ.Method(i)
+			if m.Type == to_s.Type {
+				fn := self.NewBuiltinFuncObject(m.Name, nil, nil)
+				prop.SetProp(m.Name, fn)
+			}
+		}
+	} else {
+		for i := 0; i < numMethods; i++ {
+			m := typ.Method(i)
 			fn := self.NewBuiltinFuncObject(m.Name, nil, nil)
 			prop.SetProp(m.Name, fn)
 		}
@@ -121,36 +168,36 @@ func (self *Runtime) initObjectProperties(obj Object, prop *Property) {
 
 func (self *Runtime) initBuiltinObjectProperties() {
 	intObj := self.NewIntegerObject(0)
-	self.initObjectProperties(intObj, &self.integerProperties)
+	self.addObjectProperties(intObj, &self.integerProperties)
 
 	floatObj := self.NewFloatObject(0)
-	self.initObjectProperties(floatObj, &self.floatProperties)
+	self.addObjectProperties(floatObj, &self.floatProperties)
 
 	stringObj := self.NewStringObject("")
-	self.initObjectProperties(stringObj, &self.stringProperties)
+	self.addObjectProperties(stringObj, &self.stringProperties)
 
 	arrayObj := self.NewArrayObject(nil)
-	self.initObjectProperties(arrayObj, &self.arrayProperties)
+	self.addObjectProperties(arrayObj, &self.arrayProperties)
 
 	dictObj := self.NewDictObject(nil)
-	self.initObjectProperties(dictObj, &self.dictProperties)
+	self.addObjectProperties(dictObj, &self.dictProperties)
 
 	setObj := self.NewSetObject(nil)
-	self.initObjectProperties(setObj, &self.setProperties)
+	self.addObjectProperties(setObj, &self.setProperties)
 
 	boolObj := self.NewBoolObject(false)
-	self.initObjectProperties(boolObj, &self.boolProperties)
+	self.addObjectProperties(boolObj, &self.boolProperties)
 
 	funcObj := self.NewFuncObject("init", nil, nil)
-	self.initObjectProperties(funcObj, &self.funcProperties)
+	self.addObjectProperties(funcObj, &self.funcProperties)
 
 	gofuncObj := self.NewGoFuncObject("init", nil)
-	self.initObjectProperties(gofuncObj, &self.gofuncProperties)
+	self.addObjectProperties(gofuncObj, &self.gofuncProperties)
 
 	goObj := self.NewGoObject(nil)
-	self.initObjectProperties(goObj, &self.goobjProperties)
+	self.addObjectProperties(goObj, &self.goobjProperties)
 
-	self.initObjectProperties(self.Nil, &self.nilProperties)
+	self.addObjectProperties(self.Nil, &self.nilProperties)
 }
 
 /// register
@@ -183,6 +230,7 @@ func (self *Runtime) registerGlobals(env *env.Env) {
 	})
 
 	self.RegisterFunctions("math/rand", []interface{}{
+		rand.New, rand.NewSource,
 		rand.Float64, rand.ExpFloat64, rand.Float32, rand.Int,
 		rand.Int31, rand.Int31n, rand.Int63, rand.Int63n, rand.Intn,
 		rand.NormFloat64, rand.Perm, rand.Seed, rand.Uint32,
