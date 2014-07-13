@@ -7,7 +7,6 @@ import (
 
 	"github.com/jxwr/doubi/ast"
 	"github.com/jxwr/doubi/env"
-	"github.com/jxwr/doubi/rt"
 	"github.com/jxwr/doubi/token"
 )
 
@@ -31,8 +30,6 @@ func (self *Attr) debug(node interface{}) {
 func (self *Attr) checkIdentRef(node ast.Expr) {
 	switch arg := node.(type) {
 	case *ast.Ident:
-		_, builtin := rt.Builtins[arg.Name]
-
 		keyword := false
 		for i := token.BREAK; i <= token.VAR; i++ {
 			if token.Tokens[i] == arg.Name {
@@ -40,7 +37,7 @@ func (self *Attr) checkIdentRef(node ast.Expr) {
 			}
 		}
 		_, env := self.E.LookUp(arg.Name)
-		if arg.Name != "_" && env == nil && !builtin && !keyword {
+		if arg.Name != "_" && env == nil && !keyword {
 			self.log("'%s' not found", arg.Name)
 		}
 	default:

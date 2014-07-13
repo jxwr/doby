@@ -184,17 +184,11 @@ func (self *Eval) VisitSliceExpr(node *ast.SliceExpr) {
 }
 
 func (self *Eval) VisitCallExpr(node *ast.CallExpr) {
-	var fnobj *rt.FuncObject
-	ident, ok := node.Fun.(*ast.Ident)
+	self.evalExpr(node.Fun)
 
-	var val interface{}
-	if ok {
-		val, _ = self.E.LookUp(ident.Name)
-	}
-	if ok && val == nil {
-		_, exist := rt.Builtins[ident.Name]
-		if exist {
-			fnobj = rt.NewFuncObject(ident.Name, nil, self.E).(*rt.FuncObject)
+	switch fnobj := self.Stack.Pop().(type) {
+	case *rt.FuncObject:
+		if fnobj.IsBuiltin {
 			args := []rt.Object{}
 			for _, arg := range node.Args {
 				self.evalExpr(arg)
@@ -207,59 +201,38 @@ func (self *Eval) VisitCallExpr(node *ast.CallExpr) {
 			for _, ret := range rets {
 				self.Stack.Push(ret)
 			}
-		}
-	} else {
-		self.evalExpr(node.Fun)
+		} else {
+			fnDecl := fnobj.Decl
+			fnBak := self.Fun
+			self.Fun = fnDecl
 
-		switch fnobj := self.Stack.Pop().(type) {
-		case *rt.FuncObject:
-
-			if fnobj.IsBuiltin {
-				args := []rt.Object{}
-				for _, arg := range node.Args {
-					self.evalExpr(arg)
-					args = append(args, self.Stack.Pop())
-				}
-				self.E = env.NewEnv(self.E)
-				fnobj.E = self.E
-				rets := rt.Invoke(self.RT, fnobj, "__call__", args...)
-				self.E = self.E.Outer
-				for _, ret := range rets {
-					self.Stack.Push(ret)
-				}
-			} else {
-				fnDecl := fnobj.Decl
-				fnBak := self.Fun
-				self.Fun = fnDecl
-
-				newEnv := env.NewEnv(fnobj.E)
-				for i, arg := range node.Args {
-					self.evalExpr(arg)
-					newEnv.Put(fnDecl.Args[i].Name, self.Stack.Pop())
-				}
-
-				bakEnv := self.E
-				self.E = newEnv
-				self.NeedReturn = false
-				fnobj.E = self.E
-				fnDecl.Body.Accept(self)
-				self.NeedReturn = false
-
-				self.Fun = fnBak
-				self.E = bakEnv
-			}
-		case *rt.GoFuncObject:
-			args := []rt.Object{}
-			for _, arg := range node.Args {
+			newEnv := env.NewEnv(fnobj.E)
+			for i, arg := range node.Args {
 				self.evalExpr(arg)
-				args = append(args, self.Stack.Pop())
+				newEnv.Put(fnDecl.Args[i].Name, self.Stack.Pop())
 			}
-			self.E = env.NewEnv(self.E)
-			rets := rt.Invoke(self.RT, fnobj, "__call__", args...)
-			self.E = self.E.Outer
-			for _, ret := range rets {
-				self.Stack.Push(ret)
-			}
+
+			bakEnv := self.E
+			self.E = newEnv
+			self.NeedReturn = false
+			fnobj.E = self.E
+			fnDecl.Body.Accept(self)
+			self.NeedReturn = false
+
+			self.Fun = fnBak
+			self.E = bakEnv
+		}
+	case *rt.GoFuncObject:
+		args := []rt.Object{}
+		for _, arg := range node.Args {
+			self.evalExpr(arg)
+			args = append(args, self.Stack.Pop())
+		}
+		self.E = env.NewEnv(self.E)
+		rets := rt.Invoke(self.RT, fnobj, "__call__", args...)
+		self.E = self.E.Outer
+		for _, ret := range rets {
+			self.Stack.Push(ret)
 		}
 	}
 }

@@ -42,25 +42,7 @@ func (self *FuncObject) String() string {
 	return self.name
 }
 
-var Builtins = map[string]func(args ...Object) []Object{
-	"print": func(args ...Object) (results []Object) {
-		ifs := []interface{}{}
-		for _, arg := range args {
-			ifs = append(ifs, arg)
-		}
-		fmt.Print(ifs...)
-		return
-	},
-}
-
 func (self *FuncObject) OP__call__(rt *Runtime, args ...Object) (results []Object) {
-	if self.Decl == nil && self.Obj == nil {
-		fn, ok := Builtins[self.name]
-		if ok {
-			results = fn(args...)
-		}
-	} else {
-		results = Invoke(rt, self.Obj, self.name, args...)
-	}
+	results = Invoke(rt, self.Obj, self.name, args...)
 	return
 }

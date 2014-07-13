@@ -15,3 +15,9 @@ a -= 5  // 9
 if a * 3 == 81 / 3 {
 	fmt.Println(true)
 }
+
+list = [1,2,3,4]
+
+fmt.Println("list length", list.Length())
+list.Append(6)
+fmt.Println(list)
