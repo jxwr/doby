@@ -3,7 +3,6 @@ package comp
 import (
 	"fmt"
 	"os"
-	"reflect"
 	"strconv"
 	"strings"
 
@@ -51,7 +50,6 @@ func (self *Stack) Rewind() {
 }
 
 type Eval struct {
-	Debug bool
 	E     *env.Env
 	Stack *Stack
 	Fun   *ast.FuncDeclExpr
@@ -91,17 +89,9 @@ func (self *Eval) evalExpr(expr ast.Expr) {
 	expr.Accept(self)
 }
 
-func (self *Eval) debug(node interface{}) {
-	if self.Debug {
-		fmt.Printf("%s(%#v)\n", reflect.TypeOf(node).Name(), node)
-	}
-}
-
 // exprs
 
 func (self *Eval) VisitIdent(node *ast.Ident) {
-	self.debug(node)
-
 	if node.Name == "true" {
 		obj := self.RT.NewBoolObject(true)
 		self.Stack.Push(obj)
@@ -119,8 +109,6 @@ func (self *Eval) VisitIdent(node *ast.Ident) {
 }
 
 func (self *Eval) VisitBasicLit(node *ast.BasicLit) {
-	self.debug(node)
-
 	switch node.Kind {
 	case token.INT:
 		val, err := strconv.Atoi(node.Value)
@@ -148,14 +136,10 @@ func (self *Eval) VisitBasicLit(node *ast.BasicLit) {
 }
 
 func (self *Eval) VisitParenExpr(node *ast.ParenExpr) {
-	self.debug(node)
-
 	node.X.Accept(self)
 }
 
 func (self *Eval) VisitSelectorExpr(node *ast.SelectorExpr) {
-	self.debug(node)
-
 	self.evalExpr(node.X)
 	obj := self.Stack.Pop()
 	prop := self.RT.NewStringObject(node.Sel.Name)
@@ -164,8 +148,6 @@ func (self *Eval) VisitSelectorExpr(node *ast.SelectorExpr) {
 }
 
 func (self *Eval) VisitIndexExpr(node *ast.IndexExpr) {
-	self.debug(node)
-
 	self.evalExpr(node.X)
 	obj := self.Stack.Pop()
 	self.evalExpr(node.Index)
@@ -175,8 +157,6 @@ func (self *Eval) VisitIndexExpr(node *ast.IndexExpr) {
 }
 
 func (self *Eval) VisitSliceExpr(node *ast.SliceExpr) {
-	self.debug(node)
-
 	self.evalExpr(node.X)
 	obj := self.Stack.Pop()
 
@@ -251,8 +231,6 @@ func (self *Eval) VisitCallExpr(node *ast.CallExpr) {
 }
 
 func (self *Eval) VisitUnaryExpr(node *ast.UnaryExpr) {
-	self.debug(node)
-
 	if node.Op == token.NOT {
 		self.evalExpr(node.X)
 		obj := self.Stack.Pop()
@@ -309,8 +287,6 @@ var OpFuncs = map[token.Token]string{
 }
 
 func (self *Eval) VisitBinaryExpr(node *ast.BinaryExpr) {
-	self.debug(node)
-
 	self.evalExpr(node.X)
 	self.evalExpr(node.Y)
 
@@ -322,8 +298,6 @@ func (self *Eval) VisitBinaryExpr(node *ast.BinaryExpr) {
 }
 
 func (self *Eval) VisitArrayExpr(node *ast.ArrayExpr) {
-	self.debug(node)
-
 	elems := []rt.Object{}
 	for _, elem := range node.Elems {
 		self.evalExpr(elem)
@@ -334,8 +308,6 @@ func (self *Eval) VisitArrayExpr(node *ast.ArrayExpr) {
 }
 
 func (self *Eval) VisitSetExpr(node *ast.SetExpr) {
-	self.debug(node)
-
 	elems := []rt.Object{}
 	for _, elem := range node.Elems {
 		self.evalExpr(elem)
@@ -346,8 +318,6 @@ func (self *Eval) VisitSetExpr(node *ast.SetExpr) {
 }
 
 func (self *Eval) VisitDictExpr(node *ast.DictExpr) {
-	self.debug(node)
-
 	fieldMap := map[string]rt.Object{}
 	for _, field := range node.Fields {
 		self.evalExpr(field.Name)
@@ -361,8 +331,6 @@ func (self *Eval) VisitDictExpr(node *ast.DictExpr) {
 }
 
 func (self *Eval) VisitFuncDeclExpr(node *ast.FuncDeclExpr) {
-	self.debug(node)
-
 	if node.Name != nil {
 		fname := node.Name.Name
 		self.E.Put(fname, self.RT.NewFuncObject(fname, node, self.E))
@@ -374,20 +342,15 @@ func (self *Eval) VisitFuncDeclExpr(node *ast.FuncDeclExpr) {
 // stmts
 
 func (self *Eval) VisitExprStmt(node *ast.ExprStmt) {
-	self.debug(node)
-
 	self.Stack.Mark()
 	node.X.Accept(self)
 	self.Stack.Rewind()
 }
 
 func (self *Eval) VisitSendStmt(node *ast.SendStmt) {
-	self.debug(node)
 }
 
 func (self *Eval) VisitIncDecStmt(node *ast.IncDecStmt) {
-	self.debug(node)
-
 	self.evalExpr(node.X)
 	obj := self.Stack.Pop()
 
@@ -410,8 +373,6 @@ func ContainsString(ss []string, s string) bool {
 }
 
 func (self *Eval) VisitAssignStmt(node *ast.AssignStmt) {
-	self.debug(node)
-
 	if node.Tok == token.ASSIGN {
 		rhs := []rt.Object{}
 
@@ -481,14 +442,10 @@ func (self *Eval) VisitAssignStmt(node *ast.AssignStmt) {
 }
 
 func (self *Eval) VisitGoStmt(node *ast.GoStmt) {
-	self.debug(node)
-
 	go node.Call.Accept(self)
 }
 
 func (self *Eval) VisitReturnStmt(node *ast.ReturnStmt) {
-	self.debug(node)
-
 	for _, res := range node.Results {
 		self.evalExpr(res)
 	}
@@ -497,8 +454,6 @@ func (self *Eval) VisitReturnStmt(node *ast.ReturnStmt) {
 }
 
 func (self *Eval) VisitBranchStmt(node *ast.BranchStmt) {
-	self.debug(node)
-
 	if node.Tok == token.BREAK {
 		self.needBreak = true
 	}
@@ -506,7 +461,6 @@ func (self *Eval) VisitBranchStmt(node *ast.BranchStmt) {
 	if node.Tok == token.CONTINUE {
 		self.needContinue = true
 	}
-
 }
 
 func (self *Eval) VisitBlockStmt(node *ast.BlockStmt) {
@@ -528,8 +482,6 @@ func (self *Eval) VisitBlockStmt(node *ast.BlockStmt) {
 }
 
 func (self *Eval) VisitIfStmt(node *ast.IfStmt) {
-	self.debug(node)
-
 	self.evalExpr(node.Cond)
 	cond := self.Stack.Pop()
 
@@ -541,8 +493,6 @@ func (self *Eval) VisitIfStmt(node *ast.IfStmt) {
 }
 
 func (self *Eval) VisitCaseClause(node *ast.CaseClause) {
-	self.debug(node)
-
 	initObj := self.Stack.Pop()
 
 	// default
@@ -585,8 +535,6 @@ func (self *Eval) VisitCaseClause(node *ast.CaseClause) {
 }
 
 func (self *Eval) VisitSwitchStmt(node *ast.SwitchStmt) {
-	self.debug(node)
-
 	// dirty hack, we need keep the stack clean
 	node.Init.(*ast.ExprStmt).X.Accept(self)
 	initObj := self.Stack.Pop()
@@ -601,12 +549,9 @@ func (self *Eval) VisitSwitchStmt(node *ast.SwitchStmt) {
 }
 
 func (self *Eval) VisitSelectStmt(node *ast.SelectStmt) {
-	self.debug(node)
 }
 
 func (self *Eval) VisitForStmt(node *ast.ForStmt) {
-	self.debug(node)
-
 	if node.Init != nil {
 		node.Init.Accept(self)
 	}
@@ -639,8 +584,6 @@ func (self *Eval) VisitForStmt(node *ast.ForStmt) {
 }
 
 func (self *Eval) VisitRangeStmt(node *ast.RangeStmt) {
-	self.debug(node)
-
 	self.evalExpr(node.X)
 	obj := self.Stack.Pop()
 
