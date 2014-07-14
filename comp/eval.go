@@ -9,6 +9,7 @@ import (
 
 	"github.com/jxwr/doubi/ast"
 	"github.com/jxwr/doubi/env"
+	"github.com/jxwr/doubi/parser"
 	"github.com/jxwr/doubi/rt"
 	"github.com/jxwr/doubi/token"
 )
@@ -56,15 +57,16 @@ type Eval struct {
 	Fun   *ast.FuncDeclExpr
 	RT    *rt.Runtime
 
-	NeedReturn   bool
-	LoopDepth    int
-	NeedBreak    bool
-	NeedContinue bool
+	lexer *parser.Lexer
+
+	needReturn   bool
+	loopDepth    int
+	needBreak    bool
+	needContinue bool
 }
 
 func NewEvaluater() *Eval {
-	eval := &Eval{false, env.NewEnv(nil), NewStack(), nil, nil,
-		false, 0, false, false}
+	eval := &Eval{E: env.NewEnv(nil), Stack: NewStack()}
 	return eval
 }
 
@@ -72,13 +74,15 @@ func (self *Eval) SetRuntime(rt *rt.Runtime) {
 	self.RT = rt
 }
 
-func (self *Eval) log(fmtstr string, args ...interface{}) {
-	fmt.Printf(fmtstr, args...)
-	fmt.Println()
+func (self *Eval) SetLexer(lexer *parser.Lexer) {
+	self.lexer = lexer
 }
 
-func (self *Eval) fatal(fmtstr string, args ...interface{}) {
-	fmt.Printf(fmtstr, args...)
+func (self *Eval) Fatalf(pos token.Pos, format string, a ...interface{}) {
+	if pos > 0 {
+		self.lexer.PrintPosInfo(int(pos))
+	}
+	fmt.Printf("Error: "+format, a...)
 	fmt.Println()
 	os.Exit(1)
 }
@@ -109,7 +113,7 @@ func (self *Eval) VisitIdent(node *ast.Ident) {
 		if obj != nil {
 			self.Stack.Push(obj.(rt.Object))
 		} else {
-			panic(node.Name + " not found")
+			self.Fatalf(node.NamePos, "'%s' not Found", node.Name)
 		}
 	}
 }
@@ -121,14 +125,14 @@ func (self *Eval) VisitBasicLit(node *ast.BasicLit) {
 	case token.INT:
 		val, err := strconv.Atoi(node.Value)
 		if err != nil {
-			self.fatal("%s convert to int failed: %v", node.Value, err)
+			self.Fatalf(node.ValuePos, "%s convert to int failed: %v", node.Value, err)
 		}
 		obj := self.RT.NewIntegerObject(val)
 		self.Stack.Push(obj)
 	case token.FLOAT:
 		val, err := strconv.ParseFloat(node.Value, 64)
 		if err != nil {
-			self.fatal("%s convert to float failed: %v", node.Value, err)
+			self.Fatalf(node.ValuePos, "%s convert to float failed: %v", node.Value, err)
 		}
 		obj := self.RT.NewFloatObject(val)
 		self.Stack.Push(obj)
@@ -224,10 +228,10 @@ func (self *Eval) VisitCallExpr(node *ast.CallExpr) {
 
 			bakEnv := self.E
 			self.E = newEnv
-			self.NeedReturn = false
+			self.needReturn = false
 			fnobj.E = self.E
 			fnDecl.Body.Accept(self)
-			self.NeedReturn = false
+			self.needReturn = false
 
 			self.Fun = fnBak
 			self.E = bakEnv
@@ -490,18 +494,18 @@ func (self *Eval) VisitReturnStmt(node *ast.ReturnStmt) {
 		self.evalExpr(res)
 	}
 
-	self.NeedReturn = true
+	self.needReturn = true
 }
 
 func (self *Eval) VisitBranchStmt(node *ast.BranchStmt) {
 	self.debug(node)
 
 	if node.Tok == token.BREAK {
-		self.NeedBreak = true
+		self.needBreak = true
 	}
 
 	if node.Tok == token.CONTINUE {
-		self.NeedContinue = true
+		self.needContinue = true
 	}
 
 }
@@ -510,13 +514,13 @@ func (self *Eval) VisitBlockStmt(node *ast.BlockStmt) {
 	self.E = env.NewEnv(self.E)
 	for _, stmt := range node.List {
 		// need break in all loop
-		if self.NeedReturn {
+		if self.needReturn {
 			break
 		}
-		if self.LoopDepth > 0 && self.NeedBreak {
+		if self.loopDepth > 0 && self.needBreak {
 			break
 		}
-		if self.LoopDepth > 0 && self.NeedContinue {
+		if self.loopDepth > 0 && self.needContinue {
 			break
 		}
 		stmt.Accept(self)
@@ -566,13 +570,13 @@ func (self *Eval) VisitCaseClause(node *ast.CaseClause) {
 
 	for _, s := range node.Body {
 		// need break in all loop
-		if self.NeedReturn {
+		if self.needReturn {
 			break
 		}
-		if self.LoopDepth > 0 && self.NeedBreak {
+		if self.loopDepth > 0 && self.needBreak {
 			break
 		}
-		if self.LoopDepth > 0 && self.NeedContinue {
+		if self.loopDepth > 0 && self.needContinue {
 			break
 		}
 		s.Accept(self)
@@ -615,19 +619,19 @@ func (self *Eval) VisitForStmt(node *ast.ForStmt) {
 			break
 		}
 
-		self.LoopDepth++
+		self.loopDepth++
 		node.Body.Accept(self)
-		self.LoopDepth--
+		self.loopDepth--
 
-		if self.NeedReturn {
+		if self.needReturn {
 			break
 		}
-		if self.NeedBreak {
-			self.NeedBreak = false
+		if self.needBreak {
+			self.needBreak = false
 			break
 		}
-		if self.NeedContinue {
-			self.NeedContinue = false
+		if self.needContinue {
+			self.needContinue = false
 		}
 		if node.Post != nil {
 			node.Post.Accept(self)
@@ -652,19 +656,19 @@ func (self *Eval) VisitRangeStmt(node *ast.RangeStmt) {
 			self.E.Put(keyName, self.RT.NewIntegerObject(i))
 			self.E.Put(valName, val)
 
-			self.LoopDepth++
+			self.loopDepth++
 			node.Body.Accept(self)
-			self.LoopDepth--
+			self.loopDepth--
 
-			if self.NeedReturn {
+			if self.needReturn {
 				break
 			}
-			if self.NeedBreak {
-				self.NeedBreak = false
+			if self.needBreak {
+				self.needBreak = false
 				break
 			}
-			if self.NeedContinue {
-				self.NeedContinue = false
+			if self.needContinue {
+				self.needContinue = false
 			}
 		}
 	case *rt.SetObject:
@@ -672,19 +676,19 @@ func (self *Eval) VisitRangeStmt(node *ast.RangeStmt) {
 			self.E.Put(keyName, self.RT.NewIntegerObject(i))
 			self.E.Put(valName, val)
 
-			self.LoopDepth++
+			self.loopDepth++
 			node.Body.Accept(self)
-			self.LoopDepth--
+			self.loopDepth--
 
-			if self.NeedReturn {
+			if self.needReturn {
 				break
 			}
-			if self.NeedBreak {
-				self.NeedBreak = false
+			if self.needBreak {
+				self.needBreak = false
 				break
 			}
-			if self.NeedContinue {
-				self.NeedContinue = false
+			if self.needContinue {
+				self.needContinue = false
 			}
 		}
 	case *rt.DictObject:
@@ -692,19 +696,19 @@ func (self *Eval) VisitRangeStmt(node *ast.RangeStmt) {
 			self.E.Put(keyName, self.RT.NewStringObject(i))
 			self.E.Put(valName, val)
 
-			self.LoopDepth++
+			self.loopDepth++
 			node.Body.Accept(self)
-			self.LoopDepth--
+			self.loopDepth--
 
-			if self.NeedReturn {
+			if self.needReturn {
 				break
 			}
-			if self.NeedBreak {
-				self.NeedBreak = false
+			if self.needBreak {
+				self.needBreak = false
 				break
 			}
-			if self.NeedContinue {
-				self.NeedContinue = false
+			if self.needContinue {
+				self.needContinue = false
 			}
 		}
 	}

@@ -9,19 +9,20 @@ import (
 )
 
 type Lexer struct {
-	Src     string
-	Pos     int
-	Line    int
-	Col     int
-	LastTok *DoubiSymType
+	FileName string
+	Src      string
+	Pos      int
+	Line     int
+	Col      int
+	LastTok  *DoubiSymType
 
 	SavedToks []*Tok
-	lines     []string
+	Lines     []string
 }
 
-func NewLexer(src string) *Lexer {
-	lex := &Lexer{Src: src, Pos: 0, Line: 1, Col: 0}
-	lex.lines = strings.Split(lex.Src, "\n")
+func NewLexer(filename, src string) *Lexer {
+	lex := &Lexer{FileName: filename, Src: src, Pos: 0, Line: 1, Col: 0}
+	lex.Lines = strings.Split(lex.Src, "\n")
 	return lex
 }
 
@@ -321,23 +322,62 @@ func (l *Lexer) Lex(lval *DoubiSymType) int {
 }
 
 func (l *Lexer) Error(s string) {
-	fmt.Printf("Syntax Error: Line:%d Col:%d \nToks:%q:\n", l.Line, l.Col, l.SavedToks)
+	fmt.Printf("Syntax Error: Line %d, Col %d:\n", l.Line, l.Col)
 
 	line := l.Line - 5
 	if line < 0 {
 		line = 0
 	}
 
-	for line < l.Line+5 && line < len(l.lines) {
+	for line < l.Line+5 && line < len(l.Lines) {
 		if line == l.Line-1 {
-			fmt.Printf("*%3d) %s\n", line+1, l.lines[line])
-			for i := 0; i < l.Col+6+len(l.LastTok.tok.Lit); i++ {
-				fmt.Print(" ")
+			fmt.Printf("*%3d) %s\n", line+1, l.Lines[line])
+		} else {
+			fmt.Printf(" %3d) %s\n", line+1, l.Lines[line])
+		}
+		line++
+	}
+}
+
+func (l *Lexer) PrintPosInfo(pos int) {
+	lineNum := 1
+	col := 0
+
+	for _, line := range l.Lines {
+		if pos < len(line) {
+			col = pos + 1
+			break
+		}
+		pos -= len(line) + 1
+		lineNum++
+	}
+
+	if l.FileName != "" {
+		fmt.Printf("\nFile: \"%s\", Line %d, Col %d\n", l.FileName, lineNum, col)
+	} else {
+		fmt.Printf("\nLine %d, Col %d\n", lineNum, col)
+	}
+
+	ln := lineNum - 5
+	if ln < 0 {
+		ln = 0
+	}
+
+	for ln < lineNum+4 && ln < len(l.Lines) {
+		if ln == lineNum-1 {
+			fmt.Printf("*%3d) %s\n", ln+1, l.Lines[ln])
+			fmt.Print("      ")
+			for i := 0; i < col-1; i++ {
+				if l.Lines[ln][i] == '\t' {
+					fmt.Print("\t")
+				} else {
+					fmt.Print(" ")
+				}
 			}
 			fmt.Println("^")
 		} else {
-			fmt.Printf(" %3d) %s\n", line+1, l.lines[line])
+			fmt.Printf(" %3d) %s\n", ln+1, l.Lines[ln])
 		}
-		line++
+		ln++
 	}
 }

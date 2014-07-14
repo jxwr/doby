@@ -228,15 +228,17 @@ fmt.Print(bb, "\n")
 test3()
 
 // fibornacci
+count = 0
 func fib(n) {
+	count++ 
     if n < 2 {
         return n
     }
     return fib(n-2) + fib(n-1)
 }
 
-for i = 0; i < 10; i++ {
-    fmt.Println(i, fib(i))
+for i = 0; i < 20; i++ {
+    fmt.Println(i, fib(i), count)
 }
 fmt.Print("\n")
 

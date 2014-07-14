@@ -47,7 +47,9 @@ func (self *Runner) Run(filename string) {
 	}
 
 	parser.ProgramAst = nil
-	parser.DoubiParse(parser.NewLexer(string(contents)))
+	lexer := parser.NewLexer(filename, string(contents))
+	self.eval.SetLexer(lexer)
+	parser.DoubiParse(lexer)
 
 	for _, stmt := range parser.ProgramAst {
 		stmt.Accept(self.attr)

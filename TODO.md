@@ -1,6 +1,6 @@
 ## Soon
 
-* [ ] remove Property in each object
+* [-] remove Property in each object
 * [ ] add golang type register support
 
 ## Tasks
