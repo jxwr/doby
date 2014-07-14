@@ -237,7 +237,7 @@ func fib(n) {
     return fib(n-2) + fib(n-1)
 }
 
-for i = 0; i < 20; i++ {
+for i = 0; i < 15; i++ {
     fmt.Println(i, fib(i), count)
 }
 fmt.Print("\n")
