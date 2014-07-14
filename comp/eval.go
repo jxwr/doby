@@ -36,7 +36,7 @@ func (self *Stack) Push(obj rt.Object) {
 
 func (self *Stack) Pop() rt.Object {
 	if self.cur == 0 {
-		panic("pop from empty stack")
+		panic("Pop from empty stack, maybe missing return in some func")
 	}
 	self.cur--
 	return self.vals[self.cur]
@@ -228,11 +228,10 @@ func (self *Eval) VisitCallExpr(node *ast.CallExpr) {
 
 			bakEnv := self.E
 			self.E = newEnv
-			self.needReturn = false
 			fnobj.E = self.E
+			self.needReturn = false
 			fnDecl.Body.Accept(self)
 			self.needReturn = false
-
 			self.Fun = fnBak
 			self.E = bakEnv
 		}

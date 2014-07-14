@@ -5,7 +5,7 @@ import "fmt"
 })
 
 func add_n(n) {
-     return func(a) { a + n }
+     return func(a) { return a + n }
 }
 
 add_100 = add_n(100)
