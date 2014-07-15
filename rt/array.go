@@ -37,9 +37,55 @@ func (self *ArrayObject) ToString(rt *Runtime, args ...Object) []Object {
 	return []Object{rt.NewStringObject(self.String())}
 }
 
-func (self *ArrayObject) Append(rt *Runtime, args ...Object) (results []Object) {
-	val := args[0]
-	self.Vals = append(self.Vals, val)
+func (self *ArrayObject) Push(rt *Runtime, args ...Object) (results []Object) {
+	for _, arg := range args {
+		self.Vals = append(self.Vals, arg)
+	}
+	results = append(results, self)
+	return
+}
+
+func (self *ArrayObject) Pop(rt *Runtime, args ...Object) (results []Object) {
+	n := 1
+	if len(args) == 1 {
+		n = args[0].(*IntegerObject).Val
+		if n < 0 || n > len(self.Vals) {
+			panic("pop array out of range")
+		}
+	}
+	self.Vals = self.Vals[:len(self.Vals)-n]
+	results = append(results, self)
+	return
+}
+
+func (self *ArrayObject) Take(rt *Runtime, args ...Object) (results []Object) {
+	var n int
+	if len(args) == 1 {
+		n = args[0].(*IntegerObject).Val
+		if n < 0 || n > len(self.Vals) {
+			panic("take array out of range")
+		}
+	} else {
+		rt.Fatalf("array::Take need one integer argumenet, %d given", len(args))
+	}
+	obj := rt.NewArrayObject(self.Vals[:n])
+	results = append(results, obj)
+	return
+}
+
+func (self *ArrayObject) Drop(rt *Runtime, args ...Object) (results []Object) {
+	var n int
+	if len(args) == 1 {
+		n = args[0].(*IntegerObject).Val
+		if n < 0 || n > len(self.Vals) {
+			panic("drop array out of range")
+		}
+	} else {
+		rt.Fatalf("array::Drop need one integer argumenet, %d given", len(args))
+	}
+	obj := rt.NewArrayObject(self.Vals[:n])
+	self.Vals = self.Vals[n:]
+	results = append(results, obj)
 	return
 }
 
@@ -57,24 +103,32 @@ func (self *ArrayObject) Size(rt *Runtime, args ...Object) (results []Object) {
 
 func (self *ArrayObject) Each(rt *Runtime, args ...Object) (results []Object) {
 	fnobj := args[0].(*FuncObject)
-	fnDecl := fnobj.Decl
 	for i := 0; i < len(self.Vals); i++ {
-		fnobj.E.Put(fnDecl.Args[0].Name, self.Vals[i])
-		fnDecl.Body.Accept(rt.Visitor)
+		rt.CallFuncObj(fnobj, self.Vals[i])
 	}
 	return
 }
 
 func (self *ArrayObject) Map(rt *Runtime, args ...Object) (results []Object) {
 	fnobj := args[0].(*FuncObject)
-	fnDecl := fnobj.Decl
-
 	arr := []Object{}
 	for i := 0; i < len(self.Vals); i++ {
-		fnobj.E.Put(fnDecl.Args[0].Name, self.Vals[i])
-		rt.NeedReturn = false
-		fnDecl.Body.Accept(rt.Visitor)
+		rt.CallFuncObj(fnobj, self.Vals[i])
 		arr = append(arr, rt.Pop())
+	}
+	obj := rt.NewArrayObject(arr)
+	results = append(results, obj)
+	return
+}
+
+func (self *ArrayObject) Select(rt *Runtime, args ...Object) (results []Object) {
+	fnobj := args[0].(*FuncObject)
+	arr := []Object{}
+	for i := 0; i < len(self.Vals); i++ {
+		rt.CallFuncObj(fnobj, self.Vals[i])
+		if rt.Pop().(*BoolObject).Val {
+			arr = append(arr, self.Vals[i])
+		}
 	}
 	obj := rt.NewArrayObject(arr)
 	results = append(results, obj)

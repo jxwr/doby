@@ -4,8 +4,8 @@ func filter(list, fn) {
     sublist = []
     for _, elem = range list {
         if fn(elem) {
-			sublist.Append(elem)
-			fmt.Println(sublist)
+            sublist.Push(elem)
+            fmt.Println(sublist)
         }
     }
     return sublist

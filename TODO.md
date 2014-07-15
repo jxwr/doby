@@ -1,7 +1,8 @@
 ## Soon
 
-* [-] remove Property in each object
+* [ ] remove Property in each object
 * [ ] add golang type register support
+* [ ] lexer and node states should be in runtime
 
 ## Tasks
 

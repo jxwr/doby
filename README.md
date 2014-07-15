@@ -1,8 +1,49 @@
 ## Are you a DOUBI sent by the Monkey King?
 
-A script language with golang syntax and ruby semantic, on top of golang runtime and can use golang packages if they are exported to the Doubi envrionment.
+A script language on top of golang runtime with golang syntax and ruby semantic, it could use golang packages if they were exported to the Doubi envrionment.
 
 > DO NOT USE, IT'S EXPERIMENTAL
+
+## DataType
+
+### Array 
+```go
+import "fmt"
+
+a = [1,2,3,4,5,6]
+
+a.Each(func(e){fmt.Print(e)})
+fmt.Println()
+
+fn = func(e){return e*2 + 1}
+b = a.Map(fn)
+fmt.Println(b)
+
+c = b.Select(func(e){return e > 10})
+fmt.Println(c)
+
+a.Push(7,8,9)
+fmt.Println(a)
+a.Pop(3)
+fmt.Println(a)
+
+e = a.Take(4)
+fmt.Println(e)
+
+f = e.Drop(2)
+fmt.Println(f, e)
+```
+
+Outputs:
+```
+123456
+[3,5,7,9,11,13]
+[11,13]
+[1,2,3,4,5,6,7,8,9]
+[1,2,3,4,5,6]
+[1,2,3,4]
+[1,2] [3,4]
+```
 
 ## Examples:
 
@@ -15,14 +56,14 @@ func filter(list, fn) {
      sublist = []
      for _, elem = range list {
          if fn(elem) {
-            sublist.append(elem)
+            sublist.Push(elem)
          }
      }
      return sublist
 }
 
 func qsort(list) {
-    if list.length() <= 1 {
+    if list.Length() <= 1 {
         return list
     }
 

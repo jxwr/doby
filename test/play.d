@@ -107,7 +107,7 @@ for i, v = range c {
 }
 
 list = [1,2,3,4]
-list.Append(5)
+list.Push(5)
 fmt.Println(list)
 
 cl = [1,2,3,4] + [5,6,7,8]

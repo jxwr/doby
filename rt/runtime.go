@@ -53,6 +53,17 @@ func NewRuntime(visitor ast.Visitor) *Runtime {
 	return rt
 }
 
+func (self *Runtime) CallFuncObj(fnobj *FuncObject, args ...Object) {
+	fnDecl := fnobj.Decl
+	for i, arg := range args {
+		fnobj.E.Put(fnDecl.Args[i].Name, arg)
+	}
+	self.NeedReturn = false
+	self.NeedBreak = false
+	self.NeedContinue = false
+	fnDecl.Body.Accept(self.Visitor)
+}
+
 func (self *Runtime) NewIntegerObject(val int) *IntegerObject {
 	obj := &IntegerObject{MakeProperty(nil, &self.integerProperties), val}
 	return obj
@@ -269,6 +280,12 @@ func (self *Runtime) Mark() {
 
 func (self *Runtime) Rewind() {
 	self.Stack.Rewind()
+}
+
+func (self *Runtime) Fatalf(format string, a ...interface{}) {
+	fmt.Printf("Runtime Error: "+format, a...)
+	fmt.Println()
+	os.Exit(1)
 }
 
 func WrapGoFunc(fn interface{}) {
