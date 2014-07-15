@@ -55,6 +55,32 @@ func (self *ArrayObject) Size(rt *Runtime, args ...Object) (results []Object) {
 	return
 }
 
+func (self *ArrayObject) Each(rt *Runtime, args ...Object) (results []Object) {
+	fnobj := args[0].(*FuncObject)
+	fnDecl := fnobj.Decl
+	for i := 0; i < len(self.Vals); i++ {
+		fnobj.E.Put(fnDecl.Args[0].Name, self.Vals[i])
+		fnDecl.Body.Accept(rt.Visitor)
+	}
+	return
+}
+
+func (self *ArrayObject) Map(rt *Runtime, args ...Object) (results []Object) {
+	fnobj := args[0].(*FuncObject)
+	fnDecl := fnobj.Decl
+
+	arr := []Object{}
+	for i := 0; i < len(self.Vals); i++ {
+		fnobj.E.Put(fnDecl.Args[0].Name, self.Vals[i])
+		rt.NeedReturn = false
+		fnDecl.Body.Accept(rt.Visitor)
+		arr = append(arr, rt.Pop())
+	}
+	obj := rt.NewArrayObject(arr)
+	results = append(results, obj)
+	return
+}
+
 func (self *ArrayObject) OP__add__(rt *Runtime, args ...Object) (results []Object) {
 	vals := append(self.Vals[:], args[0].(*ArrayObject).Vals...)
 	ret := rt.NewArrayObject(vals)

@@ -24,6 +24,14 @@ fmt.Println("list length", list.Length())
 list.Append(6)
 fmt.Println(list)
 
+list.Each(func(elem){fmt.Print(elem, ",")})
+fmt.Println()
+addone = list.Map(func(elem){ 
+   fmt.Println(elem)
+   return 1 
+})
+fmt.Println(addone)
+
 // str
 str = "1n2n3n5"
 subs = str[1:4]

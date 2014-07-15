@@ -17,7 +17,13 @@ import (
 type Runtime struct {
 	Visitor ast.Visitor
 	Env     *env.Env
+	Stack   *Stack
 	Nil     Object
+
+	NeedReturn   bool
+	LoopDepth    int
+	NeedBreak    bool
+	NeedContinue bool
 
 	goTypeMap map[string]*Property
 
@@ -37,7 +43,7 @@ type Runtime struct {
 func NewRuntime(visitor ast.Visitor) *Runtime {
 	env := env.NewEnv(nil)
 
-	rt := &Runtime{Visitor: visitor, Env: env}
+	rt := &Runtime{Visitor: visitor, Env: env, Stack: NewStack()}
 	rt.registerGlobals(env)
 
 	rt.Nil = &NilObject{}
@@ -245,6 +251,24 @@ func (self *Runtime) funcMap(funcList []interface{}) (fm map[string]Object) {
 		fm[xs[len(xs)-1]] = self.NewGoFuncObject(fname, f)
 	}
 	return
+}
+
+/// stack wrapper
+
+func (self *Runtime) Push(obj Object) {
+	self.Stack.Push(obj)
+}
+
+func (self *Runtime) Pop() Object {
+	return self.Stack.Pop()
+}
+
+func (self *Runtime) Mark() {
+	self.Stack.Mark()
+}
+
+func (self *Runtime) Rewind() {
+	self.Stack.Rewind()
 }
 
 func WrapGoFunc(fn interface{}) {
