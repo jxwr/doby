@@ -1,8 +1,11 @@
 ## Soon
 
-* [ ] remove Property in each object
+* [ ] remove Property in each object - done
 * [ ] add golang type register support
-* [ ] lexer and node states should be in runtime
+* [ ] lexer and node states should be in runtime - half done
+* [ ] way to make objects with golang builtin types
+* [ ] better int family types supoort
+* [ ] better autoboxing doubi type and golang type
 
 ## Tasks
 
