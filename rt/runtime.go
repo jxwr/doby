@@ -163,6 +163,15 @@ func ObjectToValue(obj Object) reflect.Value {
 
 func (self *Runtime) addObjectProperties(obj interface{}, prop *Property) {
 	typ := reflect.TypeOf(obj)
+	// if obj is a struct, add all fileds to its property
+	val := reflect.ValueOf(obj)
+	if typ.Kind() == reflect.Struct {
+		for i := 0; i < val.NumField(); i++ {
+			prop.SetProp(typ.Field(i).Name, self.NewGoObject(val.Field(i).Interface()))
+		}
+	}
+
+	// add methods of the type
 	numMethods := typ.NumMethod()
 
 	to_s, ok := typ.MethodByName("ToString")
