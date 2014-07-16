@@ -60,8 +60,9 @@ func Invoke(rt *Runtime, obj Object, method string, args ...Object) (results []O
 				goto err
 			}
 			theArgs := []reflect.Value{}
-			for _, arg := range args {
-				theArgs = append(theArgs, ObjectToValue(arg))
+			for i, arg := range args {
+				reqTyp := theMethod.Type().In(i)
+				theArgs = append(theArgs, ObjectToValue(arg, reqTyp))
 			}
 			rets := theMethod.Call(theArgs)
 			for _, ret := range rets {

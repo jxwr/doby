@@ -135,13 +135,13 @@ func (self *Runtime) NewNilObject(vals []Object) Object {
 	return self.Nil
 }
 
-func ObjectToValue(obj Object) reflect.Value {
+func ObjectToValue(obj Object, typ reflect.Type) reflect.Value {
 	var v reflect.Value
 	switch obj := obj.(type) {
 	case *IntegerObject:
-		v = reflect.ValueOf(obj.Val)
+		v = reflect.ValueOf(obj.Val).Convert(typ)
 	case *FloatObject:
-		v = reflect.ValueOf(obj.Val)
+		v = reflect.ValueOf(obj.Val).Convert(typ)
 	case *StringObject:
 		v = reflect.ValueOf(obj.Val)
 	case *BoolObject:
@@ -228,8 +228,42 @@ func (self *Runtime) initBuiltinObjectProperties() {
 
 /// register
 
-func (self *Runtime) RegisterFunctions(name string, fns []interface{}) {
-	self.Env.Put(name, self.NewDictObject(self.funcMap(fns)))
+func (self *Runtime) RegisterVars(name string, vars map[string]interface{}) {
+	dict, _ := self.Env.LookUp(name)
+
+	m := map[string]Object{}
+	for k, v := range vars {
+		m[k] = self.NewGoObject(v)
+	}
+
+	if dict == nil {
+		dict = self.NewDictObject(m)
+	} else {
+		for k, v := range m {
+			dict.(*DictObject).SetProp(k, v)
+		}
+	}
+	self.Env.Put(name, dict)
+}
+
+func (self *Runtime) RegisterFunctions(name string, vars []interface{}) {
+	dict, _ := self.Env.LookUp(name)
+
+	m := map[string]Object{}
+	for _, v := range vars {
+		name := runtime.FuncForPC(reflect.ValueOf(v).Pointer()).Name()
+		xs := strings.Split(name, ".")
+		m[xs[len(xs)-1]] = self.NewGoFuncObject(name, v)
+	}
+
+	if dict == nil {
+		dict = self.NewDictObject(m)
+	} else {
+		for k, v := range m {
+			dict.(*DictObject).SetProp(k, v)
+		}
+	}
+	self.Env.Put(name, dict)
 }
 
 func (self *Runtime) registerGlobals(env *env.Env) {
@@ -261,16 +295,6 @@ func (self *Runtime) registerGlobals(env *env.Env) {
 		rand.Int31, rand.Int31n, rand.Int63, rand.Int63n, rand.Intn,
 		rand.NormFloat64, rand.Perm, rand.Seed, rand.Uint32,
 	})
-}
-
-func (self *Runtime) funcMap(funcList []interface{}) (fm map[string]Object) {
-	fm = map[string]Object{}
-	for _, f := range funcList {
-		fname := runtime.FuncForPC(reflect.ValueOf(f).Pointer()).Name()
-		xs := strings.Split(fname, ".")
-		fm[xs[len(xs)-1]] = self.NewGoFuncObject(fname, f)
-	}
-	return
 }
 
 /// stack wrapper

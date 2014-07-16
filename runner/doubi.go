@@ -35,6 +35,10 @@ func (self *Runner) RegisterFunctions(name string, fns []interface{}) {
 	self.runtime.RegisterFunctions(name, fns)
 }
 
+func (self *Runner) RegisterVars(name string, vars map[string]interface{}) {
+	self.runtime.RegisterVars(name, vars)
+}
+
 func (self *Runner) Run(filename string) {
 	var contents []byte
 	var err error

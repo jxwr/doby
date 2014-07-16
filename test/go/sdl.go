@@ -13,8 +13,12 @@ func init() {
 	flag.StringVar(&input, "i", "", "input file")
 }
 
-func NewRect() sdl.Rect {
-	return sdl.Rect{1, 2, 3, 4}
+func MakeRect(x, y, h, w int32) sdl.Rect {
+	return sdl.Rect{x, y, h, w}
+}
+
+func NewRect(x, y, h, w int32) *sdl.Rect {
+	return &sdl.Rect{x, y, h, w}
 }
 
 func main() {
@@ -22,7 +26,14 @@ func main() {
 
 	r := runner.NewRunner()
 
-	r.RegisterFunctions("sdl", []interface{}{NewRect})
+	r.RegisterFunctions("sdl", []interface{}{
+		MakeRect, NewRect, sdl.CreateWindow, sdl.Delay, sdl.PollEvent,
+	})
+
+	r.RegisterVars("sdl", map[string]interface{}{
+		"WINDOWPOS_UNDEFINED": sdl.WINDOWPOS_UNDEFINED,
+		"WINDOW_SHOWN":        sdl.WINDOW_SHOWN,
+	})
 
 	if input != "" {
 		r.Run(input)
