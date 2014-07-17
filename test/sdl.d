@@ -48,7 +48,7 @@ func drawCell(surface, board, i, j) {
 func drawBoard(surface, board) {
 	for i = 0; i < board[0].Length(); i++ {
 		for j = 0; j < board.Length(); j++ {
-			fmt.Println("begin", i, j)
+//			fmt.Println("begin", i, j)
 			drawCell(surface, board, i, j)
 		}
 	}
@@ -111,7 +111,7 @@ func main() {
 	for !quit {
 		drawBoard(surface, board)
 		window.UpdateSurface()
-		/// ...because it is too slow, we even don't need sdl.Delay()
+		/// ... because it is too slow, we even don't need sdl.Delay()
 		update(board)
 	}
 

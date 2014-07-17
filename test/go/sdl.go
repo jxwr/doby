@@ -2,6 +2,9 @@ package main
 
 import (
 	"flag"
+	"log"
+	"net/http"
+	_ "net/http/pprof"
 
 	"github.com/jxwr/doubi/runner"
 	"github.com/veandco/go-sdl2/sdl"
@@ -22,6 +25,10 @@ func NewRect(x, y, h, w int32) *sdl.Rect {
 }
 
 func main() {
+	go func() {
+		log.Println(http.ListenAndServe("localhost:6060", nil))
+	}()
+
 	flag.Parse()
 
 	r := runner.NewRunner()
