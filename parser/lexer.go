@@ -21,7 +21,7 @@ type Lexer struct {
 }
 
 func NewLexer(filename, src string) *Lexer {
-	lex := &Lexer{FileName: filename, Src: src, Pos: 0, Line: 1, Col: 0}
+	lex := &Lexer{FileName: filename, Src: src + "\n", Pos: 0, Line: 1, Col: 0}
 	lex.Lines = strings.Split(lex.Src, "\n")
 	return lex
 }

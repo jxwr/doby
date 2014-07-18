@@ -8,6 +8,7 @@ import (
 
 	"github.com/jxwr/doubi/comp"
 	"github.com/jxwr/doubi/env"
+	"github.com/jxwr/doubi/ir"
 	"github.com/jxwr/doubi/parser"
 	"github.com/jxwr/doubi/rt"
 )
@@ -61,5 +62,10 @@ func (self *Runner) Run(filename string) {
 
 	for _, stmt := range parser.ProgramAst {
 		stmt.Accept(self.eval)
+	}
+
+	irb := ir.NewIRBuilder()
+	for _, stmt := range parser.ProgramAst {
+		irb.BuildStmt(stmt)
 	}
 }
