@@ -15,19 +15,18 @@ import (
 type Runner struct {
 	pretty  *comp.PrettyPrinter
 	attr    *comp.Attr
-	eval    *comp.Eval
+	irb     *comp.IRBuilder
 	runtime *rt.Runtime
 }
 
 func NewRunner() *Runner {
 	pretty := &comp.PrettyPrinter{false, 0, true}
 	attr := &comp.Attr{false, env.NewEnv(nil), nil}
-	eval := comp.NewEvaluater()
+	irb := comp.NewIRBuilder()
 
-	runtime := rt.NewRuntime(eval)
-	eval.SetRuntime(runtime)
+	runtime := rt.NewRuntime(irb)
 
-	runner := &Runner{pretty, attr, eval, runtime}
+	runner := &Runner{pretty, attr, irb, runtime}
 	return runner
 }
 
@@ -52,7 +51,7 @@ func (self *Runner) Run(filename string) {
 
 	parser.ProgramAst = nil
 	lexer := parser.NewLexer(filename, string(contents))
-	self.eval.SetLexer(lexer)
+	self.irb.SetLexer(lexer)
 	parser.DoubiParse(lexer)
 
 	for _, stmt := range parser.ProgramAst {
@@ -60,6 +59,6 @@ func (self *Runner) Run(filename string) {
 	}
 
 	for _, stmt := range parser.ProgramAst {
-		stmt.Accept(self.eval)
+		stmt.Accept(self.irb)
 	}
 }

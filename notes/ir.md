@@ -54,3 +54,9 @@ arg = build(Y)
 
 instr.Call(obj, '+', arg)
 instr.Copy()
+
+instrs
+const
+
+stack
+frame
