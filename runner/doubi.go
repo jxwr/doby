@@ -61,4 +61,6 @@ func (self *Runner) Run(filename string) {
 	for _, stmt := range parser.ProgramAst {
 		stmt.Accept(self.irb)
 	}
+
+	self.irb.DumpClosure()
 }

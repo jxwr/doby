@@ -7,23 +7,83 @@ import (
 	"strings"
 
 	"github.com/jxwr/doubi/ast"
-	"github.com/jxwr/doubi/env"
 	"github.com/jxwr/doubi/parser"
 	"github.com/jxwr/doubi/rt"
 	"github.com/jxwr/doubi/token"
 )
 
-type IRBuilder struct {
-	E   *env.Env
-	Fun *ast.FuncDeclExpr
-	RT  *rt.Runtime
+type Closure struct {
+	LocalVariables []string
+	InnerClosures  []*Closure
+	OuterClosure   *Closure
+	Instrs         []string
+	Args           []string
+}
 
-	lexer  *parser.Lexer
-	instrs []string
+func NewClosure(outer *Closure) *Closure {
+	c := &Closure{
+		LocalVariables: []string{},
+		InnerClosures:  []*Closure{},
+		OuterClosure:   outer,
+		Instrs:         []string{},
+		Args:           []string{},
+	}
+	return c
+}
+
+func (self *Closure) emit(instr string) {
+	self.Instrs = append(self.Instrs, instr)
+}
+
+func (self *Closure) DumpClosure() {
+	fmt.Println("------------------------------")
+	for i, instr := range self.Instrs {
+		fmt.Printf("%3d: %s\n", i, instr)
+	}
+	for _, ic := range self.InnerClosures {
+		ic.DumpClosure()
+	}
+}
+
+func (self *Closure) AddClosure(c *Closure) int {
+	self.InnerClosures = append(self.InnerClosures, c)
+	return len(self.InnerClosures)
+}
+
+func (self *Closure) AddArg(name string) int {
+	self.Args = append(self.Args, name)
+	return len(self.Args)
+}
+
+func (self *Closure) Put(name string) {
+	self.LocalVariables = append(self.LocalVariables, name)
+}
+
+func (self *Closure) LookUp(name string) (exist bool, depth int) {
+	c := self
+	for c != nil {
+		if ContainsString(c.LocalVariables, name) {
+			exist = true
+			return
+		}
+		depth++
+		c = c.OuterClosure
+	}
+	exist = false
+	return
+}
+
+type IRBuilder struct {
+	ModuleNames []string
+	Fun         *ast.FuncDeclExpr
+	RT          *rt.Runtime
+	C           *Closure
+
+	lexer *parser.Lexer
 }
 
 func NewIRBuilder() *IRBuilder {
-	irb := &IRBuilder{E: env.NewEnv(nil), instrs: []string{}}
+	irb := &IRBuilder{C: NewClosure(nil)}
 	return irb
 }
 
@@ -40,8 +100,24 @@ func (self *IRBuilder) buildExpr(expr ast.Expr) {
 }
 
 func (self *IRBuilder) emit(instr string) {
-	fmt.Println(instr)
-	self.instrs = append(self.instrs, instr)
+	self.C.emit(instr)
+}
+
+func (self *IRBuilder) PushClosure() int {
+	c := NewClosure(self.C)
+	n := self.C.AddClosure(c)
+	self.C = c
+	return n
+}
+
+func (self *IRBuilder) PopClosure() *Closure {
+	c := self.C
+	self.C = self.C.OuterClosure
+	return c
+}
+
+func (self *IRBuilder) DumpClosure() {
+	self.C.DumpClosure()
 }
 
 func (self *IRBuilder) Fatalf(pos token.Pos, format string, a ...interface{}) {
@@ -61,12 +137,7 @@ func (self *IRBuilder) VisitIdent(node *ast.Ident) {
 	} else if node.Name == "false" {
 		self.emit("push_false")
 	} else {
-		obj, _ := self.E.LookUp(node.Name)
-		if obj != nil {
-			self.emit("push_ident")
-		} else {
-			//			self.Fatalf(node.NamePos, "'%s' not Found", node.Name)
-		}
+		// self.Fatalf(node.NamePos, "'%s' not Found", node.Name)
 	}
 }
 
@@ -139,9 +210,9 @@ func (self *IRBuilder) VisitCallExpr(node *ast.CallExpr) {
 func (self *IRBuilder) VisitUnaryExpr(node *ast.UnaryExpr) {
 	self.buildExpr(node.X)
 	if node.Op == token.NOT {
-		self.emit("send_method :not")
+		self.emit("send_method :__not__")
 	} else if node.Op == token.SUB {
-		self.emit("send_method :minus")
+		self.emit("send_method :__minus__")
 	}
 }
 
@@ -175,9 +246,16 @@ func (self *IRBuilder) VisitDictExpr(node *ast.DictExpr) {
 }
 
 func (self *IRBuilder) VisitFuncDeclExpr(node *ast.FuncDeclExpr) {
-	self.emit("func_begin")
+	n := self.PushClosure()
+	for _, arg := range node.Args {
+		self.C.AddArg(arg.Name)
+	}
 	node.Body.Accept(self)
-	self.emit("func_end")
+	self.PopClosure()
+
+	self.emit(fmt.Sprintf("push_closure %d", n))
+	if node.Name != nil {
+	}
 }
 
 // stmts
