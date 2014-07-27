@@ -1,0 +1,27 @@
+package instr
+
+type Visitor interface {
+	VisitPushNil(ir *PushNilInstr)
+	VisitPushTrue(ir *PushTrueInstr)
+	VisitPushFalse(ir *PushFalseInstr)
+	VisitPushInt(ir *PushIntInstr)
+	VisitPushFloat(ir *PushFloatInstr)
+	VisitPushString(ir *PushStringInstr)
+	VisitLoadLocal(ir *LoadLocalInstr)
+	VisitLoadUpval(ir *LoadUpvalInstr)
+	VisitSetLocal(ir *SetLocalInstr)
+	VisitSetUpval(ir *SetUpvalInstr)
+	VisitSendMethod(ir *SendMethodInstr)
+	VisitNewArray(ir *NewArrayInstr)
+	VisitNewDict(ir *NewDictInstr)
+	VisitNewSet(ir *NewSetInstr)
+	VisitLabel(ir *LabelInstr)
+	VisitJump(ir *JumpInstr)
+	VisitJumpIfFalse(ir *JumpIfFalseInstr)
+	VisitImport(ir *ImportInstr)
+	VisitPushModule(ir *PushModuleInstr)
+	VisitPushClosure(ir *PushClosureInstr)
+	VisitRaiseReturn(ir *RaiseReturnInstr)
+	VisitRaiseBreak(ir *RaiseBreakInstr)
+	VisitRaiseContinue(ir *RaiseContinueInstr)
+}

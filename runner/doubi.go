@@ -10,6 +10,7 @@ import (
 	"github.com/jxwr/doubi/env"
 	"github.com/jxwr/doubi/parser"
 	"github.com/jxwr/doubi/rt"
+	"github.com/jxwr/doubi/vm"
 )
 
 type Runner struct {
@@ -62,5 +63,6 @@ func (self *Runner) Run(filename string) {
 		stmt.Accept(self.irb)
 	}
 
-	self.irb.DumpClosureProto()
+	vm := vm.VM{self.irb.C}
+	vm.Run()
 }

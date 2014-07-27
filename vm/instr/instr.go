@@ -61,6 +61,7 @@ var TypName = map[InstrType]string{
 type Instr interface {
 	Type() InstrType
 	String() string
+	Accept(Visitor)
 }
 
 type PushNilInstr struct {
@@ -344,3 +345,27 @@ func (n *PushClosureInstr) Type() InstrType   { return n.Typ }
 func (n *RaiseReturnInstr) Type() InstrType   { return n.Typ }
 func (n *RaiseBreakInstr) Type() InstrType    { return n.Typ }
 func (n *RaiseContinueInstr) Type() InstrType { return n.Typ }
+
+func (n *PushNilInstr) Accept(v Visitor)       { v.VisitPushNil(n) }
+func (n *PushTrueInstr) Accept(v Visitor)      { v.VisitPushTrue(n) }
+func (n *PushFalseInstr) Accept(v Visitor)     { v.VisitPushFalse(n) }
+func (n *PushIntInstr) Accept(v Visitor)       { v.VisitPushInt(n) }
+func (n *PushFloatInstr) Accept(v Visitor)     { v.VisitPushFloat(n) }
+func (n *PushStringInstr) Accept(v Visitor)    { v.VisitPushString(n) }
+func (n *LoadLocalInstr) Accept(v Visitor)     { v.VisitLoadLocal(n) }
+func (n *LoadUpvalInstr) Accept(v Visitor)     { v.VisitLoadUpval(n) }
+func (n *SetLocalInstr) Accept(v Visitor)      { v.VisitSetLocal(n) }
+func (n *SetUpvalInstr) Accept(v Visitor)      { v.VisitSetUpval(n) }
+func (n *SendMethodInstr) Accept(v Visitor)    { v.VisitSendMethod(n) }
+func (n *NewArrayInstr) Accept(v Visitor)      { v.VisitNewArray(n) }
+func (n *NewDictInstr) Accept(v Visitor)       { v.VisitNewDict(n) }
+func (n *NewSetInstr) Accept(v Visitor)        { v.VisitNewSet(n) }
+func (n *LabelInstr) Accept(v Visitor)         { v.VisitLabel(n) }
+func (n *JumpInstr) Accept(v Visitor)          { v.VisitJump(n) }
+func (n *JumpIfFalseInstr) Accept(v Visitor)   { v.VisitJumpIfFalse(n) }
+func (n *ImportInstr) Accept(v Visitor)        { v.VisitImport(n) }
+func (n *PushModuleInstr) Accept(v Visitor)    { v.VisitPushModule(n) }
+func (n *PushClosureInstr) Accept(v Visitor)   { v.VisitPushClosure(n) }
+func (n *RaiseReturnInstr) Accept(v Visitor)   { v.VisitRaiseReturn(n) }
+func (n *RaiseBreakInstr) Accept(v Visitor)    { v.VisitRaiseBreak(n) }
+func (n *RaiseContinueInstr) Accept(v Visitor) { v.VisitRaiseContinue(n) }
