@@ -63,6 +63,9 @@ func (self *Runner) Run(filename string) {
 		stmt.Accept(self.irb)
 	}
 
-	vm := vm.VM{self.irb.C}
+	self.irb.C.DumpClosureProto()
+	fmt.Println("===========================")
+
+	vm := vm.NewVM(self.irb.C, self.irb.CS, self.runtime)
 	vm.Run()
 }

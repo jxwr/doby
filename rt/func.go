@@ -5,7 +5,32 @@ import (
 
 	"github.com/jxwr/doubi/ast"
 	"github.com/jxwr/doubi/env"
+	"github.com/jxwr/doubi/vm/instr"
 )
+
+/// closure
+
+type ClosureObject struct {
+	Property
+
+	Proto *instr.ClosureProto
+}
+
+func (self *ClosureObject) Name() string {
+	return "closure"
+}
+
+func (self *ClosureObject) HashCode() string {
+	return fmt.Sprintf("%p", self)
+}
+
+func (self *ClosureObject) String() string {
+	return fmt.Sprintf("closure#%d", self.Proto.Seq)
+}
+
+func (self *ClosureObject) ToString(rt *Runtime, args ...Object) []Object {
+	return []Object{rt.NewStringObject(self.String())}
+}
 
 /// function
 

@@ -1,27 +1,18 @@
 
-1 + 2 * 5
+a = 1 + 2 * 4
+b = a + 100
+c = "hello" + " world"
+d = 1.02
+e = a + d
 
-a = [1,2,3,4]
+f = [1,2,3,4]
 
-if 1 > 2 {
-	return 10
-} else {
-	100
-}
-
-true 
-
-[12,3][1:]
-
-c = 0
 func add(a, b) {
-	return a + b + c
+	c = a + b
+	d = c + 1
+	c
+	return
+	c + 1
 }
 
-func fff(fn) {
-	fn(1,2)
-}
-
-fff(a)
-
-a(1,2,3)
+m = add(1, 2)

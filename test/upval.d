@@ -1,6 +1,6 @@
 a = 1 + 2
 
-func add(a, b) {
+func add1(a, b) {
 	e = 100
 	c = a + b + e
 	return c
@@ -8,7 +8,7 @@ func add(a, b) {
 
 d = 1
 e = 2
-func add(a, b) {
+func add2(a, b) {
 	c = a + b + d + e
 	return c
 }

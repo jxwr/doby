@@ -164,7 +164,7 @@ func SetUpval(offset int) *SetUpvalInstr {
 type SendMethodInstr struct {
 	Typ    InstrType
 	Method string
-	Offset int
+	Num    int
 }
 
 func SendMethod(method string, offset int) *SendMethodInstr {
@@ -308,7 +308,7 @@ func (n *LoadLocalInstr) String() string     { return _t(TypName[n.Typ], n.Offse
 func (n *LoadUpvalInstr) String() string     { return _t(TypName[n.Typ], n.Offset) }
 func (n *SetLocalInstr) String() string      { return _t(TypName[n.Typ], n.Offset) }
 func (n *SetUpvalInstr) String() string      { return _t(TypName[n.Typ], n.Offset) }
-func (n *SendMethodInstr) String() string    { return _t(TypName[n.Typ], n.Method, n.Offset) }
+func (n *SendMethodInstr) String() string    { return _t(TypName[n.Typ], n.Method, n.Num) }
 func (n *NewArrayInstr) String() string      { return _t(TypName[n.Typ], n.Num) }
 func (n *NewDictInstr) String() string       { return _t(TypName[n.Typ], n.Num) }
 func (n *NewSetInstr) String() string        { return _t(TypName[n.Typ], n.Num) }

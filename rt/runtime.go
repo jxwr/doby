@@ -12,6 +12,7 @@ import (
 
 	"github.com/jxwr/doubi/ast"
 	"github.com/jxwr/doubi/env"
+	"github.com/jxwr/doubi/vm/instr"
 )
 
 type Runtime struct {
@@ -19,6 +20,8 @@ type Runtime struct {
 	Env     *env.Env
 	Stack   *Stack
 	Nil     Object
+	True    Object
+	False   Object
 
 	NeedReturn   bool
 	LoopDepth    int
@@ -49,6 +52,8 @@ func NewRuntime(visitor ast.Visitor) *Runtime {
 	rt.Nil = &NilObject{}
 	rt.goTypeMap = map[string]*Property{}
 	rt.initBuiltinObjectProperties()
+	rt.True = rt.NewBoolObject(true)
+	rt.False = rt.NewBoolObject(false)
 
 	return rt
 }
@@ -99,6 +104,11 @@ func (self *Runtime) NewGoObject(obj interface{}) *GoObject {
 		gobj = &GoObject{MakeProperty(nil, self.goTypeMap[key]), obj}
 	}
 	return gobj
+}
+
+func (self *Runtime) NewClosureObject(proto *instr.ClosureProto) Object {
+	obj := &ClosureObject{MakeProperty(nil, &self.funcProperties), proto}
+	return obj
 }
 
 func (self *Runtime) NewFuncObject(name string, decl *ast.FuncDeclExpr, e *env.Env) Object {

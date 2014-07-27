@@ -37,7 +37,7 @@ type GoFuncObject struct {
 	fn   interface{}
 }
 
-func (self *GoFuncObject) callGoFunc(rt *Runtime, args ...Object) (results []Object) {
+func (self *GoFuncObject) CallGoFunc(rt *Runtime, args ...Object) (results []Object) {
 	inNum := self.typ.NumIn()
 	inArgs := []reflect.Value{}
 
@@ -136,11 +136,6 @@ func (self *GoFuncObject) callGoFunc(rt *Runtime, args ...Object) (results []Obj
 		}
 	}
 
-	return
-}
-
-func (self *GoFuncObject) OP__call__(rt *Runtime, args ...Object) (results []Object) {
-	results = self.callGoFunc(rt, args...)
 	return
 }
 
