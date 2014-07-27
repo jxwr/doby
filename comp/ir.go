@@ -531,6 +531,7 @@ func (self *IRBuilder) VisitImportStmt(node *ast.ImportStmt) {
 		modname = strings.Trim(modname, "\" ")
 		self.emit("push_string " + modname)
 		self.emit("import")
-		self.ModuleNames = append(self.ModuleNames, modname)
+		xs := strings.Split(modname, "/")
+		self.ModuleNames = append(self.ModuleNames, xs[len(xs)-1])
 	}
 }

@@ -9,7 +9,7 @@ import (
 var input string
 
 func init() {
-	flag.StringVar(&input, "i", "", "input file")
+	flag.StringVar(&input, "f", "", "input file")
 }
 
 func main() {
