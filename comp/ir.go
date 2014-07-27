@@ -10,6 +10,7 @@ import (
 	"github.com/jxwr/doubi/parser"
 	"github.com/jxwr/doubi/rt"
 	"github.com/jxwr/doubi/token"
+	"github.com/jxwr/doubi/vm/instr"
 )
 
 type ClosureProto struct {
@@ -21,7 +22,7 @@ type ClosureProto struct {
 
 	InnerClosureProtos []*ClosureProto
 	OuterClosureProto  *ClosureProto
-	Instrs             []string
+	Instrs             []instr.Instr
 	Args               []string
 	Seq                int
 }
@@ -32,7 +33,7 @@ func NewClosureProto(outer *ClosureProto) *ClosureProto {
 		UpvalVariables:     map[string]int{},
 		InnerClosureProtos: []*ClosureProto{},
 		OuterClosureProto:  outer,
-		Instrs:             []string{},
+		Instrs:             []instr.Instr{},
 		Args:               []string{},
 		Seq:                closure_seq,
 	}
@@ -40,7 +41,7 @@ func NewClosureProto(outer *ClosureProto) *ClosureProto {
 	return c
 }
 
-func (self *ClosureProto) emit(instr string) {
+func (self *ClosureProto) emit(instr instr.Instr) {
 	self.Instrs = append(self.Instrs, instr)
 }
 
@@ -57,7 +58,7 @@ func (self *ClosureProto) DumpClosureProto() {
 
 	fmt.Println("CODE:")
 	for i, instr := range self.Instrs {
-		fmt.Printf("%3d: %s\n", i, instr)
+		fmt.Printf("%3d: %s\n", i, instr.String())
 	}
 	for _, ic := range self.InnerClosureProtos {
 		ic.DumpClosureProto()
@@ -130,6 +131,8 @@ func (self *ClosureProto) LookUpOuter(name string) (exist bool, depth int, offse
 
 var closure_seq int = 0
 
+/// IRBuilder
+
 type IRBuilder struct {
 	ModuleNames []string
 	Fun         *ast.FuncDeclExpr
@@ -156,7 +159,7 @@ func (self *IRBuilder) buildExpr(expr ast.Expr) {
 	expr.Accept(self)
 }
 
-func (self *IRBuilder) emit(instr string) {
+func (self *IRBuilder) emit(instr instr.Instr) {
 	self.C.emit(instr)
 }
 
@@ -190,27 +193,27 @@ func (self *IRBuilder) Fatalf(pos token.Pos, format string, a ...interface{}) {
 
 func (self *IRBuilder) VisitIdent(node *ast.Ident) {
 	if node.Name == "true" {
-		self.emit("push_true")
+		self.emit(instr.PushTrue())
 	} else if node.Name == "false" {
-		self.emit("push_false")
+		self.emit(instr.PushFalse())
 	} else {
 		exist, offset := self.C.LookUpLocal(node.Name)
 		if exist {
-			self.emit(fmt.Sprintf("load_local %d", offset))
+			self.emit(instr.LoadLocal(offset))
 			return
 		}
 		exist, offset = self.C.LookUpUpval(node.Name)
 		if exist {
-			self.emit(fmt.Sprintf("load_upval %d", offset))
+			self.emit(instr.LoadUpval(offset))
 			return
 		}
 
 		exist, depth, offset := self.C.LookUpOuter(node.Name)
 		if exist {
 			offset := self.C.AddUpvalVariable(node.Name, depth, offset)
-			self.emit(fmt.Sprintf("load_upval %d", offset))
+			self.emit(instr.LoadUpval(offset))
 		} else if ContainsString(self.ModuleNames, node.Name) {
-			self.emit("push_module " + node.Name)
+			self.emit(instr.PushModule(node.Name))
 		} else {
 			self.Fatalf(node.NamePos, "'%s' not Found", node.Name)
 		}
@@ -224,19 +227,19 @@ func (self *IRBuilder) VisitBasicLit(node *ast.BasicLit) {
 		if err != nil {
 			self.Fatalf(node.ValuePos, "%s convert to int failed: %v", node.Value, err)
 		}
-		self.emit(fmt.Sprintf("push_int %d", val))
+		self.emit(instr.PushInt(val))
 	case token.FLOAT:
 		val, err := strconv.ParseFloat(node.Value, 64)
 		if err != nil {
 			self.Fatalf(node.ValuePos, "%s convert to float failed: %v", node.Value, err)
 		}
-		self.emit(fmt.Sprintf("push_float %f", val))
+		self.emit(instr.PushFloat(val))
 	case token.STRING:
 		val := strings.Trim(node.Value, "\"")
-		self.emit(fmt.Sprintf("push_string %s", val))
+		self.emit(instr.PushString(val))
 	case token.CHAR:
 		val := strings.Trim(node.Value, "'")
-		self.emit(fmt.Sprintf("push_string %s", val))
+		self.emit(instr.PushString(val))
 	}
 }
 
@@ -245,33 +248,32 @@ func (self *IRBuilder) VisitParenExpr(node *ast.ParenExpr) {
 }
 
 func (self *IRBuilder) VisitSelectorExpr(node *ast.SelectorExpr) {
+	self.emit(instr.PushString(node.Sel.Name))
 	self.buildExpr(node.X)
-	self.emit(fmt.Sprintf("push_string %s", node.Sel.Name))
-	self.emit("send_method :get_property")
+	self.emit(instr.SendMethod("__get_property__", 1))
 }
 
 func (self *IRBuilder) VisitIndexExpr(node *ast.IndexExpr) {
-	self.buildExpr(node.X)
 	self.buildExpr(node.Index)
-	self.emit("send_method :get_index")
+	self.buildExpr(node.X)
+	self.emit(instr.SendMethod("__get_index__", 1))
 }
 
 func (self *IRBuilder) VisitSliceExpr(node *ast.SliceExpr) {
-	self.buildExpr(node.X)
-
 	if node.Low == nil {
-		self.emit("push_nil")
+		self.emit(instr.PushNil())
 	} else {
 		self.buildExpr(node.Low)
 	}
 
 	if node.High == nil {
-		self.emit("push_nil")
+		self.emit(instr.PushNil())
 	} else {
 		self.buildExpr(node.High)
 	}
 
-	self.emit("send_method :slice")
+	self.buildExpr(node.X)
+	self.emit(instr.SendMethod("__slice__", 2))
 }
 
 func (self *IRBuilder) VisitCallExpr(node *ast.CallExpr) {
@@ -280,15 +282,15 @@ func (self *IRBuilder) VisitCallExpr(node *ast.CallExpr) {
 	}
 
 	self.buildExpr(node.Fun)
-	self.emit(fmt.Sprintf("send_stack %d", len(node.Args)))
+	self.emit(instr.SendMethod("__slice__", len(node.Args)))
 }
 
 func (self *IRBuilder) VisitUnaryExpr(node *ast.UnaryExpr) {
 	self.buildExpr(node.X)
 	if node.Op == token.NOT {
-		self.emit("send_method :__not__")
+		self.emit(instr.SendMethod("__not__", 0))
 	} else if node.Op == token.SUB {
-		self.emit("send_method :__minus__")
+		self.emit(instr.SendMethod("__minus__", 0))
 	}
 }
 
@@ -296,21 +298,21 @@ func (self *IRBuilder) VisitBinaryExpr(node *ast.BinaryExpr) {
 	self.buildExpr(node.Y)
 	self.buildExpr(node.X)
 
-	self.emit(fmt.Sprintf("send_stack :%s %d", OpFuncs[node.Op], 1))
+	self.emit(instr.SendMethod(OpFuncs[node.Op], 1))
 }
 
 func (self *IRBuilder) VisitArrayExpr(node *ast.ArrayExpr) {
 	for _, elem := range node.Elems {
 		self.buildExpr(elem)
 	}
-	self.emit(fmt.Sprintf("new_array %d", len(node.Elems)))
+	self.emit(instr.NewArray(len(node.Elems)))
 }
 
 func (self *IRBuilder) VisitSetExpr(node *ast.SetExpr) {
 	for _, elem := range node.Elems {
 		self.buildExpr(elem)
 	}
-	self.emit(fmt.Sprintf("new_set %d", len(node.Elems)))
+	self.emit(instr.NewSet(len(node.Elems)))
 }
 
 func (self *IRBuilder) VisitDictExpr(node *ast.DictExpr) {
@@ -318,7 +320,7 @@ func (self *IRBuilder) VisitDictExpr(node *ast.DictExpr) {
 		self.buildExpr(field.Name)
 		self.buildExpr(field.Value)
 	}
-	self.emit(fmt.Sprintf("new_dict %d", len(node.Fields)))
+	self.emit(instr.NewSet(len(node.Fields)))
 }
 
 func (self *IRBuilder) VisitFuncDeclExpr(node *ast.FuncDeclExpr) {
@@ -327,19 +329,19 @@ func (self *IRBuilder) VisitFuncDeclExpr(node *ast.FuncDeclExpr) {
 		self.C.AddLocalVariable(arg.Name)
 	}
 	for i := len(node.Args) - 1; i >= 0; i-- {
-		self.emit(fmt.Sprintf("set_local %d", i))
+		self.emit(instr.SetLocal(i))
 	}
 	node.Body.Accept(self)
 	self.PopClosureProto()
 
-	self.emit(fmt.Sprintf("push_closure %d", n))
+	self.emit(instr.PushClosure(n))
 
 	if node.Name != nil {
 		exist, offset := self.C.LookUpLocal(node.Name.Name)
 		if !exist {
 			offset = self.C.AddLocalVariable(node.Name.Name)
 		}
-		self.emit(fmt.Sprintf("set_local %d", offset))
+		self.emit(instr.SetLocal(offset))
 	}
 }
 
@@ -355,9 +357,9 @@ func (self *IRBuilder) VisitSendStmt(node *ast.SendStmt) {
 func (self *IRBuilder) VisitIncDecStmt(node *ast.IncDecStmt) {
 	self.buildExpr(node.X)
 	if node.Tok == token.INC {
-		self.emit("send_method :__inc__")
+		self.emit(instr.SendMethod("__inc__", 0))
 	} else if node.Tok == token.DEC {
-		self.emit("send_method :__dec__")
+		self.emit(instr.SendMethod("__dec__", 0))
 	}
 }
 
@@ -372,32 +374,32 @@ func (self *IRBuilder) VisitAssignStmt(node *ast.AssignStmt) {
 			case *ast.Ident:
 				exist, offset := self.C.LookUpLocal(v.Name)
 				if exist {
-					self.emit(fmt.Sprintf("set_local %d", offset))
+					self.emit(instr.SetLocal(offset))
 					continue
 				}
 				exist, offset = self.C.LookUpUpval(v.Name)
 				if exist {
-					self.emit(fmt.Sprintf("set_upval %d", offset))
+					self.emit(instr.SetUpval(offset))
 					continue
 				}
 				_, depth, offset := self.C.LookUpOuter(v.Name)
 				if depth < 1 {
 					offset := self.C.AddLocalVariable(v.Name)
-					self.emit(fmt.Sprintf("set_local %d", offset))
+					self.emit(instr.SetLocal(offset))
 					continue
 				} else {
 					offset := self.C.AddUpvalVariable(v.Name, depth, offset)
-					self.emit(fmt.Sprintf("set_upval %d", offset))
+					self.emit(instr.SetUpval(offset))
 					continue
 				}
 			case *ast.IndexExpr:
 				self.buildExpr(v.Index)
 				self.buildExpr(v.X)
-				self.emit("send_stack :__set_index__ 1")
+				self.emit(instr.SendMethod("__set_index__", 1))
 			case *ast.SelectorExpr:
-				self.emit("push_string " + v.Sel.Name)
+				self.emit(instr.PushString(v.Sel.Name))
 				self.buildExpr(v.X)
-				self.emit("send_stack :__set_property__ 1")
+				self.emit(instr.SendMethod("__set_property__", 1))
 			}
 		}
 	} else {
@@ -408,49 +410,46 @@ func (self *IRBuilder) VisitAssignStmt(node *ast.AssignStmt) {
 			case *ast.Ident:
 				exist, offset := self.C.LookUpLocal(v.Name)
 				if exist {
-					self.emit(fmt.Sprintf("load_local %d", offset))
+					self.emit(instr.LoadLocal(offset))
 					continue
 				}
 				exist, offset = self.C.LookUpUpval(v.Name)
 				if exist {
-					self.emit(fmt.Sprintf("load_upval %d", offset))
+					self.emit(instr.LoadUpval(offset))
 					continue
 				}
 			case *ast.IndexExpr:
 				self.buildExpr(v.Index)
 				self.buildExpr(v.X)
-				self.emit("send_stack :__get_index__ 1")
+				self.emit(instr.SendMethod("__get_index__", 1))
 			case *ast.SelectorExpr:
-				self.emit("push_string " + v.Sel.Name)
+				self.emit(instr.PushString(v.Sel.Name))
 				self.buildExpr(v.X)
-				self.emit("send_stack :__get_property__ 1")
+				self.emit(instr.SendMethod("__get_property__", 1))
 			}
-			self.emit("send_stack :" + OpFuncs[node.Tok] + " 1")
+			self.emit(instr.SendMethod(OpFuncs[node.Tok], 1))
 		}
 	}
 }
 
 func (self *IRBuilder) VisitGoStmt(node *ast.GoStmt) {
-	self.emit("go_prepare")
 	node.Call.Accept(self)
-	self.emit("go_run")
 }
 
 func (self *IRBuilder) VisitReturnStmt(node *ast.ReturnStmt) {
 	for _, res := range node.Results {
 		self.buildExpr(res)
 	}
-
-	self.emit(fmt.Sprintf("raise_return %d", len(node.Results)))
+	self.emit(instr.RaiseReturn(len(node.Results)))
 }
 
 func (self *IRBuilder) VisitBranchStmt(node *ast.BranchStmt) {
 	if node.Tok == token.BREAK {
-		self.emit("raise_break")
+		self.emit(instr.RaiseBreak())
 	}
 
 	if node.Tok == token.CONTINUE {
-		self.emit("raise_continue")
+		self.emit(instr.RaiseContinue())
 	}
 }
 
@@ -463,17 +462,17 @@ func (self *IRBuilder) VisitBlockStmt(node *ast.BlockStmt) {
 func (self *IRBuilder) VisitIfStmt(node *ast.IfStmt) {
 	self.buildExpr(node.Cond)
 	if node.Else != nil {
-		self.emit("jump_if_false label_false")
+		self.emit(instr.JumpIfFalse(0))
 	} else {
-		self.emit("jump_if_false label_end")
+		self.emit(instr.JumpIfFalse(0))
 	}
 	node.Body.Accept(self)
 	if node.Else != nil {
-		self.emit("jump label_end")
-		self.emit("label_false:")
+		self.emit(instr.Jump(0))
+		self.emit(instr.Label("false"))
 		node.Else.Accept(self)
 	}
-	self.emit("label_end:")
+	self.emit(instr.Label("end"))
 }
 
 func (self *IRBuilder) VisitCaseClause(node *ast.CaseClause) {
@@ -483,9 +482,9 @@ func (self *IRBuilder) VisitCaseClause(node *ast.CaseClause) {
 			_, ok := e.(*ast.BasicLit)
 			self.buildExpr(e)
 			if ok {
-				self.emit("send_method :__eql__")
+				self.emit(instr.SendMethod("__eql__", 0))
 			}
-			self.emit("jump_if_false label_out")
+			self.emit(instr.JumpIfFalse(0))
 		}
 	}
 
@@ -493,7 +492,7 @@ func (self *IRBuilder) VisitCaseClause(node *ast.CaseClause) {
 		s.Accept(self)
 	}
 
-	self.emit("label_out:")
+	self.emit(instr.Label("out"))
 }
 
 func (self *IRBuilder) VisitSwitchStmt(node *ast.SwitchStmt) {
@@ -512,13 +511,13 @@ func (self *IRBuilder) VisitForStmt(node *ast.ForStmt) {
 		node.Init.Accept(self)
 	}
 
-	self.emit("label_cond:")
+	self.emit(instr.Label("cond"))
 	self.buildExpr(node.Cond)
-	self.emit("jump_if_false label_out")
+	self.emit(instr.JumpIfFalse(0))
 	node.Body.Accept(self)
 	node.Post.Accept(self)
-	self.emit("jump label_cond")
-	self.emit("label_out:")
+	self.emit(instr.Jump(0))
+	self.emit(instr.Label("out"))
 }
 
 func (self *IRBuilder) VisitRangeStmt(node *ast.RangeStmt) {
@@ -529,8 +528,7 @@ func (self *IRBuilder) VisitImportStmt(node *ast.ImportStmt) {
 	if len(node.Modules) == 1 {
 		modname := node.Modules[0]
 		modname = strings.Trim(modname, "\" ")
-		self.emit("push_string " + modname)
-		self.emit("import")
+		self.emit(instr.Import(modname))
 		xs := strings.Split(modname, "/")
 		self.ModuleNames = append(self.ModuleNames, xs[len(xs)-1])
 	}
