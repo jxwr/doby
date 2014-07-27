@@ -25,7 +25,3 @@ func fff(fn) {
 fff(a)
 
 a(1,2,3)
-
-push_local 0
-push_local 1
-push_

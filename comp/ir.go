@@ -209,6 +209,8 @@ func (self *IRBuilder) VisitIdent(node *ast.Ident) {
 		if exist {
 			offset := self.C.AddUpvalVariable(node.Name, depth, offset)
 			self.emit(fmt.Sprintf("load_upval %d", offset))
+		} else if ContainsString(self.ModuleNames, node.Name) {
+			self.emit("push_module " + node.Name)
 		} else {
 			self.Fatalf(node.NamePos, "'%s' not Found", node.Name)
 		}
@@ -529,5 +531,6 @@ func (self *IRBuilder) VisitImportStmt(node *ast.ImportStmt) {
 		modname = strings.Trim(modname, "\" ")
 		self.emit("push_string " + modname)
 		self.emit("import")
+		self.ModuleNames = append(self.ModuleNames, modname)
 	}
 }
