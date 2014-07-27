@@ -4,6 +4,10 @@ A script language on top of golang runtime with golang syntax and ruby semantic,
 
 > DO NOT USE, IT'S EXPERIMENTAL
 
+## Progress
+
+Hacking IR generation, see `notes/upval.d`
+
 ## DataType
 
 ### Array 

@@ -12,78 +12,135 @@ import (
 	"github.com/jxwr/doubi/token"
 )
 
-type Closure struct {
-	LocalVariables []string
-	InnerClosures  []*Closure
-	OuterClosure   *Closure
-	Instrs         []string
-	Args           []string
+type ClosureProto struct {
+	LocalVariables map[string]int
+	localOffset    int
+
+	UpvalVariables map[string]int
+	upvalOffset    int
+
+	InnerClosureProtos []*ClosureProto
+	OuterClosureProto  *ClosureProto
+	Instrs             []string
+	Args               []string
+	Seq                int
 }
 
-func NewClosure(outer *Closure) *Closure {
-	c := &Closure{
-		LocalVariables: []string{},
-		InnerClosures:  []*Closure{},
-		OuterClosure:   outer,
-		Instrs:         []string{},
-		Args:           []string{},
+func NewClosureProto(outer *ClosureProto) *ClosureProto {
+	c := &ClosureProto{
+		LocalVariables:     map[string]int{},
+		UpvalVariables:     map[string]int{},
+		InnerClosureProtos: []*ClosureProto{},
+		OuterClosureProto:  outer,
+		Instrs:             []string{},
+		Args:               []string{},
+		Seq:                closure_seq,
 	}
+	closure_seq++
 	return c
 }
 
-func (self *Closure) emit(instr string) {
+func (self *ClosureProto) emit(instr string) {
 	self.Instrs = append(self.Instrs, instr)
 }
 
-func (self *Closure) DumpClosure() {
-	fmt.Println("------------------------------")
+func (self *ClosureProto) DumpClosureProto() {
+	fmt.Println()
+	fmt.Printf("CLOSURE seq:%d local:%d upval:%d\n", self.Seq,
+		len(self.LocalVariables), len(self.UpvalVariables))
+	for k, v := range self.LocalVariables {
+		fmt.Printf("  .local %d %s\n", v, k)
+	}
+	for k, v := range self.UpvalVariables {
+		fmt.Printf("  .upval %d %d %d %s\n", v&0xffff, (v>>32)&0xffff, (v>>16)&0xffff, k)
+	}
+
+	fmt.Println("CODE:")
 	for i, instr := range self.Instrs {
 		fmt.Printf("%3d: %s\n", i, instr)
 	}
-	for _, ic := range self.InnerClosures {
-		ic.DumpClosure()
+	for _, ic := range self.InnerClosureProtos {
+		ic.DumpClosureProto()
 	}
 }
 
-func (self *Closure) AddClosure(c *Closure) int {
-	self.InnerClosures = append(self.InnerClosures, c)
-	return len(self.InnerClosures)
+func (self *ClosureProto) AddClosureProto(c *ClosureProto) int {
+	self.InnerClosureProtos = append(self.InnerClosureProtos, c)
+	return len(self.InnerClosureProtos)
 }
 
-func (self *Closure) AddArg(name string) int {
-	self.Args = append(self.Args, name)
-	return len(self.Args)
+func (self *ClosureProto) AddLocalVariable(name string) (offset int) {
+	exist, _ := self.LookUpLocal(name)
+	if !exist {
+		offset = self.localOffset
+		self.LocalVariables[name] = offset
+		self.localOffset++
+	}
+	return
 }
 
-func (self *Closure) Put(name string) {
-	self.LocalVariables = append(self.LocalVariables, name)
+func (self *ClosureProto) LookUpLocal(name string) (exist bool, offset int) {
+	offset, ok := self.LocalVariables[name]
+	if ok {
+		exist = true
+		return
+	}
+	return
 }
 
-func (self *Closure) LookUp(name string) (exist bool, depth int) {
-	c := self
+func (self *ClosureProto) AddUpvalVariable(name string, depth, localOffset int) (offset int) {
+	exist, _ := self.LookUpLocal(name)
+	if !exist {
+		offset = self.upvalOffset
+		self.UpvalVariables[name] = offset + (depth << 32) + (localOffset << 16)
+		self.upvalOffset++
+	}
+	return
+}
+
+func (self *ClosureProto) LookUpUpval(name string) (exist bool, offset int) {
+	offset, ok := self.UpvalVariables[name]
+	if ok {
+		offset &= 0xffff
+		exist = true
+		return
+	}
+	return
+}
+
+func (self *ClosureProto) LookUpOuter(name string) (exist bool, depth int, offset int) {
+	c := self.OuterClosureProto
+	depth = 1
+
 	for c != nil {
-		if ContainsString(c.LocalVariables, name) {
+		of, ok := c.LocalVariables[name]
+		if ok {
+			offset = of
 			exist = true
 			return
 		}
 		depth++
-		c = c.OuterClosure
+		c = c.OuterClosureProto
 	}
+
+	depth = -1
 	exist = false
 	return
 }
+
+var closure_seq int = 0
 
 type IRBuilder struct {
 	ModuleNames []string
 	Fun         *ast.FuncDeclExpr
 	RT          *rt.Runtime
-	C           *Closure
+	C           *ClosureProto
 
 	lexer *parser.Lexer
 }
 
 func NewIRBuilder() *IRBuilder {
-	irb := &IRBuilder{C: NewClosure(nil)}
+	irb := &IRBuilder{C: NewClosureProto(nil)}
 	return irb
 }
 
@@ -103,21 +160,21 @@ func (self *IRBuilder) emit(instr string) {
 	self.C.emit(instr)
 }
 
-func (self *IRBuilder) PushClosure() int {
-	c := NewClosure(self.C)
-	n := self.C.AddClosure(c)
+func (self *IRBuilder) PushClosureProto() int {
+	c := NewClosureProto(self.C)
+	self.C.AddClosureProto(c)
 	self.C = c
-	return n
+	return c.Seq
 }
 
-func (self *IRBuilder) PopClosure() *Closure {
+func (self *IRBuilder) PopClosureProto() *ClosureProto {
 	c := self.C
-	self.C = self.C.OuterClosure
+	self.C = self.C.OuterClosureProto
 	return c
 }
 
-func (self *IRBuilder) DumpClosure() {
-	self.C.DumpClosure()
+func (self *IRBuilder) DumpClosureProto() {
+	self.C.DumpClosureProto()
 }
 
 func (self *IRBuilder) Fatalf(pos token.Pos, format string, a ...interface{}) {
@@ -137,7 +194,24 @@ func (self *IRBuilder) VisitIdent(node *ast.Ident) {
 	} else if node.Name == "false" {
 		self.emit("push_false")
 	} else {
-		// self.Fatalf(node.NamePos, "'%s' not Found", node.Name)
+		exist, offset := self.C.LookUpLocal(node.Name)
+		if exist {
+			self.emit(fmt.Sprintf("load_local %d", offset))
+			return
+		}
+		exist, offset = self.C.LookUpUpval(node.Name)
+		if exist {
+			self.emit(fmt.Sprintf("load_upval %d", offset))
+			return
+		}
+
+		exist, depth, offset := self.C.LookUpOuter(node.Name)
+		if exist {
+			offset := self.C.AddUpvalVariable(node.Name, depth, offset)
+			self.emit(fmt.Sprintf("load_upval %d", offset))
+		} else {
+			self.Fatalf(node.NamePos, "'%s' not Found", node.Name)
+		}
 	}
 }
 
@@ -246,15 +320,24 @@ func (self *IRBuilder) VisitDictExpr(node *ast.DictExpr) {
 }
 
 func (self *IRBuilder) VisitFuncDeclExpr(node *ast.FuncDeclExpr) {
-	n := self.PushClosure()
+	n := self.PushClosureProto()
 	for _, arg := range node.Args {
-		self.C.AddArg(arg.Name)
+		self.C.AddLocalVariable(arg.Name)
+	}
+	for i := len(node.Args) - 1; i >= 0; i-- {
+		self.emit(fmt.Sprintf("set_local %d", i))
 	}
 	node.Body.Accept(self)
-	self.PopClosure()
+	self.PopClosureProto()
 
 	self.emit(fmt.Sprintf("push_closure %d", n))
+
 	if node.Name != nil {
+		exist, offset := self.C.LookUpLocal(node.Name.Name)
+		if !exist {
+			offset = self.C.AddLocalVariable(node.Name.Name)
+		}
+		self.emit(fmt.Sprintf("set_local %d", offset))
 	}
 }
 
@@ -281,9 +364,66 @@ func (self *IRBuilder) VisitAssignStmt(node *ast.AssignStmt) {
 		for i := 0; i < len(node.Rhs); i++ {
 			self.buildExpr(node.Rhs[i])
 		}
+
+		for i := len(node.Lhs) - 1; i >= 0; i-- {
+			switch v := node.Lhs[i].(type) {
+			case *ast.Ident:
+				exist, offset := self.C.LookUpLocal(v.Name)
+				if exist {
+					self.emit(fmt.Sprintf("set_local %d", offset))
+					continue
+				}
+				exist, offset = self.C.LookUpUpval(v.Name)
+				if exist {
+					self.emit(fmt.Sprintf("set_upval %d", offset))
+					continue
+				}
+				_, depth, offset := self.C.LookUpOuter(v.Name)
+				if depth < 1 {
+					offset := self.C.AddLocalVariable(v.Name)
+					self.emit(fmt.Sprintf("set_local %d", offset))
+					continue
+				} else {
+					offset := self.C.AddUpvalVariable(v.Name, depth, offset)
+					self.emit(fmt.Sprintf("set_upval %d", offset))
+					continue
+				}
+			case *ast.IndexExpr:
+				self.buildExpr(v.Index)
+				self.buildExpr(v.X)
+				self.emit("send_stack :__set_index__ 1")
+			case *ast.SelectorExpr:
+				self.emit("push_string " + v.Sel.Name)
+				self.buildExpr(v.X)
+				self.emit("send_stack :__set_property__ 1")
+			}
+		}
 	} else {
 		for i := 0; i < len(node.Lhs); i++ {
 			self.buildExpr(node.Rhs[i])
+
+			switch v := node.Lhs[i].(type) {
+			case *ast.Ident:
+				exist, offset := self.C.LookUpLocal(v.Name)
+				if exist {
+					self.emit(fmt.Sprintf("load_local %d", offset))
+					continue
+				}
+				exist, offset = self.C.LookUpUpval(v.Name)
+				if exist {
+					self.emit(fmt.Sprintf("load_upval %d", offset))
+					continue
+				}
+			case *ast.IndexExpr:
+				self.buildExpr(v.Index)
+				self.buildExpr(v.X)
+				self.emit("send_stack :__get_index__ 1")
+			case *ast.SelectorExpr:
+				self.emit("push_string " + v.Sel.Name)
+				self.buildExpr(v.X)
+				self.emit("send_stack :__get_property__ 1")
+			}
+			self.emit("send_stack :" + OpFuncs[node.Tok] + " 1")
 		}
 	}
 }
@@ -313,11 +453,9 @@ func (self *IRBuilder) VisitBranchStmt(node *ast.BranchStmt) {
 }
 
 func (self *IRBuilder) VisitBlockStmt(node *ast.BlockStmt) {
-	self.emit("push_scope")
 	for _, stmt := range node.List {
 		stmt.Accept(self)
 	}
-	self.emit("pop_scope")
 }
 
 func (self *IRBuilder) VisitIfStmt(node *ast.IfStmt) {

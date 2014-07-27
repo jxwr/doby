@@ -14,6 +14,26 @@ c = add_100(20)
 d = add_150(20)
 fmt.Println(c, d)
 
+func add(a, b) {
+	c = a + b
+	return c
+}
+
+// .local a
+// .local b
+// .local c
+
+d = 1
+func add(a, b) {
+	c = a + b + d
+	return c
+}
+
+// .local a
+// .local b 
+// .local c
+// .upval d
+
 func f0() {
      c = 100
      f1 = func() {

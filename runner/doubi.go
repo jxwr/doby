@@ -62,5 +62,5 @@ func (self *Runner) Run(filename string) {
 		stmt.Accept(self.irb)
 	}
 
-	self.irb.DumpClosure()
+	self.irb.DumpClosureProto()
 }
