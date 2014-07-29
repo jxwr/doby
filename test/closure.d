@@ -19,20 +19,11 @@ func add(a, b) {
 	return c
 }
 
-// .local a
-// .local b
-// .local c
-
 d = 1
 func add(a, b) {
 	c = a + b + d
 	return c
 }
-
-// .local a
-// .local b 
-// .local c
-// .upval d
 
 func f0() {
      c = 100
@@ -45,13 +36,6 @@ func f0() {
      }
      d = f1()
      e = f2()
-     fmt.Print(d, e,"\n")
 }
 
 f0()
-
-func q(n) { fmt.Println(n["name"]) }
-
-func p(str) { q(str) }
-
-p(#{"name": "hello"})

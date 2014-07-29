@@ -1,7 +1,8 @@
 package vm
 
 import (
-	"fmt"
+	//	"fmt"
+	"strings"
 
 	"github.com/jxwr/doubi/rt"
 	"github.com/jxwr/doubi/vm/instr"
@@ -11,11 +12,12 @@ type VM struct {
 	C     *instr.ClosureProto
 	CS    map[int]*instr.ClosureProto
 	RT    *rt.Runtime
+	Mods  map[string]*rt.DictObject
 	frame *rt.Frame
 }
 
 func NewVM(c *instr.ClosureProto, cs map[int]*instr.ClosureProto, runtime *rt.Runtime) *VM {
-	vm := &VM{C: c, CS: cs, RT: runtime}
+	vm := &VM{C: c, CS: cs, RT: runtime, Mods: map[string]*rt.DictObject{}}
 	return vm
 }
 
@@ -93,7 +95,15 @@ func (self *VM) VisitSetLocal(ir *instr.SetLocalInstr) {
 }
 
 func (self *VM) VisitSetUpval(ir *instr.SetUpvalInstr) {
-	fmt.Println("upval", ir)
+	depth := (ir.Offset >> 32) & 0xffff
+	remoteOffset := (ir.Offset >> 16) & 0xffff
+
+	f := self.frame
+	for depth > 0 {
+		f = f.Parent
+		depth--
+	}
+	f.Locals[remoteOffset] = self.RT.Pop()
 }
 
 func (self *VM) VisitSendMethod(ir *instr.SendMethodInstr) {
@@ -139,8 +149,16 @@ func (self *VM) VisitNewSet(ir *instr.NewSetInstr)           {}
 func (self *VM) VisitLabel(ir *instr.LabelInstr)             {}
 func (self *VM) VisitJump(ir *instr.JumpInstr)               {}
 func (self *VM) VisitJumpIfFalse(ir *instr.JumpIfFalseInstr) {}
-func (self *VM) VisitImport(ir *instr.ImportInstr)           {}
-func (self *VM) VisitPushModule(ir *instr.PushModuleInstr)   {}
+
+func (self *VM) VisitImport(ir *instr.ImportInstr) {
+	mod, _ := self.RT.Env.LookUp(ir.Path)
+	xs := strings.Split(ir.Path, "/")
+	self.Mods[xs[len(xs)-1]] = mod.(*rt.DictObject)
+}
+
+func (self *VM) VisitPushModule(ir *instr.PushModuleInstr) {
+	self.RT.Push(self.Mods[ir.Name])
+}
 
 func (self *VM) VisitRaiseReturn(ir *instr.RaiseReturnInstr) {
 	self.frame.NeedReturn = true

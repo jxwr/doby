@@ -94,7 +94,7 @@ func (self *ClosureProto) AddUpvalVariable(name string, depth, remoteOffset int)
 func (self *ClosureProto) LookUpUpval(name string) (exist bool, offset int) {
 	offset, ok := self.UpvalVariables[name]
 	if ok {
-		offset &= 0xffff
+		//		offset &= 0xffff
 		exist = true
 		return
 	}
