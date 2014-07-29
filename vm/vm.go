@@ -7,28 +7,11 @@ import (
 	"github.com/jxwr/doubi/vm/instr"
 )
 
-type Frame struct {
-	Locals     []rt.Object
-	Upvals     []rt.Object
-	Parent     *Frame
-	NeedReturn bool
-}
-
-func NewFrame(numLocals, numUpvals int, parent *Frame) *Frame {
-	frame := &Frame{
-		make([]rt.Object, numLocals),
-		make([]rt.Object, numUpvals),
-		parent,
-		false,
-	}
-	return frame
-}
-
 type VM struct {
 	C     *instr.ClosureProto
 	CS    map[int]*instr.ClosureProto
 	RT    *rt.Runtime
-	frame *Frame
+	frame *rt.Frame
 }
 
 func NewVM(c *instr.ClosureProto, cs map[int]*instr.ClosureProto, runtime *rt.Runtime) *VM {
@@ -37,11 +20,13 @@ func NewVM(c *instr.ClosureProto, cs map[int]*instr.ClosureProto, runtime *rt.Ru
 }
 
 func (self *VM) Run() {
-	self.RunClosure(self.C)
+	obj := self.RT.NewClosureObject(self.C, nil)
+	self.RunClosure(obj)
 }
 
-func (self *VM) RunClosure(c *instr.ClosureProto) {
-	self.frame = NewFrame(len(c.LocalVariables), len(c.UpvalVariables), self.frame)
+func (self *VM) RunClosure(obj *rt.ClosureObject) {
+	c := obj.Proto
+	self.frame = rt.NewFrame(len(c.LocalVariables), len(c.UpvalVariables), obj.Frame)
 	for _, instr := range c.Instrs {
 		if self.frame.NeedReturn {
 			break
@@ -49,6 +34,11 @@ func (self *VM) RunClosure(c *instr.ClosureProto) {
 		instr.Accept(self)
 	}
 	self.frame = self.frame.Parent
+}
+
+func (self *VM) VisitPushClosure(ir *instr.PushClosureInstr) {
+	obj := self.RT.NewClosureObject(self.CS[ir.Seq], self.frame)
+	self.RT.Push(obj)
 }
 
 func (self *VM) VisitPushNil(ir *instr.PushNilInstr) {
@@ -83,15 +73,28 @@ func (self *VM) VisitLoadLocal(ir *instr.LoadLocalInstr) {
 	self.RT.Push(obj)
 }
 
-func (self *VM) VisitLoadUpval(ir *instr.LoadUpvalInstr) {}
+func (self *VM) VisitLoadUpval(ir *instr.LoadUpvalInstr) {
+	depth := 1 //(ir.Offset >> 32) & 0xffff
+	remoteOffset := (ir.Offset >> 16) & 0xffff
+
+	f := self.frame
+	for depth > 0 {
+		f = f.Parent
+		depth--
+	}
+	obj := f.Locals[remoteOffset]
+	//fmt.Println(depth, remoteOffset, obj)
+	self.RT.Push(obj)
+}
 
 func (self *VM) VisitSetLocal(ir *instr.SetLocalInstr) {
 	obj := self.RT.Pop()
 	self.frame.Locals[ir.Offset] = obj
-	fmt.Println(obj)
 }
 
-func (self *VM) VisitSetUpval(ir *instr.SetUpvalInstr) {}
+func (self *VM) VisitSetUpval(ir *instr.SetUpvalInstr) {
+	fmt.Println("upval", ir)
+}
 
 func (self *VM) VisitSendMethod(ir *instr.SendMethodInstr) {
 	obj := self.RT.Pop()
@@ -99,7 +102,7 @@ func (self *VM) VisitSendMethod(ir *instr.SendMethodInstr) {
 	if ir.Method == "__call__" {
 		switch v := obj.(type) {
 		case *rt.ClosureObject:
-			self.RunClosure(v.Proto)
+			self.RunClosure(v)
 		case *rt.GoFuncObject:
 			args := make([]rt.Object, ir.Num)
 			for i := ir.Num - 1; i >= 0; i-- {
@@ -139,13 +142,9 @@ func (self *VM) VisitJumpIfFalse(ir *instr.JumpIfFalseInstr) {}
 func (self *VM) VisitImport(ir *instr.ImportInstr)           {}
 func (self *VM) VisitPushModule(ir *instr.PushModuleInstr)   {}
 
-func (self *VM) VisitPushClosure(ir *instr.PushClosureInstr) {
-	obj := self.RT.NewClosureObject(self.CS[ir.Seq])
-	self.RT.Push(obj)
-}
-
 func (self *VM) VisitRaiseReturn(ir *instr.RaiseReturnInstr) {
 	self.frame.NeedReturn = true
 }
+
 func (self *VM) VisitRaiseBreak(ir *instr.RaiseBreakInstr)       {}
 func (self *VM) VisitRaiseContinue(ir *instr.RaiseContinueInstr) {}

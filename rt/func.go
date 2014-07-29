@@ -14,6 +14,7 @@ type ClosureObject struct {
 	Property
 
 	Proto *instr.ClosureProto
+	Frame *Frame
 }
 
 func (self *ClosureObject) Name() string {

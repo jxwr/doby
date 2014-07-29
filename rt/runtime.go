@@ -43,6 +43,23 @@ type Runtime struct {
 	goobjProperties   Property
 }
 
+type Frame struct {
+	Locals     []Object
+	Upvals     []Object
+	Parent     *Frame
+	NeedReturn bool
+}
+
+func NewFrame(numLocals, numUpvals int, parent *Frame) *Frame {
+	frame := &Frame{
+		make([]Object, numLocals),
+		make([]Object, numUpvals),
+		parent,
+		false,
+	}
+	return frame
+}
+
 func NewRuntime(visitor ast.Visitor) *Runtime {
 	env := env.NewEnv(nil)
 
@@ -106,8 +123,8 @@ func (self *Runtime) NewGoObject(obj interface{}) *GoObject {
 	return gobj
 }
 
-func (self *Runtime) NewClosureObject(proto *instr.ClosureProto) Object {
-	obj := &ClosureObject{MakeProperty(nil, &self.funcProperties), proto}
+func (self *Runtime) NewClosureObject(proto *instr.ClosureProto, frame *Frame) *ClosureObject {
+	obj := &ClosureObject{MakeProperty(nil, &self.funcProperties), proto, frame}
 	return obj
 }
 
