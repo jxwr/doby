@@ -213,8 +213,8 @@ func Label(label string) *LabelInstr {
 }
 
 type JumpInstr struct {
-	Typ InstrType
-	Pos int
+	Typ    InstrType
+	Target int
 }
 
 func Jump(pos int) *JumpInstr {
@@ -223,8 +223,8 @@ func Jump(pos int) *JumpInstr {
 }
 
 type JumpIfFalseInstr struct {
-	Typ InstrType
-	Pos int
+	Typ    InstrType
+	Target int
 }
 
 func JumpIfFalse(pos int) *JumpIfFalseInstr {
@@ -313,8 +313,8 @@ func (n *NewArrayInstr) String() string      { return _t(TypName[n.Typ], n.Num) 
 func (n *NewDictInstr) String() string       { return _t(TypName[n.Typ], n.Num) }
 func (n *NewSetInstr) String() string        { return _t(TypName[n.Typ], n.Num) }
 func (n *LabelInstr) String() string         { return _t(TypName[n.Typ], n.Label) }
-func (n *JumpInstr) String() string          { return _t(TypName[n.Typ], n.Pos) }
-func (n *JumpIfFalseInstr) String() string   { return _t(TypName[n.Typ], n.Pos) }
+func (n *JumpInstr) String() string          { return _t(TypName[n.Typ], n.Target) }
+func (n *JumpIfFalseInstr) String() string   { return _t(TypName[n.Typ], n.Target) }
 func (n *ImportInstr) String() string        { return _t(TypName[n.Typ], n.Path) }
 func (n *PushModuleInstr) String() string    { return _t(TypName[n.Typ], n.Name) }
 func (n *PushClosureInstr) String() string   { return _t(TypName[n.Typ], n.Seq) }

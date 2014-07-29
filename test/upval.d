@@ -13,4 +13,6 @@ func add2(a, b) {
 	return c
 }
 
-add2(10, 20)
+import "fmt"
+
+fmt.Println(add2(10, 20))

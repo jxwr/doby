@@ -47,6 +47,7 @@ type Frame struct {
 	Locals     []Object
 	Upvals     []Object
 	Parent     *Frame
+	JumpTarget int
 	NeedReturn bool
 }
 
@@ -55,6 +56,7 @@ func NewFrame(numLocals, numUpvals int, parent *Frame) *Frame {
 		make([]Object, numLocals),
 		make([]Object, numUpvals),
 		parent,
+		-1,
 		false,
 	}
 	return frame

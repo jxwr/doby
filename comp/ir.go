@@ -40,8 +40,8 @@ func (self *IRBuilder) buildExpr(expr ast.Expr) {
 	expr.Accept(self)
 }
 
-func (self *IRBuilder) emit(instr instr.Instr) {
-	self.C.Emit(instr)
+func (self *IRBuilder) emit(instr instr.Instr) int {
+	return self.C.Emit(instr)
 }
 
 func (self *IRBuilder) PushClosureProto() int {
@@ -343,18 +343,23 @@ func (self *IRBuilder) VisitBlockStmt(node *ast.BlockStmt) {
 
 func (self *IRBuilder) VisitIfStmt(node *ast.IfStmt) {
 	self.buildExpr(node.Cond)
-	if node.Else != nil {
-		self.emit(instr.JumpIfFalse(0))
-	} else {
-		self.emit(instr.JumpIfFalse(0))
-	}
+	jmpInstr := instr.JumpIfFalse(-1)
+	self.emit(jmpInstr)
 	node.Body.Accept(self)
 	if node.Else != nil {
-		self.emit(instr.Jump(0))
-		self.emit(instr.Label("false"))
+		// else {
+		endInstr := instr.Jump(-1)
+		self.emit(endInstr)
+		elsePc := self.emit(instr.Label("if_else_label"))
+		jmpInstr.Target = elsePc
 		node.Else.Accept(self)
+		// }
+		endPc := self.emit(instr.Label("if_end_label"))
+		endInstr.Target = endPc
+	} else {
+		endPc := self.emit(instr.Label("if_end_label"))
+		jmpInstr.Target = endPc
 	}
-	self.emit(instr.Label("end"))
 }
 
 func (self *IRBuilder) VisitCaseClause(node *ast.CaseClause) {

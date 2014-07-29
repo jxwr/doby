@@ -5,4 +5,4 @@ a = #{"name": "jiaoxiang", "age": add(1,2)}
 
 import "fmt"
 
-fmt.Println(a)
+fmt.Println(a, a.name, a.age)

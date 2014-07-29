@@ -1,7 +1,7 @@
 package vm
 
 import (
-	//	"fmt"
+	_ "fmt"
 	"strings"
 
 	"github.com/jxwr/doubi/rt"
@@ -30,8 +30,12 @@ func (self *VM) RunClosure(obj *rt.ClosureObject) {
 	c := obj.Proto
 	f := self.frame
 	self.frame = rt.NewFrame(len(c.LocalVariables), len(c.UpvalVariables), obj.Frame)
-	for _, instr := range c.Instrs {
-		instr.Accept(self)
+	for i := 0; i < len(c.Instrs); i++ {
+		c.Instrs[i].Accept(self)
+		if self.frame.JumpTarget > 0 {
+			i = self.frame.JumpTarget - 1
+			self.frame.JumpTarget = -1
+		}
 		if self.frame.NeedReturn {
 			break
 		}
@@ -156,10 +160,28 @@ func (self *VM) VisitNewDict(ir *instr.NewDictInstr) {
 	self.RT.Push(obj)
 }
 
-func (self *VM) VisitNewSet(ir *instr.NewSetInstr)           {}
-func (self *VM) VisitLabel(ir *instr.LabelInstr)             {}
-func (self *VM) VisitJump(ir *instr.JumpInstr)               {}
-func (self *VM) VisitJumpIfFalse(ir *instr.JumpIfFalseInstr) {}
+func (self *VM) VisitNewSet(ir *instr.NewSetInstr) {
+	elems := make([]rt.Object, ir.Num)
+	for i := ir.Num - 1; i >= 0; i-- {
+		elems[i] = self.RT.Pop()
+	}
+	obj := self.RT.NewSetObject(elems)
+	self.RT.Push(obj)
+}
+
+func (self *VM) VisitLabel(ir *instr.LabelInstr) {}
+
+func (self *VM) VisitJump(ir *instr.JumpInstr) {
+	self.frame.JumpTarget = ir.Target
+}
+
+func (self *VM) VisitJumpIfFalse(ir *instr.JumpIfFalseInstr) {
+	obj := self.RT.Pop().(*rt.BoolObject)
+
+	if !obj.Val {
+		self.frame.JumpTarget = ir.Target
+	}
+}
 
 func (self *VM) VisitImport(ir *instr.ImportInstr) {
 	mod, _ := self.RT.Env.LookUp(ir.Path)

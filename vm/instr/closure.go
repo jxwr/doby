@@ -32,8 +32,9 @@ func NewClosureProto(outer *ClosureProto) *ClosureProto {
 	return c
 }
 
-func (self *ClosureProto) Emit(instr Instr) {
+func (self *ClosureProto) Emit(instr Instr) int {
 	self.Instrs = append(self.Instrs, instr)
+	return len(self.Instrs) - 1
 }
 
 func (self *ClosureProto) DumpClosureProto() {
