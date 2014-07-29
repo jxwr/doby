@@ -16,12 +16,11 @@ func update(board) {
 				s2 = board[i+1][j-1] + board[i+1][j] + board[i+1][j+1]
 				sum = s0 + s1 + s2
 
-				switch sum {
-				case 2:
+				if sum == 2 {
 					continue
-				case 3:
+				} else if sum == 3 {
 					board[i][j] = 1
-				default:
+				} else {
 					board[i][j] = 0
 				}
 			}
