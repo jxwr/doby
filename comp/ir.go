@@ -278,12 +278,14 @@ func (self *IRBuilder) VisitAssignStmt(node *ast.AssignStmt) {
 				}
 			case *ast.IndexExpr:
 				self.buildExpr(v.Index)
+				self.buildExpr(node.Rhs[0])
 				self.buildExpr(v.X)
-				self.emit(instr.SendMethod("__set_index__", 1))
+				self.emit(instr.SendMethod("__set_index__", 2))
 			case *ast.SelectorExpr:
 				self.emit(instr.PushString(v.Sel.Name))
+				self.buildExpr(node.Rhs[0])
 				self.buildExpr(v.X)
-				self.emit(instr.SendMethod("__set_property__", 1))
+				self.emit(instr.SendMethod("__set_property__", 2))
 			}
 		}
 	} else {

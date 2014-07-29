@@ -8,3 +8,9 @@ if a && false {
 }
 
 
+b = [1,2,3,4]
+fmt.Println(b[3])
+b[3] = 10
+fmt.Println(b + [4,4,3])
+b.Push(11)
+fmt.Println(b)

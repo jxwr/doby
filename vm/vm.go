@@ -1,7 +1,7 @@
 package vm
 
 import (
-	_ "fmt"
+	"fmt"
 	"strings"
 
 	"github.com/jxwr/doubi/rt"
@@ -135,6 +135,19 @@ func (self *VM) VisitSendMethod(ir *instr.SendMethodInstr) {
 			for _, ret := range rets {
 				self.RT.Push(ret)
 			}
+		case *rt.FuncObject:
+			if v.IsBuiltin {
+				args := make([]rt.Object, ir.Num)
+				for i := ir.Num - 1; i >= 0; i-- {
+					args[i] = self.RT.Pop()
+				}
+				rets := rt.Invoke(self.RT, v, "__call__", args...)
+				for _, ret := range rets {
+					self.RT.Push(ret)
+				}
+			}
+		default:
+			fmt.Printf("%T", v)
 		}
 	} else {
 		args := make([]rt.Object, ir.Num)
