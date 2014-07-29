@@ -18,6 +18,8 @@ type Visitor interface {
 	VisitLabel(ir *LabelInstr)
 	VisitJump(ir *JumpInstr)
 	VisitJumpIfFalse(ir *JumpIfFalseInstr)
+	VisitPushBlock(ir *PushBlockInstr)
+	VisitPopBlock(ir *PopBlockInstr)
 	VisitImport(ir *ImportInstr)
 	VisitPushModule(ir *PushModuleInstr)
 	VisitPushClosure(ir *PushClosureInstr)

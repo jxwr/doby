@@ -24,6 +24,8 @@ const (
 	LABEL
 	JUMP
 	JUMP_IF_FALSE
+	PUSH_BLOCK
+	POP_BLOCK
 	IMPORT
 	PUSH_MODULE
 	PUSH_CLOSURE
@@ -50,6 +52,8 @@ var TypName = map[InstrType]string{
 	LABEL:          "LABEL",
 	JUMP:           "JUMP",
 	JUMP_IF_FALSE:  "JUMP_IF_FALSE",
+	PUSH_BLOCK:     "PUSH_BLOCK",
+	POP_BLOCK:      "POP_BLOCK",
 	IMPORT:         "IMPORT",
 	PUSH_MODULE:    "PUSH_MODULE",
 	PUSH_CLOSURE:   "PUSH_CLOSURE",
@@ -232,6 +236,26 @@ func JumpIfFalse(pos int) *JumpIfFalseInstr {
 	return instr
 }
 
+type PushBlockInstr struct {
+	Typ    InstrType
+	Target int
+}
+
+func PushBlock(pos int) *PushBlockInstr {
+	instr := &PushBlockInstr{PUSH_BLOCK, pos}
+	return instr
+}
+
+type PopBlockInstr struct {
+	Typ    InstrType
+	Target int
+}
+
+func PopBlock(pos int) *PopBlockInstr {
+	instr := &PopBlockInstr{POP_BLOCK, pos}
+	return instr
+}
+
 type ImportInstr struct {
 	Typ  InstrType
 	Path string
@@ -315,6 +339,8 @@ func (n *NewSetInstr) String() string        { return _t(TypName[n.Typ], n.Num) 
 func (n *LabelInstr) String() string         { return _t(TypName[n.Typ], n.Label) }
 func (n *JumpInstr) String() string          { return _t(TypName[n.Typ], n.Target) }
 func (n *JumpIfFalseInstr) String() string   { return _t(TypName[n.Typ], n.Target) }
+func (n *PushBlockInstr) String() string     { return _t(TypName[n.Typ], n.Target) }
+func (n *PopBlockInstr) String() string      { return _t(TypName[n.Typ], n.Target) }
 func (n *ImportInstr) String() string        { return _t(TypName[n.Typ], n.Path) }
 func (n *PushModuleInstr) String() string    { return _t(TypName[n.Typ], n.Name) }
 func (n *PushClosureInstr) String() string   { return _t(TypName[n.Typ], n.Seq) }
@@ -339,6 +365,8 @@ func (n *NewSetInstr) Type() InstrType        { return n.Typ }
 func (n *LabelInstr) Type() InstrType         { return n.Typ }
 func (n *JumpInstr) Type() InstrType          { return n.Typ }
 func (n *JumpIfFalseInstr) Type() InstrType   { return n.Typ }
+func (n *PushBlockInstr) Type() InstrType     { return n.Typ }
+func (n *PopBlockInstr) Type() InstrType      { return n.Typ }
 func (n *ImportInstr) Type() InstrType        { return n.Typ }
 func (n *PushModuleInstr) Type() InstrType    { return n.Typ }
 func (n *PushClosureInstr) Type() InstrType   { return n.Typ }
@@ -363,6 +391,8 @@ func (n *NewSetInstr) Accept(v Visitor)        { v.VisitNewSet(n) }
 func (n *LabelInstr) Accept(v Visitor)         { v.VisitLabel(n) }
 func (n *JumpInstr) Accept(v Visitor)          { v.VisitJump(n) }
 func (n *JumpIfFalseInstr) Accept(v Visitor)   { v.VisitJumpIfFalse(n) }
+func (n *PushBlockInstr) Accept(v Visitor)     { v.VisitPushBlock(n) }
+func (n *PopBlockInstr) Accept(v Visitor)      { v.VisitPopBlock(n) }
 func (n *ImportInstr) Accept(v Visitor)        { v.VisitImport(n) }
 func (n *PushModuleInstr) Accept(v Visitor)    { v.VisitPushModule(n) }
 func (n *PushClosureInstr) Accept(v Visitor)   { v.VisitPushClosure(n) }

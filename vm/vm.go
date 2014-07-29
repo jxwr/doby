@@ -36,7 +36,16 @@ func (self *VM) RunClosure(obj *rt.ClosureObject) {
 			i = self.frame.JumpTarget - 1
 			self.frame.JumpTarget = -1
 		}
+		if self.frame.NeedBreak {
+			pc := self.frame.BlockEndPc()
+			if pc < 0 {
+				panic("wrong break stmt")
+			}
+			i = pc - 1
+			self.frame.NeedBreak = false
+		}
 		if self.frame.NeedReturn {
+			self.frame.NeedReturn = false
 			break
 		}
 	}
@@ -193,9 +202,22 @@ func (self *VM) VisitPushModule(ir *instr.PushModuleInstr) {
 	self.RT.Push(self.Mods[ir.Name])
 }
 
+func (self *VM) VisitPushBlock(ir *instr.PushBlockInstr) {
+	self.frame.PushBlock(ir.Target)
+}
+
+func (self *VM) VisitPopBlock(ir *instr.PopBlockInstr) {
+	self.frame.PopBlock()
+}
+
 func (self *VM) VisitRaiseReturn(ir *instr.RaiseReturnInstr) {
 	self.frame.NeedReturn = true
 }
 
-func (self *VM) VisitRaiseBreak(ir *instr.RaiseBreakInstr)       {}
-func (self *VM) VisitRaiseContinue(ir *instr.RaiseContinueInstr) {}
+func (self *VM) VisitRaiseBreak(ir *instr.RaiseBreakInstr) {
+	self.frame.NeedBreak = true
+}
+
+func (self *VM) VisitRaiseContinue(ir *instr.RaiseContinueInstr) {
+	self.frame.NeedContinue = true
+}

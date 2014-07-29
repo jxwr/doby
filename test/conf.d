@@ -7,3 +7,4 @@ if a && false {
 	fmt.Println("false:", a)
 }
 
+

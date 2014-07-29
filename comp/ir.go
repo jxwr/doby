@@ -20,14 +20,16 @@ type IRBuilder struct {
 	C           *instr.ClosureProto
 	CS          map[int]*instr.ClosureProto
 
-	lexer *parser.Lexer
+	lexer              *parser.Lexer
+	continueInstrStack []*instr.JumpInstr
 }
 
 func NewIRBuilder() *IRBuilder {
 	c := instr.NewClosureProto(nil)
 	irb := &IRBuilder{
-		C:  c,
-		CS: map[int]*instr.ClosureProto{0: c},
+		C:                  c,
+		CS:                 map[int]*instr.ClosureProto{0: c},
+		continueInstrStack: []*instr.JumpInstr{},
 	}
 	return irb
 }
@@ -331,7 +333,9 @@ func (self *IRBuilder) VisitBranchStmt(node *ast.BranchStmt) {
 	}
 
 	if node.Tok == token.CONTINUE {
-		self.emit(instr.RaiseContinue())
+		continueInstr := instr.Jump(-1)
+		self.emit(continueInstr)
+		self.continueInstrStack = append(self.continueInstrStack, continueInstr)
 	}
 }
 
@@ -394,21 +398,37 @@ func (self *IRBuilder) VisitSelectStmt(node *ast.SelectStmt) {
 }
 
 func (self *IRBuilder) VisitForStmt(node *ast.ForStmt) {
+	pushBlockInstr := instr.PushBlock(-1)
+	self.emit(pushBlockInstr)
+
 	if node.Init != nil {
 		node.Init.Accept(self)
 	}
 
-	self.emit(instr.Label("cond"))
+	condPc := self.emit(instr.Label("for_cond_label"))
 	self.buildExpr(node.Cond)
-	self.emit(instr.JumpIfFalse(0))
+	condJumpInstr := instr.JumpIfFalse(-1)
+	self.emit(condJumpInstr)
 	node.Body.Accept(self)
-	node.Post.Accept(self)
-	self.emit(instr.Jump(0))
-	self.emit(instr.Label("out"))
+	postPc := self.emit(instr.Label("for_post_label"))
+	for _, instr := range self.continueInstrStack {
+		instr.Target = postPc
+	}
+	self.continueInstrStack = self.continueInstrStack[:0]
+
+	if node.Post != nil {
+		node.Post.Accept(self)
+	}
+	self.emit(instr.Jump(condPc))
+	endPc := self.emit(instr.Label("for_end"))
+	condJumpInstr.Target = endPc
+
+	popBlockInstr := instr.PopBlock(-1)
+	pc := self.emit(popBlockInstr)
+	pushBlockInstr.Target = pc
 }
 
 func (self *IRBuilder) VisitRangeStmt(node *ast.RangeStmt) {
-	self.buildExpr(node.X)
 }
 
 func (self *IRBuilder) VisitImportStmt(node *ast.ImportStmt) {
