@@ -26,14 +26,15 @@ func (self *VM) Run() {
 
 func (self *VM) RunClosure(obj *rt.ClosureObject) {
 	c := obj.Proto
+	f := self.frame
 	self.frame = rt.NewFrame(len(c.LocalVariables), len(c.UpvalVariables), obj.Frame)
 	for _, instr := range c.Instrs {
+		instr.Accept(self)
 		if self.frame.NeedReturn {
 			break
 		}
-		instr.Accept(self)
 	}
-	self.frame = self.frame.Parent
+	self.frame = f
 }
 
 func (self *VM) VisitPushClosure(ir *instr.PushClosureInstr) {
@@ -74,7 +75,7 @@ func (self *VM) VisitLoadLocal(ir *instr.LoadLocalInstr) {
 }
 
 func (self *VM) VisitLoadUpval(ir *instr.LoadUpvalInstr) {
-	depth := 1 //(ir.Offset >> 32) & 0xffff
+	depth := (ir.Offset >> 32) & 0xffff
 	remoteOffset := (ir.Offset >> 16) & 0xffff
 
 	f := self.frame
@@ -83,7 +84,6 @@ func (self *VM) VisitLoadUpval(ir *instr.LoadUpvalInstr) {
 		depth--
 	}
 	obj := f.Locals[remoteOffset]
-	//fmt.Println(depth, remoteOffset, obj)
 	self.RT.Push(obj)
 }
 

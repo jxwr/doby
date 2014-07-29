@@ -80,11 +80,12 @@ func (self *ClosureProto) LookUpLocal(name string) (exist bool, offset int) {
 	return
 }
 
-func (self *ClosureProto) AddUpvalVariable(name string, depth, remoteOffset int) (offset int) {
+func (self *ClosureProto) AddUpvalVariable(name string, depth, remoteOffset int) (pos int) {
 	exist, _ := self.LookUpLocal(name)
 	if !exist {
-		offset = self.upvalOffset
-		self.UpvalVariables[name] = offset + (depth << 32) + (remoteOffset << 16)
+		offset := self.upvalOffset
+		pos = offset + (depth << 32) + (remoteOffset << 16)
+		self.UpvalVariables[name] = pos
 		self.upvalOffset++
 	}
 	return

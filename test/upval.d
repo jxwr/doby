@@ -12,3 +12,5 @@ func add2(a, b) {
 	c = a + b + d + e
 	return c
 }
+
+add2(10, 20)
