@@ -202,7 +202,7 @@ func (self *IRBuilder) VisitDictExpr(node *ast.DictExpr) {
 		self.buildExpr(field.Name)
 		self.buildExpr(field.Value)
 	}
-	self.emit(instr.NewSet(len(node.Fields)))
+	self.emit(instr.NewDict(len(node.Fields)))
 }
 
 func (self *IRBuilder) VisitFuncDeclExpr(node *ast.FuncDeclExpr) {

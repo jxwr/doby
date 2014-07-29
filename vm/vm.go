@@ -144,7 +144,18 @@ func (self *VM) VisitNewArray(ir *instr.NewArrayInstr) {
 	self.RT.Push(obj)
 }
 
-func (self *VM) VisitNewDict(ir *instr.NewDictInstr)         {}
+func (self *VM) VisitNewDict(ir *instr.NewDictInstr) {
+	fieldMap := map[string]rt.Object{}
+
+	for i := 0; i < ir.Num; i++ {
+		val := self.RT.Pop()
+		key := self.RT.Pop()
+		fieldMap[key.HashCode()] = val
+	}
+	obj := self.RT.NewDictObject(fieldMap)
+	self.RT.Push(obj)
+}
+
 func (self *VM) VisitNewSet(ir *instr.NewSetInstr)           {}
 func (self *VM) VisitLabel(ir *instr.LabelInstr)             {}
 func (self *VM) VisitJump(ir *instr.JumpInstr)               {}
