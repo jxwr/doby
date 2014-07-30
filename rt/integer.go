@@ -29,11 +29,10 @@ func (self *IntegerObject) ToString(rt *Runtime, args ...Object) []Object {
 }
 
 func (self *IntegerObject) Times(rt *Runtime, args ...Object) (results []Object) {
-	fnobj := args[0].(*FuncObject)
-	fnDecl := fnobj.Decl
+	fnobj := args[0].(*ClosureObject)
 	for i := 0; i < self.Val; i++ {
-		fnobj.E.Put(fnDecl.Args[0].Name, rt.NewIntegerObject(i))
-		fnDecl.Body.Accept(rt.Visitor)
+		rt.Push(rt.NewIntegerObject(i))
+		rt.Runner.RunClosure(fnobj)
 	}
 	return
 }

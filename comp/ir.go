@@ -302,12 +302,12 @@ func (self *IRBuilder) VisitAssignStmt(node *ast.AssignStmt) {
 				exist, offset := self.C.LookUpLocal(v.Name)
 				if exist {
 					self.emit(instr.LoadLocal(offset))
-					continue
+					goto out
 				}
 				exist, offset = self.C.LookUpUpval(v.Name)
 				if exist {
 					self.emit(instr.LoadUpval(offset))
-					continue
+					goto out
 				}
 			case *ast.IndexExpr:
 				self.buildExpr(v.Index)
@@ -318,6 +318,7 @@ func (self *IRBuilder) VisitAssignStmt(node *ast.AssignStmt) {
 				self.buildExpr(v.X)
 				self.emit(instr.SendMethod("__get_property__", 1))
 			}
+		out:
 			self.emit(instr.SendMethod(OpFuncs[node.Tok], 1))
 		}
 	}
@@ -435,7 +436,46 @@ func (self *IRBuilder) VisitForStmt(node *ast.ForStmt) {
 	pushBlockInstr.Target = pc
 }
 
+var iterSeq int = 0
+
 func (self *IRBuilder) VisitRangeStmt(node *ast.RangeStmt) {
+	pushBlockInstr := instr.PushBlock(-1)
+	self.emit(pushBlockInstr)
+
+	keyName := node.KeyValue[0].(*ast.Ident).Name
+	valName := node.KeyValue[1].(*ast.Ident).Name
+
+	keyOffset := self.C.AddLocalVariable(keyName)
+	valOffset := self.C.AddLocalVariable(valName)
+	iterOffset := self.C.AddLocalVariable(fmt.Sprintf("#iter%d#", iterSeq))
+	xOffset := self.C.AddLocalVariable(fmt.Sprintf("#iter#x%d#", iterSeq))
+	iterSeq++
+
+	self.emit(instr.PushInt(0))
+	self.emit(instr.SetLocal(iterOffset))
+
+	self.buildExpr(node.X)
+	self.emit(instr.SetLocal(xOffset))
+
+	beginLabel := self.emit(instr.Label("for_range_start"))
+	self.emit(instr.LoadLocal(iterOffset))
+	self.emit(instr.LoadLocal(xOffset))
+
+	self.emit(instr.SendMethod("__iter__", 1))
+	condJump := instr.JumpIfFalse(-1)
+	self.emit(condJump)
+	self.emit(instr.SetLocal(valOffset))
+	self.emit(instr.SetLocal(keyOffset))
+	node.Body.Accept(self)
+	self.emit(instr.LoadLocal(iterOffset))
+	self.emit(instr.SendMethod("__inc__", 0))
+	self.emit(instr.Jump(beginLabel))
+	endLabel := self.emit(instr.Label("for_range_end"))
+	condJump.Target = endLabel
+
+	popBlockInstr := instr.PopBlock(-1)
+	pc := self.emit(popBlockInstr)
+	pushBlockInstr.Target = pc
 }
 
 func (self *IRBuilder) VisitImportStmt(node *ast.ImportStmt) {

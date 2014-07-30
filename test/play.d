@@ -101,9 +101,9 @@ for i = 0; i < 3; i++ {
     fmt.Print(i,"")
 }
 
-for i, v = range c {
-    fmt.Print(i, "=", v, "\n")
-    return true
+fmt.Println(c)
+for j, v = range c {
+    fmt.Print(j, "=", v, "\n")
 }
 
 list = [1,2,3,4]
@@ -305,6 +305,7 @@ for index, value = range ["a", "b", "c", "d"] {
     fmt.Print(index, value, "\n")
 }
 
+fmt.Println("range_over_dict")
 for index, value = range #{"a": 1, "b": 2, "c": 3, "d": 4} {
     fmt.Print(index, value, "\n")
 }

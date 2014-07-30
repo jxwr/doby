@@ -102,7 +102,7 @@ func (self *ArrayObject) Size(rt *Runtime, args ...Object) (results []Object) {
 }
 
 func (self *ArrayObject) Each(rt *Runtime, args ...Object) (results []Object) {
-	fnobj := args[0].(*FuncObject)
+	fnobj := args[0].(*ClosureObject)
 	for i := 0; i < len(self.Vals); i++ {
 		rt.CallFuncObj(fnobj, self.Vals[i])
 	}
@@ -110,7 +110,7 @@ func (self *ArrayObject) Each(rt *Runtime, args ...Object) (results []Object) {
 }
 
 func (self *ArrayObject) Map(rt *Runtime, args ...Object) (results []Object) {
-	fnobj := args[0].(*FuncObject)
+	fnobj := args[0].(*ClosureObject)
 	arr := []Object{}
 	for i := 0; i < len(self.Vals); i++ {
 		rt.CallFuncObj(fnobj, self.Vals[i])
@@ -122,7 +122,7 @@ func (self *ArrayObject) Map(rt *Runtime, args ...Object) (results []Object) {
 }
 
 func (self *ArrayObject) Select(rt *Runtime, args ...Object) (results []Object) {
-	fnobj := args[0].(*FuncObject)
+	fnobj := args[0].(*ClosureObject)
 	arr := []Object{}
 	for i := 0; i < len(self.Vals); i++ {
 		rt.CallFuncObj(fnobj, self.Vals[i])
@@ -132,6 +132,17 @@ func (self *ArrayObject) Select(rt *Runtime, args ...Object) (results []Object) 
 	}
 	obj := rt.NewArrayObject(arr)
 	results = append(results, obj)
+	return
+}
+
+func (self *ArrayObject) OP__iter__(rt *Runtime, args ...Object) (results []Object) {
+	idx := args[0].(*IntegerObject)
+	if idx.Val < len(self.Vals) {
+		obj := self.Vals[idx.Val]
+		results = append(results, args[0], obj, rt.True)
+	} else {
+		results = append(results, rt.False)
+	}
 	return
 }
 

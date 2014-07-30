@@ -276,13 +276,13 @@ func (self *Eval) VisitSetExpr(node *ast.SetExpr) {
 }
 
 func (self *Eval) VisitDictExpr(node *ast.DictExpr) {
-	fieldMap := map[string]rt.Object{}
+	fieldMap := map[string]rt.Slot{}
 	for _, field := range node.Fields {
 		self.evalExpr(field.Name)
 		key := self.RT.Pop()
 		self.evalExpr(field.Value)
 		val := self.RT.Pop()
-		fieldMap[key.HashCode()] = val
+		fieldMap[key.HashCode()] = rt.Slot{key, val}
 	}
 	obj := self.RT.NewDictObject(fieldMap)
 	self.RT.Push(obj)

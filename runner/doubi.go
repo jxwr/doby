@@ -67,5 +67,6 @@ func (self *Runner) Run(filename string) {
 	fmt.Println("===========================")
 
 	vm := vm.NewVM(self.irb.C, self.irb.CS, self.runtime)
+	self.runtime.Runner = vm
 	vm.Run()
 }

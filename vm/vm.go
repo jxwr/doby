@@ -171,12 +171,12 @@ func (self *VM) VisitNewArray(ir *instr.NewArrayInstr) {
 }
 
 func (self *VM) VisitNewDict(ir *instr.NewDictInstr) {
-	fieldMap := map[string]rt.Object{}
+	fieldMap := map[string]rt.Slot{}
 
 	for i := 0; i < ir.Num; i++ {
 		val := self.RT.Pop()
 		key := self.RT.Pop()
-		fieldMap[key.HashCode()] = val
+		fieldMap[key.HashCode()] = rt.Slot{key, val}
 	}
 	obj := self.RT.NewDictObject(fieldMap)
 	self.RT.Push(obj)

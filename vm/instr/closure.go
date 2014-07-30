@@ -63,7 +63,7 @@ func (self *ClosureProto) AddClosureProto(c *ClosureProto) int {
 }
 
 func (self *ClosureProto) AddLocalVariable(name string) (offset int) {
-	exist, _ := self.LookUpLocal(name)
+	exist, offset := self.LookUpLocal(name)
 	if !exist {
 		offset = self.localOffset
 		self.LocalVariables[name] = offset

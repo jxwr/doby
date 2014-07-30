@@ -23,6 +23,9 @@ type Runtime struct {
 	True    Object
 	False   Object
 
+	TmpString *StringObject
+	Runner    ClosureRunner
+
 	NeedReturn   bool
 	LoopDepth    int
 	NeedBreak    bool
@@ -89,6 +92,8 @@ func NewRuntime(visitor ast.Visitor) *Runtime {
 	env := env.NewEnv(nil)
 
 	rt := &Runtime{Visitor: visitor, Env: env, Stack: NewStack()}
+	rt.TmpString = rt.NewStringObject("")
+
 	rt.registerGlobals(env)
 
 	rt.Nil = &NilObject{}
@@ -100,15 +105,11 @@ func NewRuntime(visitor ast.Visitor) *Runtime {
 	return rt
 }
 
-func (self *Runtime) CallFuncObj(fnobj *FuncObject, args ...Object) {
-	fnDecl := fnobj.Decl
-	for i, arg := range args {
-		fnobj.E.Put(fnDecl.Args[i].Name, arg)
+func (self *Runtime) CallFuncObj(fnobj *ClosureObject, args ...Object) {
+	for _, arg := range args {
+		self.Push(arg)
 	}
-	self.NeedReturn = false
-	self.NeedBreak = false
-	self.NeedContinue = false
-	fnDecl.Body.Accept(self.Visitor)
+	self.Runner.RunClosure(fnobj)
 }
 
 func (self *Runtime) NewIntegerObject(val int) *IntegerObject {
@@ -116,12 +117,12 @@ func (self *Runtime) NewIntegerObject(val int) *IntegerObject {
 	return obj
 }
 
-func (self *Runtime) NewStringObject(val string) Object {
+func (self *Runtime) NewStringObject(val string) *StringObject {
 	obj := &StringObject{MakeProperty(nil, &self.stringProperties), val}
 	return obj
 }
 
-func (self *Runtime) NewFloatObject(val float64) Object {
+func (self *Runtime) NewFloatObject(val float64) *FloatObject {
 	obj := &FloatObject{MakeProperty(nil, &self.floatProperties), val}
 	return obj
 }
@@ -148,7 +149,8 @@ func (self *Runtime) NewGoObject(obj interface{}) *GoObject {
 	return gobj
 }
 
-func (self *Runtime) NewClosureObject(proto *instr.ClosureProto, frame *Frame) *ClosureObject {
+func (self *Runtime) NewClosureObject(proto *instr.ClosureProto,
+	frame *Frame) *ClosureObject {
 	obj := &ClosureObject{MakeProperty(nil, &self.funcProperties), proto, frame}
 	return obj
 }
@@ -163,8 +165,8 @@ func (self *Runtime) NewBuiltinFuncObject(name string, recv Object, e *env.Env) 
 	return obj
 }
 
-func (self *Runtime) NewDictObject(fields map[string]Object) Object {
-	obj := &DictObject{MakeProperty(fields, &self.dictProperties)}
+func (self *Runtime) NewDictObject(fields map[string]Slot) Object {
+	obj := &DictObject{MakeProperty(fields, &self.dictProperties), nil}
 	return obj
 }
 
@@ -219,7 +221,8 @@ func (self *Runtime) addObjectProperties(obj interface{}, prop *Property) {
 	val := reflect.ValueOf(obj)
 	if typ.Kind() == reflect.Struct {
 		for i := 0; i < val.NumField(); i++ {
-			prop.SetProp(typ.Field(i).Name, self.NewGoObject(val.Field(i).Interface()))
+			self.TmpString.Val = typ.Field(i).Name
+			prop.SetProp(self.TmpString, self.NewGoObject(val.Field(i).Interface()))
 		}
 	}
 
@@ -232,14 +235,16 @@ func (self *Runtime) addObjectProperties(obj interface{}, prop *Property) {
 			m := typ.Method(i)
 			if m.Type == to_s.Type {
 				fn := self.NewBuiltinFuncObject(m.Name, nil, nil)
-				prop.SetProp(m.Name, fn)
+				self.TmpString.Val = m.Name
+				prop.SetProp(self.TmpString, fn)
 			}
 		}
 	} else {
 		for i := 0; i < numMethods; i++ {
 			m := typ.Method(i)
 			fn := self.NewBuiltinFuncObject(m.Name, nil, nil)
-			prop.SetProp(m.Name, fn)
+			self.TmpString.Val = m.Name
+			prop.SetProp(self.TmpString, fn)
 		}
 	}
 }
@@ -283,16 +288,18 @@ func (self *Runtime) initBuiltinObjectProperties() {
 func (self *Runtime) RegisterVars(name string, vars map[string]interface{}) {
 	dict, _ := self.Env.LookUp(name)
 
-	m := map[string]Object{}
+	m := map[string]Slot{}
 	for k, v := range vars {
-		m[k] = self.NewGoObject(v)
+		self.TmpString.Val = k
+		m[self.TmpString.HashCode()] = Slot{self.TmpString, self.NewGoObject(v)}
 	}
 
 	if dict == nil {
 		dict = self.NewDictObject(m)
 	} else {
 		for k, v := range m {
-			dict.(*DictObject).SetProp(k, v)
+			self.TmpString.Val = k
+			dict.(*DictObject).SetProp(self.TmpString, v.Val)
 		}
 	}
 	self.Env.Put(name, dict)
@@ -301,18 +308,20 @@ func (self *Runtime) RegisterVars(name string, vars map[string]interface{}) {
 func (self *Runtime) RegisterFunctions(name string, vars []interface{}) {
 	dict, _ := self.Env.LookUp(name)
 
-	m := map[string]Object{}
+	m := map[string]Slot{}
 	for _, v := range vars {
 		name := runtime.FuncForPC(reflect.ValueOf(v).Pointer()).Name()
 		xs := strings.Split(name, ".")
-		m[xs[len(xs)-1]] = self.NewGoFuncObject(name, v)
+		self.TmpString.Val = xs[len(xs)-1]
+		m[self.TmpString.HashCode()] = Slot{self.TmpString, self.NewGoFuncObject(name, v)}
 	}
 
 	if dict == nil {
 		dict = self.NewDictObject(m)
 	} else {
 		for k, v := range m {
-			dict.(*DictObject).SetProp(k, v)
+			self.TmpString.Val = k
+			dict.(*DictObject).SetProp(self.TmpString, v.Val)
 		}
 	}
 	self.Env.Put(name, dict)

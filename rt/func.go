@@ -10,6 +10,10 @@ import (
 
 /// closure
 
+type ClosureRunner interface {
+	RunClosure(obj *ClosureObject)
+}
+
 type ClosureObject struct {
 	Property
 

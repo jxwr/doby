@@ -11,16 +11,15 @@ type Object interface {
 	Name() string
 	String() string
 	HashCode() string
-	SetProp(key string, val Object)
-	GetProp(key string) Object
+	SetProp(obj Object, val Object)
+	GetProp(obj Object) Object
 	ToString(*Runtime, ...Object) []Object
 }
 
 func Invoke(rt *Runtime, obj Object, method string, args ...Object) (results []Object) {
 	if strings.HasPrefix(method, "__") {
 		if method == "__get_property__" {
-			idx := args[0].(*StringObject)
-			val := obj.GetProp(idx.Val)
+			val := obj.GetProp(args[0])
 			fnobj, ok := val.(*FuncObject)
 			if ok {
 				fnobj.Obj = obj
@@ -28,9 +27,8 @@ func Invoke(rt *Runtime, obj Object, method string, args ...Object) (results []O
 			results = append(results, val)
 			return
 		} else if method == "__set_property__" {
-			idx := args[0].(*StringObject)
 			val := args[1]
-			obj.SetProp(idx.Val, val)
+			obj.SetProp(args[0], val)
 			return
 		} else {
 			method = "OP" + method
@@ -80,12 +78,17 @@ err:
 	return
 }
 
+type Slot struct {
+	Key Object
+	Val Object
+}
+
 type Property struct {
-	Slots  map[string]Object
+	Slots  map[string]Slot
 	Parent *Property
 }
 
-func MakeProperty(slots map[string]Object, parent *Property) Property {
+func MakeProperty(slots map[string]Slot, parent *Property) Property {
 	return Property{slots, parent}
 }
 
@@ -93,26 +96,28 @@ func EmptyProperty() Property {
 	return Property{nil, nil}
 }
 
-func (self *Property) SetProp(key string, val Object) {
+func (self *Property) SetProp(obj Object, val Object) {
 	if self.Slots == nil {
-		self.Slots = map[string]Object{}
+		self.Slots = map[string]Slot{}
 	}
-	self.Slots[key] = val
+	hash := obj.HashCode()
+	self.Slots[hash] = Slot{obj, val}
 }
 
-func (self *Property) GetProp(key string) Object {
+func (self *Property) GetProp(obj Object) Object {
 	s := self
 	for {
-		val, ok := s.Slots[key]
+		hash := obj.HashCode()
+		slot, ok := s.Slots[hash]
 		if !ok {
 			if s.Parent != nil {
 				s = self.Parent
 				continue
 			} else {
-				panic(fmt.Sprintf("Error: no property named %s\n", key))
+				panic(fmt.Sprintf("Error: no property %v\n", obj))
 			}
 		}
-		return val
+		return slot.Val
 	}
 	return nil
 }
