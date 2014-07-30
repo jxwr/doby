@@ -285,16 +285,16 @@ for i = 0; i < 20; i++ {
 	fmt.Print(i)
 }
 
-switch a {
-case a < 10:
-	fmt.Print("< 10")
-case a > 100:
-	fmt.Print("> 10")
-case 10:
-	fmt.Print(10)
-default:
-	fmt.Print("default\n")
-}
+//switch a {
+//case a < 10:
+//	fmt.Print("< 10")
+//case a > 100:
+//	fmt.Print("> 10")
+//case 10:
+//	fmt.Print(10)
+//default:
+//	fmt.Print("default\n")
+//}
 
 //10000.times(func(i){fmt.Print(i,"")})
 fmt.Print("\n")

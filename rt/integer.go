@@ -57,6 +57,12 @@ func (self *IntegerObject) OP__dec__(rt *Runtime, args ...Object) (results []Obj
 	return
 }
 
+func (self *IntegerObject) OP__minus__(rt *Runtime, args ...Object) (results []Object) {
+	val := -self.Val
+	rt.Push(rt.NewIntegerObject(val))
+	return
+}
+
 // +=
 func (self *IntegerObject) OP__add_assign__(rt *Runtime, args ...Object) (results []Object) {
 	results = self.assign(rt, "__+=__", args[0])

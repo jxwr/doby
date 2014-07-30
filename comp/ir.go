@@ -208,6 +208,15 @@ func (self *IRBuilder) VisitDictExpr(node *ast.DictExpr) {
 }
 
 func (self *IRBuilder) VisitFuncDeclExpr(node *ast.FuncDeclExpr) {
+	funNameOffset := 0
+	if node.Name != nil {
+		exist, offset := self.C.LookUpLocal(node.Name.Name)
+		if !exist {
+			offset = self.C.AddLocalVariable(node.Name.Name)
+		}
+		funNameOffset = offset
+	}
+
 	n := self.PushClosureProto()
 	for _, arg := range node.Args {
 		self.C.AddLocalVariable(arg.Name)
@@ -221,11 +230,7 @@ func (self *IRBuilder) VisitFuncDeclExpr(node *ast.FuncDeclExpr) {
 	self.emit(instr.PushClosure(n))
 
 	if node.Name != nil {
-		exist, offset := self.C.LookUpLocal(node.Name.Name)
-		if !exist {
-			offset = self.C.AddLocalVariable(node.Name.Name)
-		}
-		self.emit(instr.SetLocal(offset))
+		self.emit(instr.SetLocal(funNameOffset))
 	}
 }
 
