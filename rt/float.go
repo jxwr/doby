@@ -61,6 +61,12 @@ func (self *FloatObject) OP__quo_assign__(rt *Runtime, args ...Object) (results 
 	return
 }
 
+func (self *FloatObject) OP__minus__(rt *Runtime, args ...Object) (results []Object) {
+	val := -self.Val
+	rt.Push(rt.NewFloatObject(val))
+	return
+}
+
 // +
 func (self *FloatObject) OP__add__(rt *Runtime, args ...Object) (results []Object) {
 	results = self.binary(rt, "__add__", args[0])

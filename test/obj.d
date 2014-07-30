@@ -21,7 +21,7 @@ list = [] + [1,2,3,4] + [3,4,5] + [a] + []
 fmt.Println(list[1:] + [2])
 
 fmt.Println("list length", list.Length())
-list.Append(6)
+list.Push(6)
 fmt.Println(list)
 
 list.Each(func(elem){fmt.Print(elem, ",")})

@@ -32,7 +32,7 @@ func showBoard(board) {
 func solveSudoku(board) {
 	showBoard(board)
 	count++
-	fmt.Println(count, board)
+	fmt.Println(count)
 
 	for i = 0; i < board.Length(); i++ {
 		for j = 0; j < board[i].Length(); j++ {

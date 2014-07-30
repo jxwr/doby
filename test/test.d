@@ -19,6 +19,9 @@ Minute               = 60 * Second
 Hour                 = 60 * Minute
 
 time.Sleep(200 * Millisecond)
+
+time.Now()
+
 fmt.Println(time.Now())
 
 /// os

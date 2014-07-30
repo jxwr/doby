@@ -221,8 +221,11 @@ func (self *Runtime) addObjectProperties(obj interface{}, prop *Property) {
 	val := reflect.ValueOf(obj)
 	if typ.Kind() == reflect.Struct {
 		for i := 0; i < val.NumField(); i++ {
-			self.TmpString.Val = typ.Field(i).Name
-			prop.SetProp(self.TmpString, self.NewGoObject(val.Field(i).Interface()))
+			ch := typ.Field(i).Name[0]
+			if ch >= 'A' && ch <= 'Z' {
+				self.TmpString.Val = typ.Field(i).Name
+				prop.SetProp(self.TmpString, self.NewGoObject(val.Field(i).Interface()))
+			}
 		}
 	}
 
