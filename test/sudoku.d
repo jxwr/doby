@@ -22,10 +22,17 @@ func isValid(board, x, y, c) {
 
 count = 0
 
+func showBoard(board) {
+	fmt.Println("-----------------------------------")
+	for i, line = range board {
+		fmt.Println(line)
+	}
+}
+
 func solveSudoku(board) {
 	showBoard(board)
 	count++
-	fmt.Println(count)
+	fmt.Println(count, board)
 
 	for i = 0; i < board.Length(); i++ {
 		for j = 0; j < board[i].Length(); j++ {
@@ -47,7 +54,7 @@ func solveSudoku(board) {
 	return true
 }
 
-board = [
+theboard = [
 	['5','3','.','.','7','.','9','.','.'],
 	['6','.','.','1','9','5','.','.','.'],
 	['.','9','8','.','.','.','.','6','.'],
@@ -59,11 +66,4 @@ board = [
 	['3','.','5','.','8','.','.','7','9']
 ]
 
-func showBoard(board) {
-	fmt.Println("-----------------------------------")
-	for i, line = range board {
-		fmt.Println(line)
-	}
-}
-
-solveSudoku(board)
+solveSudoku(theboard)
