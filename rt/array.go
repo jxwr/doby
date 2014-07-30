@@ -164,13 +164,16 @@ func (self *ArrayObject) OP__set_index__(rt *Runtime, args ...Object) (results [
 func (self *ArrayObject) OP__slice__(rt *Runtime, args ...Object) (results []Object) {
 	low := 0
 	high := len(self.Vals)
+	lo := args[0]
+	ho := args[1]
 
-	if len(args) > 0 {
-		lo := args[0]
-		low = lo.(*IntegerObject).Val
+	v, ok := lo.(*IntegerObject)
+	if ok {
+		low = v.Val
 	}
-	if len(args) > 1 {
-		ho := args[1]
+
+	v, ok = ho.(*IntegerObject)
+	if ok {
 		high = ho.(*IntegerObject).Val
 	}
 
