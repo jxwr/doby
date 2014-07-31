@@ -344,7 +344,7 @@ func (n *PopBlockInstr) String() string      { return _t(TypName[n.Typ], n.Targe
 func (n *ImportInstr) String() string        { return _t(TypName[n.Typ], n.Path) }
 func (n *PushModuleInstr) String() string    { return _t(TypName[n.Typ], n.Name) }
 func (n *PushClosureInstr) String() string   { return _t(TypName[n.Typ], n.Seq) }
-func (n *RaiseReturnInstr) String() string   { return TypName[n.Typ] }
+func (n *RaiseReturnInstr) String() string   { return _t(TypName[n.Typ], n.Num) }
 func (n *RaiseBreakInstr) String() string    { return TypName[n.Typ] }
 func (n *RaiseContinueInstr) String() string { return TypName[n.Typ] }
 

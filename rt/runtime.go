@@ -375,8 +375,20 @@ func (self *Runtime) Mark() {
 	self.Stack.Mark()
 }
 
+func (self *Runtime) MarkN(offset int) {
+	self.Stack.MarkN(offset)
+}
+
 func (self *Runtime) Rewind() {
 	self.Stack.Rewind()
+}
+
+func (self *Runtime) PopMark() int {
+	return self.Stack.PopMark()
+}
+
+func (self *Runtime) ShiftTopN(n, pos int) {
+	self.Stack.ShiftTopN(n, pos)
 }
 
 func (self *Runtime) Fatalf(format string, a ...interface{}) {

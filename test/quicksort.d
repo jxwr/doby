@@ -18,12 +18,14 @@ func qsort(list) {
 
     pivot = list[0]
     list = list[1:]
-
+	
+	fmt.Println("==========================")
     left = filter(list, func (x) { return x <= pivot })
     fmt.Println("left", left)
     right = filter(list, func (x) { return x > pivot })
     fmt.Println("right", right)
     fmt.Println("pivot", pivot)
+	fmt.Println("^^^^^^^^^^^^^^^^^^^^^^^^^")
 
     return qsort(left) + [pivot] + qsort(right)
 }

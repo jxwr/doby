@@ -50,3 +50,7 @@ fmt.Println(ch.Size())
 
 ch = 'a'
 fmt.Println(ch + 'b')
+
+arr = []
+brr = arr + [4] + []
+fmt.Println(brr)

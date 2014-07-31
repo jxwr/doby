@@ -18,6 +18,9 @@ type Runner struct {
 	attr    *comp.Attr
 	irb     *comp.IRBuilder
 	runtime *rt.Runtime
+
+	dumpInstrs bool
+	printStack bool
 }
 
 func NewRunner() *Runner {
@@ -27,8 +30,16 @@ func NewRunner() *Runner {
 
 	runtime := rt.NewRuntime(irb)
 
-	runner := &Runner{pretty, attr, irb, runtime}
+	runner := &Runner{pretty, attr, irb, runtime, false, false}
 	return runner
+}
+
+func (self *Runner) SetDumpInstrs(dumpInstrs bool) {
+	self.dumpInstrs = dumpInstrs
+}
+
+func (self *Runner) SetPrintStack(printStack bool) {
+	self.printStack = printStack
 }
 
 func (self *Runner) RegisterFunctions(name string, fns []interface{}) {
@@ -63,10 +74,16 @@ func (self *Runner) Run(filename string) {
 		stmt.Accept(self.irb)
 	}
 
-	self.irb.C.DumpClosureProto()
-	fmt.Println("===========================")
+	if self.dumpInstrs {
+		self.irb.C.DumpClosureProto()
+	}
 
+	fmt.Println("===========================")
 	vm := vm.NewVM(self.irb.C, self.irb.CS, self.runtime)
 	self.runtime.Runner = vm
 	vm.Run()
+
+	if self.printStack {
+		self.runtime.Stack.Print()
+	}
 }

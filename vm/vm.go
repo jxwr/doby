@@ -29,6 +29,7 @@ func (self *VM) Run() {
 func (self *VM) RunClosure(obj *rt.ClosureObject) {
 	c := obj.Proto
 	f := self.frame
+
 	self.frame = rt.NewFrame(len(c.LocalVariables), len(c.UpvalVariables), obj.Frame)
 	for i := 0; i < len(c.Instrs); i++ {
 		c.Instrs[i].Accept(self)
@@ -125,6 +126,7 @@ func (self *VM) VisitSendMethod(ir *instr.SendMethodInstr) {
 	if ir.Method == "__call__" {
 		switch v := obj.(type) {
 		case *rt.ClosureObject:
+			self.RT.MarkN(-(ir.Num))
 			self.RunClosure(v)
 		case *rt.GoFuncObject:
 			args := make([]rt.Object, ir.Num)
@@ -224,6 +226,7 @@ func (self *VM) VisitPopBlock(ir *instr.PopBlockInstr) {
 }
 
 func (self *VM) VisitRaiseReturn(ir *instr.RaiseReturnInstr) {
+	self.RT.ShiftTopN(ir.Num, self.RT.PopMark())
 	self.frame.NeedReturn = true
 }
 

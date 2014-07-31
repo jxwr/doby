@@ -6,12 +6,12 @@ import "fmt"
 
 type Stack struct {
 	cur  int
-	mark int
+	mark []int
 	vals []Object
 }
 
 func NewStack() *Stack {
-	stack := &Stack{0, 0, []Object{}}
+	stack := &Stack{0, []int{}, []Object{}}
 	return stack
 }
 
@@ -33,11 +33,36 @@ func (self *Stack) Pop() Object {
 }
 
 func (self *Stack) Mark() {
-	self.mark = self.cur
+	self.mark = append(self.mark, self.cur)
+}
+
+func (self *Stack) MarkN(offset int) {
+	self.mark = append(self.mark, self.cur+offset)
 }
 
 func (self *Stack) Rewind() {
-	self.cur = self.mark
+	ln := len(self.mark)
+	self.cur = self.mark[ln-1]
+	self.mark = self.mark[:ln-1]
+}
+
+func (self *Stack) ShiftTopN(n, pos int) {
+	top := self.cur - n
+	self.cur = pos
+	for i := 0; i < n; i++ {
+		self.vals[self.cur] = self.vals[top+i]
+		self.cur++
+	}
+}
+
+func (self *Stack) PopMark() int {
+	ln := len(self.mark)
+	if ln == 0 {
+		panic("rewind from empty mark stack, may missing return in some func")
+	}
+	mark := self.mark[ln-1]
+	self.mark = self.mark[:ln-1]
+	return mark
 }
 
 func (self *Stack) Print() {
