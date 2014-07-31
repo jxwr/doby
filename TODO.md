@@ -1,9 +1,7 @@
 ## Soon
 
-* [ ] Fix forward declaration, should not need
-* [ ] Impl for range
-* [ ] Switch/case
-* [ ] Invoke class method
+* [ ] clean code
+* [ ] fix block scope variable, the ':='
 
 ## RoadMap
 

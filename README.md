@@ -6,7 +6,8 @@ A script language on top of golang runtime with golang syntax and ruby semantic,
 
 ## Progress
 
-Hacking IR generation, see `notes/upval.d`
+[DONE] Hacking IR generation
+[    ] Clean code, remove eval ast tree related code, refactor
 
 ## DataType
 
@@ -48,6 +49,23 @@ Outputs:
 [1,2,3,4]
 [1,2] [3,4]
 ```
+
+### Dict
+```go
+dict = #{"name": "jiaoxiang", "height": 180}
+dict.birth = 1987
+```
+
+### Set
+```
+set = #[1,1,1,1,2]
+```
+
+### String
+
+### Integer
+
+### Float
 
 ## Examples:
 
