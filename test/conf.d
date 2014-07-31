@@ -14,3 +14,12 @@ b[3] = 10
 fmt.Println(b + [4,4,3])
 b.Push(11)
 fmt.Println(b)
+
+switch a {
+case 100:
+	fmt.Println("one hundred")
+case 200:
+	fmt.Println("two hundred")
+default:
+	fmt.Println(a)
+}

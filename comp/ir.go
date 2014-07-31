@@ -375,31 +375,60 @@ func (self *IRBuilder) VisitIfStmt(node *ast.IfStmt) {
 }
 
 func (self *IRBuilder) VisitCaseClause(node *ast.CaseClause) {
-	// default
-	if node.List != nil {
-		for _, e := range node.List {
-			_, ok := e.(*ast.BasicLit)
-			self.buildExpr(e)
-			if ok {
-				self.emit(instr.SendMethod("__eql__", 0))
-			}
-			self.emit(instr.JumpIfFalse(0))
-		}
-	}
-
-	for _, s := range node.Body {
-		s.Accept(self)
-	}
-
-	self.emit(instr.Label("out"))
+	// dummy
 }
+
+var switchSeq int = 0
 
 func (self *IRBuilder) VisitSwitchStmt(node *ast.SwitchStmt) {
 	node.Init.(*ast.ExprStmt).X.Accept(self)
+	switchExprOffset := self.C.AddLocalVariable(fmt.Sprintf("#switch%d#", switchSeq))
 
+	var lastCaseJumpInstr *instr.JumpIfFalseInstr
+	endJmpList := []*instr.JumpInstr{}
+
+	self.emit(instr.SetLocal(switchExprOffset))
 	for _, c := range node.Body.List {
-		c.Accept(self)
+		caseClause := c.(*ast.CaseClause)
+
+		// set last case clause jumpiffalse target
+		caseStart := self.emit(instr.Label("case_start_label"))
+		if lastCaseJumpInstr != nil {
+			lastCaseJumpInstr.Target = caseStart
+		}
+
+		// emit the cmp
+		if caseClause.List != nil {
+			for _, e := range caseClause.List {
+				_, ok := e.(*ast.BasicLit)
+				self.buildExpr(e)
+				self.emit(instr.LoadLocal(switchExprOffset))
+				if ok {
+					self.emit(instr.SendMethod("__eql__", 1))
+				}
+				jmp := instr.JumpIfFalse(-1)
+				lastCaseJumpInstr = jmp
+				self.emit(jmp)
+			}
+		}
+
+		// emit the case body
+		for _, s := range caseClause.Body {
+			s.Accept(self)
+		}
+
+		// jump to end after every case body
+		jmp := instr.Jump(-1)
+		endJmpList = append(endJmpList, jmp)
+		self.emit(jmp)
 	}
+
+	outpc := self.emit(instr.Label("switch_out_label"))
+	for _, ins := range endJmpList {
+		ins.Target = outpc
+	}
+
+	switchSeq++
 }
 
 func (self *IRBuilder) VisitSelectStmt(node *ast.SelectStmt) {
