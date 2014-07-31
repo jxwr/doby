@@ -6,8 +6,8 @@ A script language on top of golang runtime with golang syntax and ruby semantic,
 
 ## Progress
 
-[DONE] Hacking IR generation
-[    ] Clean code, remove eval ast tree related code, refactor
+* [DONE] Hacking IR generation
+* [TODO] Clean code, remove eval ast tree related code, refactor
 
 ## DataType
 
