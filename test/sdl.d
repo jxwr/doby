@@ -104,7 +104,6 @@ func main() {
 	quit = false
 	updateInterval = 100
 	tick = 0
-	delay = 10
 
 	/// main loop
 	for !quit {
@@ -112,6 +111,10 @@ func main() {
 		window.UpdateSurface()
 		/// ... because it is too slow, we even don't need sdl.Delay()
 		update(board)
+                tick++
+                if tick > 100 {
+                   break
+                }
 	}
 
 	window.Destroy()

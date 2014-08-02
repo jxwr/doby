@@ -23,8 +23,10 @@ type Runtime struct {
 	True    Object
 	False   Object
 
-	TmpString *StringObject
-	Runner    ClosureRunner
+	TmpString  *StringObject
+	TmpInteger *IntegerObject
+
+	Runner ClosureRunner
 
 	NeedReturn   bool
 	LoopDepth    int

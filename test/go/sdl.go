@@ -5,6 +5,8 @@ import (
 	"log"
 	"net/http"
 	_ "net/http/pprof"
+	"os"
+	"runtime/pprof"
 
 	"github.com/jxwr/doubi/runner"
 	"github.com/veandco/go-sdl2/sdl"
@@ -25,6 +27,13 @@ func NewRect(x, y, h, w int32) *sdl.Rect {
 }
 
 func main() {
+	f, err := os.Create("prof")
+	if err != nil {
+		log.Fatal(err)
+	}
+	pprof.StartCPUProfile(f)
+	defer pprof.StopCPUProfile()
+
 	go func() {
 		log.Println(http.ListenAndServe("localhost:6060", nil))
 	}()
