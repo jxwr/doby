@@ -39,11 +39,8 @@ func (self *ClosureObject) ToString(rt *Runtime, args ...Object) []Object {
 
 type FuncObject struct {
 	Property
-
 	name string
-
-	IsBuiltin bool
-	Obj       Object
+	recv Object
 }
 
 func (self *FuncObject) Name() string {
@@ -63,6 +60,10 @@ func (self *FuncObject) ToString(rt *Runtime, args ...Object) []Object {
 }
 
 func (self *FuncObject) OP__call__(rt *Runtime, args ...Object) (results []Object) {
-	results = Invoke(rt, self.Obj, self.name, args...)
+	results = Invoke(rt, self.recv, self.name, args...)
 	return
+}
+
+func (self *FuncObject) SetRecv(obj Object) {
+	self.recv = obj
 }

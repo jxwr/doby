@@ -158,8 +158,8 @@ func (self *Runtime) NewClosureObject(proto *instr.ClosureProto,
 	return obj
 }
 
-func (self *Runtime) NewBuiltinFuncObject(name string, recv Object) *FuncObject {
-	obj := &FuncObject{MakeProperty(nil, &self.funcProperties), name, true, recv}
+func (self *Runtime) NewBuiltinFuncObject(name string) *FuncObject {
+	obj := &FuncObject{MakeProperty(nil, &self.funcProperties), name, nil}
 	return obj
 }
 
@@ -235,7 +235,7 @@ func (self *Runtime) addObjectProperties(obj interface{}, prop *Property) {
 		for i := 0; i < numMethods; i++ {
 			m := typ.Method(i)
 			if m.Type == to_s.Type {
-				fn := self.NewBuiltinFuncObject(m.Name, nil)
+				fn := self.NewBuiltinFuncObject(m.Name)
 				self.TmpString.Val = m.Name
 				prop.SetProp(self.TmpString, fn)
 			}
@@ -243,7 +243,7 @@ func (self *Runtime) addObjectProperties(obj interface{}, prop *Property) {
 	} else {
 		for i := 0; i < numMethods; i++ {
 			m := typ.Method(i)
-			fn := self.NewBuiltinFuncObject(m.Name, nil)
+			fn := self.NewBuiltinFuncObject(m.Name)
 			self.TmpString.Val = m.Name
 			prop.SetProp(self.TmpString, fn)
 		}

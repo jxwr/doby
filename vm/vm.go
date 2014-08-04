@@ -123,9 +123,14 @@ func (self *VM) VisitSetUpval(ir *instr.SetUpvalInstr) {
 func (self *VM) VisitSendMethod(ir *instr.SendMethodInstr) {
 	obj := self.RT.Pop()
 
+	// closure object is a function defined in doubi code, mark stack and rewind manually
+	// gofunc object is a function defined in go lib, no way to rewind the stack here
+	// func object is a function of a builtin object, mark stack by CallFuncObj(rt/runtime.go)
+
 	if ir.Method == "__call__" {
 		switch v := obj.(type) {
 		case *rt.ClosureObject:
+			// take care of the stack
 			self.RT.MarkN(-(ir.Num))
 			self.RunClosure(v)
 		case *rt.GoFuncObject:
@@ -138,15 +143,14 @@ func (self *VM) VisitSendMethod(ir *instr.SendMethodInstr) {
 				self.RT.Push(ret)
 			}
 		case *rt.FuncObject:
-			if v.IsBuiltin {
-				args := make([]rt.Object, ir.Num)
-				for i := ir.Num - 1; i >= 0; i-- {
-					args[i] = self.RT.Pop()
-				}
-				rets := rt.Invoke(self.RT, v, "__call__", args...)
-				for _, ret := range rets {
-					self.RT.Push(ret)
-				}
+			// FIXME: For now, func object is the method object of the builtin object
+			args := make([]rt.Object, ir.Num)
+			for i := ir.Num - 1; i >= 0; i-- {
+				args[i] = self.RT.Pop()
+			}
+			rets := rt.Invoke(self.RT, v, "__call__", args...)
+			for _, ret := range rets {
+				self.RT.Push(ret)
 			}
 		default:
 			fmt.Printf("%T", v)
@@ -226,6 +230,10 @@ func (self *VM) VisitPopBlock(ir *instr.PopBlockInstr) {
 }
 
 func (self *VM) VisitRaiseReturn(ir *instr.RaiseReturnInstr) {
+	// FIXME: THIS IS VERY INEFFICIENCY
+	// We need to do this explicitly to clean up the garbage values left in the stack,
+	// should check out JRuby or some other interpreters to see how to resolve this
+	// problem.
 	self.RT.ShiftTopN(ir.Num, self.RT.PopMark())
 	self.frame.NeedReturn = true
 }

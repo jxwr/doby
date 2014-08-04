@@ -19,10 +19,11 @@ type Object interface {
 func Invoke(rt *Runtime, obj Object, method string, args ...Object) (results []Object) {
 	if strings.HasPrefix(method, "__") {
 		if method == "__get_property__" {
+			// builtin function
 			val := obj.GetProp(args[0])
 			fnobj, ok := val.(*FuncObject)
 			if ok {
-				fnobj.Obj = obj
+				fnobj.SetRecv(obj)
 			}
 			results = append(results, val)
 			return
