@@ -73,6 +73,51 @@ func (self *IRBuilder) Fatalf(pos token.Pos, format string, a ...interface{}) {
 	os.Exit(1)
 }
 
+var OpFuncs = map[token.Token]string{
+	token.ADD:            "__add__",
+	token.SUB:            "__sub__",
+	token.MUL:            "__mul__",
+	token.QUO:            "__quo__",
+	token.REM:            "__rem__",
+	token.AND:            "__and__",
+	token.OR:             "__or__",
+	token.NOT:            "__not__",
+	token.XOR:            "__xor__",
+	token.SHL:            "__shl__",
+	token.SHR:            "__shr__",
+	token.AND_NOT:        "__and_not__",
+	token.LAND:           "__land__",
+	token.LOR:            "__lor__",
+	token.EQL:            "__eql__",
+	token.LSS:            "__lss__",
+	token.GTR:            "__gtr__",
+	token.LEQ:            "__leq__",
+	token.GEQ:            "__geq__",
+	token.NEQ:            "__neq__",
+	token.ADD_ASSIGN:     "__add_assign__",
+	token.SUB_ASSIGN:     "__sub_assign__",
+	token.MUL_ASSIGN:     "__mul_assign__",
+	token.QUO_ASSIGN:     "__quo_assign__",
+	token.REM_ASSIGN:     "__rem_assign__",
+	token.AND_ASSIGN:     "__and_assign__",
+	token.OR_ASSIGN:      "__or_assign__",
+	token.XOR_ASSIGN:     "__xor_assign__",
+	token.SHL_ASSIGN:     "__shl_assign__",
+	token.SHR_ASSIGN:     "__shr_assign__",
+	token.AND_NOT_ASSIGN: "__and_not_assign__",
+}
+
+func ContainsString(ss []string, s string) bool {
+	found := false
+	for _, v := range ss {
+		if v == s {
+			found = true
+			break
+		}
+	}
+	return found
+}
+
 // exprs
 
 func (self *IRBuilder) VisitIdent(node *ast.Ident) {

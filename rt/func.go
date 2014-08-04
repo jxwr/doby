@@ -3,8 +3,6 @@ package rt
 import (
 	"fmt"
 
-	"github.com/jxwr/doubi/ast"
-	"github.com/jxwr/doubi/env"
 	"github.com/jxwr/doubi/vm/instr"
 )
 
@@ -43,11 +41,9 @@ type FuncObject struct {
 	Property
 
 	name string
-	Decl *ast.FuncDeclExpr
 
 	IsBuiltin bool
 	Obj       Object
-	E         *env.Env
 }
 
 func (self *FuncObject) Name() string {

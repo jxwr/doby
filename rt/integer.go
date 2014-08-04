@@ -31,8 +31,7 @@ func (self *IntegerObject) ToString(rt *Runtime, args ...Object) []Object {
 func (self *IntegerObject) Times(rt *Runtime, args ...Object) (results []Object) {
 	fnobj := args[0].(*ClosureObject)
 	for i := 0; i < self.Val; i++ {
-		rt.Push(rt.NewIntegerObject(i))
-		rt.Runner.RunClosure(fnobj)
+		rt.CallFuncObj(fnobj, rt.NewIntegerObject(i))
 	}
 	return
 }

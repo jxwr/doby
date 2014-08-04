@@ -108,6 +108,7 @@ func NewRuntime(visitor ast.Visitor) *Runtime {
 }
 
 func (self *Runtime) CallFuncObj(fnobj *ClosureObject, args ...Object) {
+	self.MarkN(-len(args))
 	for _, arg := range args {
 		self.Push(arg)
 	}
@@ -157,13 +158,8 @@ func (self *Runtime) NewClosureObject(proto *instr.ClosureProto,
 	return obj
 }
 
-func (self *Runtime) NewFuncObject(name string, decl *ast.FuncDeclExpr, e *env.Env) Object {
-	obj := &FuncObject{MakeProperty(nil, &self.funcProperties), name, decl, false, nil, e}
-	return obj
-}
-
-func (self *Runtime) NewBuiltinFuncObject(name string, recv Object, e *env.Env) *FuncObject {
-	obj := &FuncObject{MakeProperty(nil, &self.funcProperties), name, nil, true, recv, e}
+func (self *Runtime) NewBuiltinFuncObject(name string, recv Object) *FuncObject {
+	obj := &FuncObject{MakeProperty(nil, &self.funcProperties), name, true, recv}
 	return obj
 }
 
@@ -239,7 +235,7 @@ func (self *Runtime) addObjectProperties(obj interface{}, prop *Property) {
 		for i := 0; i < numMethods; i++ {
 			m := typ.Method(i)
 			if m.Type == to_s.Type {
-				fn := self.NewBuiltinFuncObject(m.Name, nil, nil)
+				fn := self.NewBuiltinFuncObject(m.Name, nil)
 				self.TmpString.Val = m.Name
 				prop.SetProp(self.TmpString, fn)
 			}
@@ -247,7 +243,7 @@ func (self *Runtime) addObjectProperties(obj interface{}, prop *Property) {
 	} else {
 		for i := 0; i < numMethods; i++ {
 			m := typ.Method(i)
-			fn := self.NewBuiltinFuncObject(m.Name, nil, nil)
+			fn := self.NewBuiltinFuncObject(m.Name, nil)
 			self.TmpString.Val = m.Name
 			prop.SetProp(self.TmpString, fn)
 		}
@@ -275,9 +271,6 @@ func (self *Runtime) initBuiltinObjectProperties() {
 
 	boolObj := self.NewBoolObject(false)
 	self.addObjectProperties(boolObj, &self.boolProperties)
-
-	funcObj := self.NewFuncObject("init", nil, nil)
-	self.addObjectProperties(funcObj, &self.funcProperties)
 
 	gofuncObj := self.NewGoFuncObject("init", nil)
 	self.addObjectProperties(gofuncObj, &self.gofuncProperties)
