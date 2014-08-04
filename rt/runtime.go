@@ -10,28 +10,21 @@ import (
 	"strings"
 	"time"
 
-	"github.com/jxwr/doubi/ast"
 	"github.com/jxwr/doubi/env"
 	"github.com/jxwr/doubi/vm/instr"
 )
 
 type Runtime struct {
-	Visitor ast.Visitor
-	Env     *env.Env
-	Stack   *Stack
-	Nil     Object
-	True    Object
-	False   Object
-
-	TmpString  *StringObject
-	TmpInteger *IntegerObject
+	Env   *env.Env
+	Stack *Stack
+	Nil   Object
+	True  Object
+	False Object
 
 	Runner ClosureRunner
 
-	NeedReturn   bool
-	LoopDepth    int
-	NeedBreak    bool
-	NeedContinue bool
+	tmpString  *StringObject
+	tmpInteger *IntegerObject
 
 	goTypeMap map[string]*Property
 
@@ -48,53 +41,11 @@ type Runtime struct {
 	goobjProperties   Property
 }
 
-type Frame struct {
-	Locals       []Object
-	Upvals       []Object
-	Parent       *Frame
-	JumpTarget   int
-	NeedReturn   bool
-	NeedBreak    bool
-	NeedContinue bool
-	blockTargets []int
-}
-
-func NewFrame(numLocals, numUpvals int, parent *Frame) *Frame {
-	frame := &Frame{
-		make([]Object, numLocals),
-		make([]Object, numUpvals),
-		parent,
-		-1,
-		false,
-		false,
-		false,
-		[]int{},
-	}
-	return frame
-}
-
-func (self *Frame) PushBlock(pc int) {
-	self.blockTargets = append(self.blockTargets, pc)
-}
-
-func (self *Frame) PopBlock() (target int) {
-	target = self.blockTargets[len(self.blockTargets)-1]
-	self.blockTargets = self.blockTargets[:len(self.blockTargets)-1]
-	return
-}
-
-func (self *Frame) BlockEndPc() int {
-	if len(self.blockTargets) == 0 {
-		return -1
-	}
-	return self.blockTargets[len(self.blockTargets)-1]
-}
-
-func NewRuntime(visitor ast.Visitor) *Runtime {
+func NewRuntime() *Runtime {
 	env := env.NewEnv(nil)
 
-	rt := &Runtime{Visitor: visitor, Env: env, Stack: NewStack()}
-	rt.TmpString = rt.NewStringObject("")
+	rt := &Runtime{Env: env, Stack: NewStack()}
+	rt.tmpString = rt.NewStringObject("")
 
 	rt.registerGlobals(env)
 
@@ -221,8 +172,8 @@ func (self *Runtime) addObjectProperties(obj interface{}, prop *Property) {
 		for i := 0; i < val.NumField(); i++ {
 			ch := typ.Field(i).Name[0]
 			if ch >= 'A' && ch <= 'Z' {
-				self.TmpString.Val = typ.Field(i).Name
-				prop.SetProp(self.TmpString, self.NewGoObject(val.Field(i).Interface()))
+				self.tmpString.Val = typ.Field(i).Name
+				prop.SetProp(self.tmpString, self.NewGoObject(val.Field(i).Interface()))
 			}
 		}
 	}
@@ -236,16 +187,16 @@ func (self *Runtime) addObjectProperties(obj interface{}, prop *Property) {
 			m := typ.Method(i)
 			if m.Type == to_s.Type {
 				fn := self.NewBuiltinFuncObject(m.Name)
-				self.TmpString.Val = m.Name
-				prop.SetProp(self.TmpString, fn)
+				self.tmpString.Val = m.Name
+				prop.SetProp(self.tmpString, fn)
 			}
 		}
 	} else {
 		for i := 0; i < numMethods; i++ {
 			m := typ.Method(i)
 			fn := self.NewBuiltinFuncObject(m.Name)
-			self.TmpString.Val = m.Name
-			prop.SetProp(self.TmpString, fn)
+			self.tmpString.Val = m.Name
+			prop.SetProp(self.tmpString, fn)
 		}
 	}
 }
@@ -288,16 +239,16 @@ func (self *Runtime) RegisterVars(name string, vars map[string]interface{}) {
 
 	m := map[string]Slot{}
 	for k, v := range vars {
-		self.TmpString.Val = k
-		m[self.TmpString.HashCode()] = Slot{self.TmpString, self.NewGoObject(v)}
+		self.tmpString.Val = k
+		m[self.tmpString.HashCode()] = Slot{self.tmpString, self.NewGoObject(v)}
 	}
 
 	if dict == nil {
 		dict = self.NewDictObject(m)
 	} else {
 		for k, v := range m {
-			self.TmpString.Val = k
-			dict.(*DictObject).SetProp(self.TmpString, v.Val)
+			self.tmpString.Val = k
+			dict.(*DictObject).SetProp(self.tmpString, v.Val)
 		}
 	}
 	self.Env.Put(name, dict)
@@ -310,16 +261,16 @@ func (self *Runtime) RegisterFunctions(name string, vars []interface{}) {
 	for _, v := range vars {
 		name := runtime.FuncForPC(reflect.ValueOf(v).Pointer()).Name()
 		xs := strings.Split(name, ".")
-		self.TmpString.Val = xs[len(xs)-1]
-		m[self.TmpString.HashCode()] = Slot{self.TmpString, self.NewGoFuncObject(name, v)}
+		self.tmpString.Val = xs[len(xs)-1]
+		m[self.tmpString.HashCode()] = Slot{self.tmpString, self.NewGoFuncObject(name, v)}
 	}
 
 	if dict == nil {
 		dict = self.NewDictObject(m)
 	} else {
 		for k, v := range m {
-			self.TmpString.Val = k
-			dict.(*DictObject).SetProp(self.TmpString, v.Val)
+			self.tmpString.Val = k
+			dict.(*DictObject).SetProp(self.tmpString, v.Val)
 		}
 	}
 	self.Env.Put(name, dict)

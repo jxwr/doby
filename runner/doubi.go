@@ -7,7 +7,6 @@ import (
 	"io/ioutil"
 
 	"github.com/jxwr/doubi/comp"
-	"github.com/jxwr/doubi/env"
 	"github.com/jxwr/doubi/parser"
 	"github.com/jxwr/doubi/rt"
 	"github.com/jxwr/doubi/vm"
@@ -24,11 +23,10 @@ type Runner struct {
 }
 
 func NewRunner() *Runner {
-	pretty := &comp.PrettyPrinter{false, 0, true}
-	attr := &comp.Attr{false, env.NewEnv(nil), nil}
+	pretty := comp.NewPrettyPrinter()
+	attr := comp.NewAttr()
 	irb := comp.NewIRBuilder()
-
-	runtime := rt.NewRuntime(irb)
+	runtime := rt.NewRuntime()
 
 	runner := &Runner{pretty, attr, irb, runtime, false, false}
 	return runner
@@ -70,16 +68,20 @@ func (self *Runner) Run(filename string) {
 		stmt.Accept(self.attr)
 	}
 
+	// IR generation
+	irb := self.irb
 	for _, stmt := range parser.ProgramAst {
-		stmt.Accept(self.irb)
+		stmt.Accept(irb)
 	}
 
 	if self.dumpInstrs {
-		self.irb.C.DumpClosureProto()
+		irb.RootClosure().DumpClosureProto()
 	}
 
 	fmt.Println("===========================")
-	vm := vm.NewVM(self.irb.C, self.irb.CS, self.runtime)
+
+	// run IRs in the vm
+	vm := vm.NewVM(irb.RootClosure(), irb.ClosureTable(), self.runtime)
 	self.runtime.Runner = vm
 	vm.Run()
 

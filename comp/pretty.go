@@ -8,9 +8,14 @@ import (
 )
 
 type PrettyPrinter struct {
-	Debug       bool
-	Indent      int
-	ShowNewLine bool
+	debugMode   bool
+	indent      int
+	showNewLine bool
+}
+
+func NewPrettyPrinter() *PrettyPrinter {
+	p := &PrettyPrinter{false, 0, true}
+	return p
 }
 
 func puts(str string) {
@@ -24,19 +29,19 @@ func putTok(tok token.Token) {
 }
 
 func (self *PrettyPrinter) putln() {
-	if self.ShowNewLine {
+	if self.showNewLine {
 		fmt.Println()
 	}
 }
 
 func (self *PrettyPrinter) putIndent() {
-	for i := 0; i < self.Indent; i++ {
+	for i := 0; i < self.indent; i++ {
 		puts("  ")
 	}
 }
 
 func (self *PrettyPrinter) debug(node interface{}) {
-	if self.Debug {
+	if self.debugMode {
 		fmt.Printf("%#v\n", node)
 	}
 }
@@ -95,9 +100,9 @@ func (self *PrettyPrinter) VisitCallExpr(node *ast.CallExpr) {
 	node.Fun.Accept(self)
 	puts("(")
 	for i, arg := range node.Args {
-		self.ShowNewLine = false
+		self.showNewLine = false
 		arg.Accept(self)
-		self.ShowNewLine = true
+		self.showNewLine = true
 		if i < len(node.Args)-1 {
 			puts(", ")
 		}
@@ -265,17 +270,17 @@ func (self *PrettyPrinter) VisitBranchStmt(node *ast.BranchStmt) {
 func (self *PrettyPrinter) VisitBlockStmt(node *ast.BlockStmt) {
 	self.debug(node)
 
-	nl := self.ShowNewLine
+	nl := self.showNewLine
 	puts("{")
-	self.ShowNewLine = true
+	self.showNewLine = true
 	self.putln()
-	self.Indent++
+	self.indent++
 	for _, stmt := range node.List {
 		self.putIndent()
 		stmt.Accept(self)
 	}
-	self.Indent--
-	self.ShowNewLine = nl
+	self.indent--
+	self.showNewLine = nl
 	self.putIndent()
 	puts("}")
 }
@@ -307,21 +312,21 @@ func (self *PrettyPrinter) VisitCaseClause(node *ast.CaseClause) {
 	}
 	puts(":")
 	self.putln()
-	self.Indent++
+	self.indent++
 	for _, stmt := range node.Body {
 		self.putIndent()
 		stmt.Accept(self)
 	}
-	self.Indent--
+	self.indent--
 }
 
 func (self *PrettyPrinter) VisitSwitchStmt(node *ast.SwitchStmt) {
 	self.debug(node)
 
 	puts("switch ")
-	self.ShowNewLine = false
+	self.showNewLine = false
 	node.Init.Accept(self)
-	self.ShowNewLine = true
+	self.showNewLine = true
 	puts(" ")
 	node.Body.Accept(self)
 	self.putln()
@@ -339,14 +344,14 @@ func (self *PrettyPrinter) VisitForStmt(node *ast.ForStmt) {
 	self.debug(node)
 
 	puts("for ")
-	self.ShowNewLine = false
+	self.showNewLine = false
 	node.Init.Accept(self)
 	puts("; ")
 	node.Cond.Accept(self)
 	puts("; ")
 	node.Post.Accept(self)
 	puts(" ")
-	self.ShowNewLine = true
+	self.showNewLine = true
 	node.Body.Accept(self)
 	self.putln()
 }
@@ -355,14 +360,14 @@ func (self *PrettyPrinter) VisitRangeStmt(node *ast.RangeStmt) {
 	self.debug(node)
 
 	puts("for ")
-	self.ShowNewLine = false
+	self.showNewLine = false
 	node.KeyValue[0].Accept(self)
 	puts(", ")
 	node.KeyValue[1].Accept(self)
 	puts(" = range ")
 	node.X.Accept(self)
 	puts(" ")
-	self.ShowNewLine = true
+	self.showNewLine = true
 	node.Body.Accept(self)
 	self.putln()
 }

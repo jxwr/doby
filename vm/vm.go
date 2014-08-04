@@ -9,20 +9,20 @@ import (
 )
 
 type VM struct {
-	C     *instr.ClosureProto
-	CS    map[int]*instr.ClosureProto
-	RT    *rt.Runtime
-	Mods  map[string]*rt.DictObject
-	frame *rt.Frame
+	cc      *instr.ClosureProto
+	cs      map[int]*instr.ClosureProto
+	mods    map[string]*rt.DictObject
+	frame   *rt.Frame
+	runtime *rt.Runtime
 }
 
 func NewVM(c *instr.ClosureProto, cs map[int]*instr.ClosureProto, runtime *rt.Runtime) *VM {
-	vm := &VM{C: c, CS: cs, RT: runtime, Mods: map[string]*rt.DictObject{}}
+	vm := &VM{cc: c, cs: cs, runtime: runtime, mods: map[string]*rt.DictObject{}}
 	return vm
 }
 
 func (self *VM) Run() {
-	obj := self.RT.NewClosureObject(self.C, nil)
+	obj := self.runtime.NewClosureObject(self.cc, nil)
 	self.RunClosure(obj)
 }
 
@@ -30,9 +30,10 @@ func (self *VM) RunClosure(obj *rt.ClosureObject) {
 	c := obj.Proto
 	f := self.frame
 
-	self.frame = rt.NewFrame(len(c.LocalVariables), len(c.UpvalVariables), obj.Frame)
-	for i := 0; i < len(c.Instrs); i++ {
-		c.Instrs[i].Accept(self)
+	self.frame = rt.NewFrame(c.NumLocalVariable(), c.NumUpvalVariable(), obj.Frame)
+	instrs := c.Instrs()
+	for i := 0; i < len(instrs); i++ {
+		instrs[i].Accept(self)
 		if self.frame.JumpTarget > 0 {
 			i = self.frame.JumpTarget - 1
 			self.frame.JumpTarget = -1
@@ -54,40 +55,40 @@ func (self *VM) RunClosure(obj *rt.ClosureObject) {
 }
 
 func (self *VM) VisitPushClosure(ir *instr.PushClosureInstr) {
-	obj := self.RT.NewClosureObject(self.CS[ir.Seq], self.frame)
-	self.RT.Push(obj)
+	obj := self.runtime.NewClosureObject(self.cs[ir.Seq], self.frame)
+	self.runtime.Push(obj)
 }
 
 func (self *VM) VisitPushNil(ir *instr.PushNilInstr) {
-	self.RT.Push(self.RT.Nil)
+	self.runtime.Push(self.runtime.Nil)
 }
 
 func (self *VM) VisitPushTrue(ir *instr.PushTrueInstr) {
-	self.RT.Push(self.RT.True)
+	self.runtime.Push(self.runtime.True)
 }
 
 func (self *VM) VisitPushFalse(ir *instr.PushFalseInstr) {
-	self.RT.Push(self.RT.False)
+	self.runtime.Push(self.runtime.False)
 }
 
 func (self *VM) VisitPushInt(ir *instr.PushIntInstr) {
-	obj := self.RT.NewIntegerObject(ir.Val)
-	self.RT.Push(obj)
+	obj := self.runtime.NewIntegerObject(ir.Val)
+	self.runtime.Push(obj)
 }
 
 func (self *VM) VisitPushFloat(ir *instr.PushFloatInstr) {
-	obj := self.RT.NewFloatObject(ir.Val)
-	self.RT.Push(obj)
+	obj := self.runtime.NewFloatObject(ir.Val)
+	self.runtime.Push(obj)
 }
 
 func (self *VM) VisitPushString(ir *instr.PushStringInstr) {
-	obj := self.RT.NewStringObject(ir.Val)
-	self.RT.Push(obj)
+	obj := self.runtime.NewStringObject(ir.Val)
+	self.runtime.Push(obj)
 }
 
 func (self *VM) VisitLoadLocal(ir *instr.LoadLocalInstr) {
 	obj := self.frame.Locals[ir.Offset]
-	self.RT.Push(obj)
+	self.runtime.Push(obj)
 }
 
 func (self *VM) VisitLoadUpval(ir *instr.LoadUpvalInstr) {
@@ -100,11 +101,11 @@ func (self *VM) VisitLoadUpval(ir *instr.LoadUpvalInstr) {
 		depth--
 	}
 	obj := f.Locals[remoteOffset]
-	self.RT.Push(obj)
+	self.runtime.Push(obj)
 }
 
 func (self *VM) VisitSetLocal(ir *instr.SetLocalInstr) {
-	obj := self.RT.Pop()
+	obj := self.runtime.Pop()
 	self.frame.Locals[ir.Offset] = obj
 }
 
@@ -117,11 +118,11 @@ func (self *VM) VisitSetUpval(ir *instr.SetUpvalInstr) {
 		f = f.Parent
 		depth--
 	}
-	f.Locals[remoteOffset] = self.RT.Pop()
+	f.Locals[remoteOffset] = self.runtime.Pop()
 }
 
 func (self *VM) VisitSendMethod(ir *instr.SendMethodInstr) {
-	obj := self.RT.Pop()
+	obj := self.runtime.Pop()
 
 	// closure object is a function defined in doubi code, mark stack and rewind manually
 	// gofunc object is a function defined in go lib, no way to rewind the stack here
@@ -131,26 +132,26 @@ func (self *VM) VisitSendMethod(ir *instr.SendMethodInstr) {
 		switch v := obj.(type) {
 		case *rt.ClosureObject:
 			// take care of the stack
-			self.RT.MarkN(-(ir.Num))
+			self.runtime.MarkN(-(ir.Num))
 			self.RunClosure(v)
 		case *rt.GoFuncObject:
 			args := make([]rt.Object, ir.Num)
 			for i := ir.Num - 1; i >= 0; i-- {
-				args[i] = self.RT.Pop()
+				args[i] = self.runtime.Pop()
 			}
-			rets := v.CallGoFunc(self.RT, args...)
+			rets := v.CallGoFunc(self.runtime, args...)
 			for _, ret := range rets {
-				self.RT.Push(ret)
+				self.runtime.Push(ret)
 			}
 		case *rt.FuncObject:
 			// FIXME: For now, func object is the method object of the builtin object
 			args := make([]rt.Object, ir.Num)
 			for i := ir.Num - 1; i >= 0; i-- {
-				args[i] = self.RT.Pop()
+				args[i] = self.runtime.Pop()
 			}
-			rets := rt.Invoke(self.RT, v, "__call__", args...)
+			rets := rt.Invoke(self.runtime, v, "__call__", args...)
 			for _, ret := range rets {
-				self.RT.Push(ret)
+				self.runtime.Push(ret)
 			}
 		default:
 			fmt.Printf("%T", v)
@@ -158,11 +159,11 @@ func (self *VM) VisitSendMethod(ir *instr.SendMethodInstr) {
 	} else {
 		args := make([]rt.Object, ir.Num)
 		for i := ir.Num - 1; i >= 0; i-- {
-			args[i] = self.RT.Pop()
+			args[i] = self.runtime.Pop()
 		}
-		rets := rt.Invoke(self.RT, obj, ir.Method, args...)
+		rets := rt.Invoke(self.runtime, obj, ir.Method, args...)
 		for _, ret := range rets {
-			self.RT.Push(ret)
+			self.runtime.Push(ret)
 		}
 	}
 }
@@ -170,31 +171,31 @@ func (self *VM) VisitSendMethod(ir *instr.SendMethodInstr) {
 func (self *VM) VisitNewArray(ir *instr.NewArrayInstr) {
 	elems := make([]rt.Object, ir.Num)
 	for i := ir.Num - 1; i >= 0; i-- {
-		elems[i] = self.RT.Pop()
+		elems[i] = self.runtime.Pop()
 	}
-	obj := self.RT.NewArrayObject(elems)
-	self.RT.Push(obj)
+	obj := self.runtime.NewArrayObject(elems)
+	self.runtime.Push(obj)
 }
 
 func (self *VM) VisitNewDict(ir *instr.NewDictInstr) {
 	fieldMap := map[string]rt.Slot{}
 
 	for i := 0; i < ir.Num; i++ {
-		val := self.RT.Pop()
-		key := self.RT.Pop()
+		val := self.runtime.Pop()
+		key := self.runtime.Pop()
 		fieldMap[key.HashCode()] = rt.Slot{key, val}
 	}
-	obj := self.RT.NewDictObject(fieldMap)
-	self.RT.Push(obj)
+	obj := self.runtime.NewDictObject(fieldMap)
+	self.runtime.Push(obj)
 }
 
 func (self *VM) VisitNewSet(ir *instr.NewSetInstr) {
 	elems := make([]rt.Object, ir.Num)
 	for i := ir.Num - 1; i >= 0; i-- {
-		elems[i] = self.RT.Pop()
+		elems[i] = self.runtime.Pop()
 	}
-	obj := self.RT.NewSetObject(elems)
-	self.RT.Push(obj)
+	obj := self.runtime.NewSetObject(elems)
+	self.runtime.Push(obj)
 }
 
 func (self *VM) VisitLabel(ir *instr.LabelInstr) {}
@@ -204,7 +205,7 @@ func (self *VM) VisitJump(ir *instr.JumpInstr) {
 }
 
 func (self *VM) VisitJumpIfFalse(ir *instr.JumpIfFalseInstr) {
-	obj := self.RT.Pop().(*rt.BoolObject)
+	obj := self.runtime.Pop().(*rt.BoolObject)
 
 	if !obj.Val {
 		self.frame.JumpTarget = ir.Target
@@ -212,13 +213,13 @@ func (self *VM) VisitJumpIfFalse(ir *instr.JumpIfFalseInstr) {
 }
 
 func (self *VM) VisitImport(ir *instr.ImportInstr) {
-	mod, _ := self.RT.Env.LookUp(ir.Path)
+	mod, _ := self.runtime.Env.LookUp(ir.Path)
 	xs := strings.Split(ir.Path, "/")
-	self.Mods[xs[len(xs)-1]] = mod.(*rt.DictObject)
+	self.mods[xs[len(xs)-1]] = mod.(*rt.DictObject)
 }
 
 func (self *VM) VisitPushModule(ir *instr.PushModuleInstr) {
-	self.RT.Push(self.Mods[ir.Name])
+	self.runtime.Push(self.mods[ir.Name])
 }
 
 func (self *VM) VisitPushBlock(ir *instr.PushBlockInstr) {
@@ -234,7 +235,7 @@ func (self *VM) VisitRaiseReturn(ir *instr.RaiseReturnInstr) {
 	// We need to do this explicitly to clean up the garbage values left in the stack,
 	// should check out JRuby or some other interpreters to see how to resolve this
 	// problem.
-	self.RT.ShiftTopN(ir.Num, self.RT.PopMark())
+	self.runtime.ShiftTopN(ir.Num, self.runtime.PopMark())
 	self.frame.NeedReturn = true
 }
 

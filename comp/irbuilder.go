@@ -15,20 +15,18 @@ import (
 /// IRBuilder
 
 type IRBuilder struct {
-	ModuleNames []string
-	Fun         *ast.FuncDeclExpr
-	C           *instr.ClosureProto
-	CS          map[int]*instr.ClosureProto
-
+	cc                 *instr.ClosureProto
+	cs                 map[int]*instr.ClosureProto
 	lexer              *parser.Lexer
 	continueInstrStack []*instr.JumpInstr
+	moduleNames        []string
 }
 
 func NewIRBuilder() *IRBuilder {
 	c := instr.NewClosureProto(nil)
 	irb := &IRBuilder{
-		C:                  c,
-		CS:                 map[int]*instr.ClosureProto{0: c},
+		cc:                 c,
+		cs:                 map[int]*instr.ClosureProto{0: c},
 		continueInstrStack: []*instr.JumpInstr{},
 	}
 	return irb
@@ -38,30 +36,38 @@ func (self *IRBuilder) SetLexer(lexer *parser.Lexer) {
 	self.lexer = lexer
 }
 
+func (self *IRBuilder) RootClosure() *instr.ClosureProto {
+	return self.cc
+}
+
+func (self *IRBuilder) ClosureTable() map[int]*instr.ClosureProto {
+	return self.cs
+}
+
 func (self *IRBuilder) buildExpr(expr ast.Expr) {
 	expr.Accept(self)
 }
 
 func (self *IRBuilder) emit(instr instr.Instr) int {
-	return self.C.Emit(instr)
+	return self.cc.Emit(instr)
 }
 
 func (self *IRBuilder) PushClosureProto() int {
-	c := instr.NewClosureProto(self.C)
-	self.C.AddClosureProto(c)
-	self.C = c
-	self.CS[c.Seq] = c
-	return c.Seq
+	c := instr.NewClosureProto(self.cc)
+	self.cc.AddClosureProto(c)
+	self.cc = c
+	self.cs[c.Seq()] = c
+	return c.Seq()
 }
 
 func (self *IRBuilder) PopClosureProto() *instr.ClosureProto {
-	c := self.C
-	self.C = self.C.OuterClosureProto
+	c := self.cc
+	self.cc = self.cc.OuterClosureProto()
 	return c
 }
 
 func (self *IRBuilder) DumpClosureProto() {
-	self.C.DumpClosureProto()
+	self.cc.DumpClosureProto()
 }
 
 func (self *IRBuilder) Fatalf(pos token.Pos, format string, a ...interface{}) {
@@ -126,22 +132,22 @@ func (self *IRBuilder) VisitIdent(node *ast.Ident) {
 	} else if node.Name == "false" {
 		self.emit(instr.PushFalse())
 	} else {
-		exist, offset := self.C.LookUpLocal(node.Name)
+		exist, offset := self.cc.LookUpLocal(node.Name)
 		if exist {
 			self.emit(instr.LoadLocal(offset))
 			return
 		}
-		exist, offset = self.C.LookUpUpval(node.Name)
+		exist, offset = self.cc.LookUpUpval(node.Name)
 		if exist {
 			self.emit(instr.LoadUpval(offset))
 			return
 		}
 
-		exist, depth, offset := self.C.LookUpOuter(node.Name)
+		exist, depth, offset := self.cc.LookUpOuter(node.Name)
 		if exist {
-			offset := self.C.AddUpvalVariable(node.Name, depth, offset)
+			offset := self.cc.AddUpvalVariable(node.Name, depth, offset)
 			self.emit(instr.LoadUpval(offset))
-		} else if ContainsString(self.ModuleNames, node.Name) {
+		} else if ContainsString(self.moduleNames, node.Name) {
 			self.emit(instr.PushModule(node.Name))
 		} else {
 			self.Fatalf(node.NamePos, "'%s' not Found", node.Name)
@@ -255,16 +261,16 @@ func (self *IRBuilder) VisitDictExpr(node *ast.DictExpr) {
 func (self *IRBuilder) VisitFuncDeclExpr(node *ast.FuncDeclExpr) {
 	funNameOffset := 0
 	if node.Name != nil {
-		exist, offset := self.C.LookUpLocal(node.Name.Name)
+		exist, offset := self.cc.LookUpLocal(node.Name.Name)
 		if !exist {
-			offset = self.C.AddLocalVariable(node.Name.Name)
+			offset = self.cc.AddLocalVariable(node.Name.Name)
 		}
 		funNameOffset = offset
 	}
 
 	n := self.PushClosureProto()
 	for _, arg := range node.Args {
-		self.C.AddLocalVariable(arg.Name)
+		self.cc.AddLocalVariable(arg.Name)
 	}
 	for i := len(node.Args) - 1; i >= 0; i-- {
 		self.emit(instr.SetLocal(i))
@@ -306,23 +312,23 @@ func (self *IRBuilder) VisitAssignStmt(node *ast.AssignStmt) {
 		for i := len(node.Lhs) - 1; i >= 0; i-- {
 			switch v := node.Lhs[i].(type) {
 			case *ast.Ident:
-				exist, offset := self.C.LookUpLocal(v.Name)
+				exist, offset := self.cc.LookUpLocal(v.Name)
 				if exist {
 					self.emit(instr.SetLocal(offset))
 					continue
 				}
-				exist, offset = self.C.LookUpUpval(v.Name)
+				exist, offset = self.cc.LookUpUpval(v.Name)
 				if exist {
 					self.emit(instr.SetUpval(offset))
 					continue
 				}
-				_, depth, offset := self.C.LookUpOuter(v.Name)
+				_, depth, offset := self.cc.LookUpOuter(v.Name)
 				if depth < 1 {
-					offset := self.C.AddLocalVariable(v.Name)
+					offset := self.cc.AddLocalVariable(v.Name)
 					self.emit(instr.SetLocal(offset))
 					continue
 				} else {
-					offset := self.C.AddUpvalVariable(v.Name, depth, offset)
+					offset := self.cc.AddUpvalVariable(v.Name, depth, offset)
 					self.emit(instr.SetUpval(offset))
 					continue
 				}
@@ -344,12 +350,12 @@ func (self *IRBuilder) VisitAssignStmt(node *ast.AssignStmt) {
 
 			switch v := node.Lhs[i].(type) {
 			case *ast.Ident:
-				exist, offset := self.C.LookUpLocal(v.Name)
+				exist, offset := self.cc.LookUpLocal(v.Name)
 				if exist {
 					self.emit(instr.LoadLocal(offset))
 					goto out
 				}
-				exist, offset = self.C.LookUpUpval(v.Name)
+				exist, offset = self.cc.LookUpUpval(v.Name)
 				if exist {
 					self.emit(instr.LoadUpval(offset))
 					goto out
@@ -427,7 +433,7 @@ var switchSeq int = 0
 
 func (self *IRBuilder) VisitSwitchStmt(node *ast.SwitchStmt) {
 	node.Init.(*ast.ExprStmt).X.Accept(self)
-	switchExprOffset := self.C.AddLocalVariable(fmt.Sprintf("#switch%d#", switchSeq))
+	switchExprOffset := self.cc.AddLocalVariable(fmt.Sprintf("#switch%d#", switchSeq))
 
 	var lastCaseJumpInstr *instr.JumpIfFalseInstr
 	endJmpList := []*instr.JumpInstr{}
@@ -519,10 +525,10 @@ func (self *IRBuilder) VisitRangeStmt(node *ast.RangeStmt) {
 	keyName := node.KeyValue[0].(*ast.Ident).Name
 	valName := node.KeyValue[1].(*ast.Ident).Name
 
-	keyOffset := self.C.AddLocalVariable(keyName)
-	valOffset := self.C.AddLocalVariable(valName)
-	iterOffset := self.C.AddLocalVariable(fmt.Sprintf("#iter%d#", iterSeq))
-	xOffset := self.C.AddLocalVariable(fmt.Sprintf("#iter#x%d#", iterSeq))
+	keyOffset := self.cc.AddLocalVariable(keyName)
+	valOffset := self.cc.AddLocalVariable(valName)
+	iterOffset := self.cc.AddLocalVariable(fmt.Sprintf("#iter%d#", iterSeq))
+	xOffset := self.cc.AddLocalVariable(fmt.Sprintf("#iter#x%d#", iterSeq))
 	iterSeq++
 
 	self.emit(instr.PushInt(0))
@@ -558,6 +564,6 @@ func (self *IRBuilder) VisitImportStmt(node *ast.ImportStmt) {
 		modname = strings.Trim(modname, "\" ")
 		self.emit(instr.Import(modname))
 		xs := strings.Split(modname, "/")
-		self.ModuleNames = append(self.ModuleNames, xs[len(xs)-1])
+		self.moduleNames = append(self.moduleNames, xs[len(xs)-1])
 	}
 }
