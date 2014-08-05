@@ -112,7 +112,7 @@ gaps = [701, 301, 132, 57, 23, 10, 4, 1]
 
 func bubble(lst) {
 	swapped = true
-	for i = lst.length() - 1; i > 0 && swapped; i-- {
+	for i = lst.Length() - 1; i > 0 && swapped; i-- {
 		swapped = false
 		for j = 0; j < i; j++ {
 			if lst[j] > lst[j+1] {
@@ -170,8 +170,8 @@ func solveSudoku(board) {
 	count++
 	fmt.Println(count)
 
-	for i = 0; i < board.length(); i++ {
-		for j = 0; j < board[i].length(); j++ {
+	for i = 0; i < board.Length(); i++ {
+		for j = 0; j < board[i].Length(); j++ {
 			if board[i][j] == "." {
 				for k = 0; k < 9; k++ {
 					c = "" + (k+1)

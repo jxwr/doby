@@ -5,12 +5,10 @@ import (
 )
 
 type ClosureProto struct {
-	localVariables map[string]int
-	localOffset    int
-
-	upvalVariables map[string]int
-	upvalOffset    int
-
+	localVariables     map[string]int
+	localOffset        int
+	upvalVariables     map[string]int
+	upvalOffset        int
 	innerClosureProtos []*ClosureProto
 	outerClosureProto  *ClosureProto
 	instrs             []Instr
