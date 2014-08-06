@@ -142,9 +142,17 @@ func ObjectToValue(obj Object, typ reflect.Type) reflect.Value {
 	var v reflect.Value
 	switch obj := obj.(type) {
 	case *IntegerObject:
-		v = reflect.ValueOf(obj.Val).Convert(typ)
+		if typ == nil {
+			v = reflect.ValueOf(obj.Val).Convert(reflect.TypeOf(1))
+		} else {
+			v = reflect.ValueOf(obj.Val).Convert(typ)
+		}
 	case *FloatObject:
-		v = reflect.ValueOf(obj.Val).Convert(typ)
+		if typ == nil {
+			v = reflect.ValueOf(obj.Val).Convert(reflect.TypeOf(0.1))
+		} else {
+			v = reflect.ValueOf(obj.Val).Convert(typ)
+		}
 	case *StringObject:
 		v = reflect.ValueOf(obj.Val)
 	case *BoolObject:

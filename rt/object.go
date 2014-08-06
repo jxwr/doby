@@ -17,6 +17,7 @@ type Object interface {
 }
 
 func Invoke(rt *Runtime, obj Object, method string, args ...Object) (results []Object) {
+	isBuiltin := false
 	if strings.HasPrefix(method, "__") {
 		if method == "__get_property__" {
 			// builtin function
@@ -34,10 +35,11 @@ func Invoke(rt *Runtime, obj Object, method string, args ...Object) (results []O
 		} else {
 			method = "OP" + method
 		}
+		isBuiltin = true
 	}
 
 	theMethod := reflect.ValueOf(obj).MethodByName(method)
-	if theMethod.IsValid() {
+	if theMethod.IsValid() || isBuiltin {
 		// doubi object methods
 		theArgs := []reflect.Value{reflect.ValueOf(rt)}
 		if args != nil {
@@ -58,11 +60,21 @@ func Invoke(rt *Runtime, obj Object, method string, args ...Object) (results []O
 			if !theMethod.IsValid() {
 				goto err
 			}
+			methodType := theMethod.Type()
 			theArgs := []reflect.Value{}
-			for i, arg := range args {
-				reqTyp := theMethod.Type().In(i)
-				theArgs = append(theArgs, ObjectToValue(arg, reqTyp))
+
+			if methodType.NumIn() > 0 {
+				i := 0
+				for ; i < methodType.NumIn()-1; i++ {
+					reqTyp := methodType.In(i)
+					theArgs = append(theArgs, ObjectToValue(args[i], reqTyp))
+				}
+
+				for ; i < len(args); i++ {
+					theArgs = append(theArgs, ObjectToValue(args[i], nil))
+				}
 			}
+
 			rets := theMethod.Call(theArgs)
 			for _, ret := range rets {
 				results = append(results, rt.NewGoObject(ret.Interface()))

@@ -127,7 +127,9 @@ func ContainsString(ss []string, s string) bool {
 // exprs
 
 func (self *IRBuilder) VisitIdent(node *ast.Ident) {
-	if node.Name == "true" {
+	if node.Name == "nil" {
+		self.emit(instr.PushNil())
+	} else if node.Name == "true" {
 		self.emit(instr.PushTrue())
 	} else if node.Name == "false" {
 		self.emit(instr.PushFalse())

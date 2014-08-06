@@ -28,6 +28,24 @@ func (self *GoObject) HashCode() string {
 	return fmt.Sprintf("%p", self.obj)
 }
 
+func (self *GoObject) OP__eql__(rt *Runtime, args ...Object) (results []Object) {
+	gobj, ok := args[0].(*GoObject)
+	if ok {
+		boolObj := rt.NewBoolObject(self.obj == gobj)
+		results = append(results, boolObj)
+	} else {
+		_, ok = args[0].(*NilObject)
+		if ok {
+			boolObj := rt.NewBoolObject(self.obj == nil)
+			results = append(results, boolObj)
+		} else {
+			panic("OP__eql__ on GoObject")
+		}
+	}
+
+	return
+}
+
 /// function
 
 type GoFuncObject struct {
@@ -105,10 +123,15 @@ func (self *GoFuncObject) CallGoFunc(rt *Runtime, args ...Object) (results []Obj
 			case *GoObject:
 				v := reflect.ValueOf(arg.obj)
 				t := reflect.TypeOf(arg.obj)
-				if t.ConvertibleTo(self.typ.In(i)) {
-					v = v.Convert(self.typ.In(i))
+				if t != nil {
+					if t.ConvertibleTo(self.typ.In(i)) {
+						v = v.Convert(self.typ.In(i))
+					}
+					inArgs = append(inArgs, v)
+				} else {
+					typ := self.typ.In(i)
+					inArgs = append(inArgs, reflect.Zero(typ))
 				}
-				inArgs = append(inArgs, v)
 			default:
 				v := reflect.ValueOf(arg)
 				t := reflect.TypeOf(arg)
