@@ -104,7 +104,7 @@ func (self *ArrayObject) Size(rt *Runtime, args ...Object) (results []Object) {
 func (self *ArrayObject) Each(rt *Runtime, args ...Object) (results []Object) {
 	fnobj := args[0].(*ClosureObject)
 	for i := 0; i < len(self.Vals); i++ {
-		rt.CallFuncObj(fnobj, self.Vals[i])
+		rt.CallFuncObj(fnobj, rt.NewIntegerObject(i), self.Vals[i])
 	}
 	return
 }

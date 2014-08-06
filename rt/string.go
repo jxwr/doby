@@ -1,5 +1,9 @@
 package rt
 
+import (
+	"regexp"
+)
+
 /// string
 
 type StringObject struct {
@@ -35,6 +39,23 @@ func (self *StringObject) Length(rt *Runtime, args ...Object) (results []Object)
 func (self *StringObject) Size(rt *Runtime, args ...Object) (results []Object) {
 	ret := rt.NewIntegerObject(len(self.Val))
 	results = append(results, ret)
+	return
+}
+
+func (self *StringObject) Split(rt *Runtime, args ...Object) (results []Object) {
+	pat := args[0].String()
+	n := -1
+	if len(args) == 2 {
+		n = args[1].(*IntegerObject).Val
+	}
+	re := regexp.MustCompile(pat)
+	parts := re.Split(self.Val, n)
+
+	arr := []Object{}
+	for _, part := range parts {
+		arr = append(arr, rt.NewStringObject(part))
+	}
+	results = append(results, rt.NewArrayObject(arr))
 	return
 }
 

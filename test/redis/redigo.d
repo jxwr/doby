@@ -10,13 +10,15 @@ if err == nil {
 fmt.Println(c, err)
 
 reply, err = c.Do("SET", "a", "100")
-fmt.Println("Set:", reply, err)
+reply, err = c.Do("INFO")
+info, err = redis.String(reply, err)
 
-reply, err = c.Do("GET", "a")
-fmt.Println("Get:", reply, err)
-
-str, err = redis.String(reply, err)
-fmt.Println(str, err)
+info.Split("\\n").Each(func(index, line) {
+	xs = line.Split(":")
+	if xs.Size() == 2 {
+		fmt.Println(index, xs[0], xs[1])
+	}
+})
 
 fmt.Println(nil)
 
