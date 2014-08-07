@@ -378,6 +378,7 @@ func (self *IRBuilder) VisitAssignStmt(node *ast.AssignStmt) {
 }
 
 func (self *IRBuilder) VisitGoStmt(node *ast.GoStmt) {
+	// TODO
 	node.Call.Accept(self)
 }
 
@@ -428,7 +429,7 @@ func (self *IRBuilder) VisitIfStmt(node *ast.IfStmt) {
 }
 
 func (self *IRBuilder) VisitCaseClause(node *ast.CaseClause) {
-	// dummy
+	// DUMMY
 }
 
 var switchSeq int = 0
@@ -485,6 +486,7 @@ func (self *IRBuilder) VisitSwitchStmt(node *ast.SwitchStmt) {
 }
 
 func (self *IRBuilder) VisitSelectStmt(node *ast.SelectStmt) {
+	// TODO
 }
 
 func (self *IRBuilder) VisitForStmt(node *ast.ForStmt) {

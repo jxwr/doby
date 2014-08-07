@@ -99,6 +99,7 @@ const (
 	GOTO
 	IF
 	IMPORT
+	NIL
 	TRUE
 	FALSE
 
@@ -202,6 +203,7 @@ var Tokens = [...]string{
 	GOTO:   "goto",
 	IF:     "if",
 	IMPORT: "import",
+	NIL:    "nil",
 	TRUE:   "true",
 	FALSE:  "false",
 
