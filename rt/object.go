@@ -71,7 +71,11 @@ func Invoke(rt *Runtime, obj Object, method string, args ...Object) (results []O
 				}
 
 				for ; i < len(args); i++ {
-					theArgs = append(theArgs, ObjectToValue(args[i], nil))
+					var reqTyp reflect.Type
+					if i < methodType.NumIn() && methodType.In(i).Kind() != reflect.Slice {
+						reqTyp = methodType.In(i)
+					}
+					theArgs = append(theArgs, ObjectToValue(args[i], reqTyp))
 				}
 			}
 
