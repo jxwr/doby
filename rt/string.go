@@ -2,6 +2,7 @@ package rt
 
 import (
 	"regexp"
+	"strings"
 )
 
 /// string
@@ -39,6 +40,12 @@ func (self *StringObject) Length(rt *Runtime, args ...Object) (results []Object)
 func (self *StringObject) Size(rt *Runtime, args ...Object) (results []Object) {
 	ret := rt.NewIntegerObject(len(self.Val))
 	results = append(results, ret)
+	return
+}
+
+func (self *StringObject) Trim(rt *Runtime, args ...Object) (results []Object) {
+	val := strings.TrimSpace(self.Val)
+	results = append(results, rt.NewStringObject(val))
 	return
 }
 

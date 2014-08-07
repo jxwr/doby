@@ -13,13 +13,18 @@ reply, err = c.Do("SET", "a", "100")
 reply, err = c.Do("INFO")
 info, err = redis.String(reply, err)
 
+dict = #{}
 info.Split("\\n").Each(func(index, line) {
 	xs = line.Split(":")
 	if xs.Size() == 2 {
-		fmt.Println(index, xs[0], xs[1])
+		dict[xs[0]] = xs[1].Trim()
 	}
 })
 
-fmt.Println(nil)
+fmt.Println(dict)
+
+for k, v = range dict {
+	fmt.Println(k, v)
+}
 
 c.Close()
