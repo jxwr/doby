@@ -7,7 +7,13 @@ A script language on top of golang runtime with golang syntax and ruby semantic,
 ## Progress
 
 * [DONE] Hacking IR generation
-* [TODO] Clean code, remove eval ast tree related code, refactor
+* [DONE] Clean code, remove eval ast tree related code, refactor
+* [TODO] Dict syntax, remove '#' before '{', some yacc work
+* [TODO] Refactor number object (int32, int64...), implement set
+* [TODO] Make golib support more convenient
+* [TODO] Support goroutine
+* [TODO] Run fast, ir overhaul
+* [TODO] More builtin object functions (ruby-like), more test case
 
 ## DataType
 

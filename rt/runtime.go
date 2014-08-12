@@ -45,12 +45,12 @@ func NewRuntime() *Runtime {
 	env := env.NewEnv(nil)
 
 	rt := &Runtime{Env: env, Stack: NewStack()}
+
 	rt.tmpString = rt.NewStringObject("")
-
-	rt.registerGlobals(env)
-
 	rt.Nil = &NilObject{}
 	rt.goTypeMap = map[string]*Property{}
+
+	rt.registerGlobals(env)
 	rt.initBuiltinObjectProperties()
 	rt.True = rt.NewBoolObject(true)
 	rt.False = rt.NewBoolObject(false)
@@ -242,13 +242,42 @@ func (self *Runtime) initBuiltinObjectProperties() {
 
 /// register
 
+// take care of slice object value
+func (self *Runtime) GoValueToObject(obj interface{}) Object {
+	val := reflect.ValueOf(obj)
+	kind := val.Kind()
+
+	switch kind {
+	case reflect.Slice, reflect.Array:
+		elems := []Object{}
+		for i := 0; i < val.Len(); i++ {
+			elems = append(elems, self.GoValueToObject(val.Index(i).Interface()))
+		}
+		return self.NewArrayObject(elems)
+	case reflect.String:
+		return self.NewStringObject(obj.(string))
+	case reflect.Int, reflect.Int64:
+		return self.NewIntegerObject(obj.(int))
+	case reflect.Float32, reflect.Float64:
+		return self.NewFloatObject(obj.(float64))
+	case reflect.Bool:
+		if obj.(bool) == true {
+			return self.True
+		} else {
+			return self.False
+		}
+	default:
+		return self.NewGoObject(obj)
+	}
+}
+
 func (self *Runtime) RegisterVars(name string, vars map[string]interface{}) {
 	dict, _ := self.Env.LookUp(name)
 
 	m := map[string]Slot{}
 	for k, v := range vars {
 		self.tmpString.Val = k
-		m[self.tmpString.HashCode()] = Slot{self.tmpString, self.NewGoObject(v)}
+		m[self.tmpString.HashCode()] = Slot{self.tmpString, self.GoValueToObject(v)}
 	}
 
 	if dict == nil {
@@ -301,6 +330,10 @@ func (self *Runtime) registerGlobals(env *env.Env) {
 
 	self.RegisterFunctions("os", []interface{}{
 		os.Chdir, os.Chmod, os.Chown, os.Exit, os.Getpid, os.Hostname,
+	})
+
+	self.RegisterVars("os", map[string]interface{}{
+		"Args": os.Args[2:],
 	})
 
 	self.RegisterFunctions("time", []interface{}{
