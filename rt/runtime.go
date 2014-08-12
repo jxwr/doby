@@ -1,7 +1,9 @@
 package rt
 
 import (
+	"bufio"
 	"fmt"
+	"io/ioutil"
 	"log"
 	"math/rand"
 	"os"
@@ -90,7 +92,7 @@ func (self *Runtime) NewGoObject(obj interface{}) *GoObject {
 	gobj := &GoObject{MakeProperty(nil, &self.goobjProperties), obj}
 	val := reflect.ValueOf(obj)
 
-	if obj != nil && val.Kind() > reflect.Invalid && val.Kind() <= reflect.UnsafePointer {
+	if obj != nil && reflect.Indirect(val).IsValid() && val.Kind() > reflect.Invalid && val.Kind() <= reflect.UnsafePointer {
 		key := reflect.Indirect(val).Type().PkgPath() + "::" + reflect.Indirect(val).Type().String()
 		_, ok := self.goTypeMap[key]
 		if !ok {
@@ -331,6 +333,7 @@ func (self *Runtime) registerGlobals(env *env.Env) {
 	self.RegisterFunctions("os", []interface{}{
 		os.Chdir, os.Chmod, os.Chown, os.Exit, os.Getpid,
 		os.Hostname, os.Environ, os.Getenv, os.Setenv,
+		os.Create, os.Open,
 	})
 
 	self.RegisterVars("os", map[string]interface{}{
@@ -346,6 +349,15 @@ func (self *Runtime) registerGlobals(env *env.Env) {
 		rand.Float64, rand.ExpFloat64, rand.Float32, rand.Int,
 		rand.Int31, rand.Int31n, rand.Int63, rand.Int63n, rand.Intn,
 		rand.NormFloat64, rand.Perm, rand.Seed, rand.Uint32,
+	})
+
+	self.RegisterFunctions("io/ioutil", []interface{}{
+		ioutil.WriteFile, ioutil.ReadFile, ioutil.TempDir, ioutil.TempFile,
+		ioutil.ReadAll, ioutil.ReadDir, ioutil.NopCloser,
+	})
+
+	self.RegisterFunctions("bufio", []interface{}{
+		bufio.NewWriter, bufio.NewReader, bufio.NewReadWriter, bufio.NewScanner,
 	})
 }
 
