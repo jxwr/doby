@@ -2,6 +2,7 @@ package rt
 
 import (
 	"regexp"
+	"strconv"
 	"strings"
 )
 
@@ -46,6 +47,26 @@ func (self *StringObject) Size(rt *Runtime, args ...Object) (results []Object) {
 func (self *StringObject) Trim(rt *Runtime, args ...Object) (results []Object) {
 	val := strings.TrimSpace(self.Val)
 	results = append(results, rt.NewStringObject(val))
+	return
+}
+
+func (self *StringObject) ParseInt(rt *Runtime, args ...Object) (results []Object) {
+	v, err := strconv.ParseInt(self.Val, 10, 32)
+	if err != nil {
+		results = append(results, rt.Nil)
+	} else {
+		results = append(results, rt.NewIntegerObject(int(v)))
+	}
+	return
+}
+
+func (self *StringObject) ParseFloat(rt *Runtime, args ...Object) (results []Object) {
+	v, err := strconv.ParseFloat(self.Val, 64)
+	if err != nil {
+		results = append(results, rt.Nil)
+	} else {
+		results = append(results, rt.NewFloatObject(v))
+	}
 	return
 }
 

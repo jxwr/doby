@@ -329,7 +329,8 @@ func (self *Runtime) registerGlobals(env *env.Env) {
 	})
 
 	self.RegisterFunctions("os", []interface{}{
-		os.Chdir, os.Chmod, os.Chown, os.Exit, os.Getpid, os.Hostname,
+		os.Chdir, os.Chmod, os.Chown, os.Exit, os.Getpid,
+		os.Hostname, os.Environ, os.Getenv, os.Setenv,
 	})
 
 	self.RegisterVars("os", map[string]interface{}{
