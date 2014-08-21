@@ -1,6 +1,6 @@
-## Are you a DOUBI sent by the Monkey King?
+## Doby
 
-A script language on top of golang runtime with golang syntax and ruby semantic, it could use golang packages if they were exported to the Doubi envrionment.
+A script language on top of golang runtime with golang syntax and ruby semantic, it could use golang packages if they were exported to the Doby envrionment.
 
 > DO NOT USE, IT'S EXPERIMENTAL
 
