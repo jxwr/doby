@@ -265,7 +265,7 @@ os.Exit(1)
 fmt.Println("nerver reach")
 ```
 
-This shows how to import go modules into doubi enviroment (rt/runtime.go)
+This shows how to import go modules into doby enviroment (rt/runtime.go)
 ```go
 rt.RegisterFunctions("fmt", []interface{}{
 	fmt.Errorf,

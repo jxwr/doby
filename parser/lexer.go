@@ -5,7 +5,7 @@ import (
 	"regexp"
 	"strings"
 
-	"github.com/jxwr/doubi/token"
+	"github.com/jxwr/doby/token"
 )
 
 type Lexer struct {
@@ -14,7 +14,7 @@ type Lexer struct {
 	Pos      int
 	Line     int
 	Col      int
-	LastTok  *DoubiSymType
+	LastTok  *DobySymType
 
 	SavedToks []*Tok
 	Lines     []string
@@ -209,7 +209,7 @@ func (l *Lexer) MkTok(lit string) Tok {
 	return t
 }
 
-func (l *Lexer) Lex(lval *DoubiSymType) int {
+func (l *Lexer) Lex(lval *DobySymType) int {
 	if l.Pos >= len(l.Src) {
 		return 0
 	}

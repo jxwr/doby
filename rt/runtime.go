@@ -12,8 +12,8 @@ import (
 	"strings"
 	"time"
 
-	"github.com/jxwr/doubi/env"
-	"github.com/jxwr/doubi/vm/instr"
+	"github.com/jxwr/doby/env"
+	"github.com/jxwr/doby/vm/instr"
 )
 
 type Runtime struct {

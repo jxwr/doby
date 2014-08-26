@@ -1,7 +1,7 @@
 package ast
 
 import (
-	"github.com/jxwr/doubi/token"
+	"github.com/jxwr/doby/token"
 )
 
 type Node interface {

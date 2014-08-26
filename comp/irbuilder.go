@@ -6,10 +6,10 @@ import (
 	"strconv"
 	"strings"
 
-	"github.com/jxwr/doubi/ast"
-	"github.com/jxwr/doubi/parser"
-	"github.com/jxwr/doubi/token"
-	"github.com/jxwr/doubi/vm/instr"
+	"github.com/jxwr/doby/ast"
+	"github.com/jxwr/doby/parser"
+	"github.com/jxwr/doby/token"
+	"github.com/jxwr/doby/vm/instr"
 )
 
 /// IRBuilder

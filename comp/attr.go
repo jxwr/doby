@@ -4,9 +4,9 @@ import (
 	"fmt"
 	"strings"
 
-	"github.com/jxwr/doubi/ast"
-	"github.com/jxwr/doubi/env"
-	"github.com/jxwr/doubi/token"
+	"github.com/jxwr/doby/ast"
+	"github.com/jxwr/doby/env"
+	"github.com/jxwr/doby/token"
 )
 
 type Attr struct {

@@ -6,10 +6,10 @@ import (
 	"fmt"
 	"io/ioutil"
 
-	"github.com/jxwr/doubi/comp"
-	"github.com/jxwr/doubi/parser"
-	"github.com/jxwr/doubi/rt"
-	"github.com/jxwr/doubi/vm"
+	"github.com/jxwr/doby/comp"
+	"github.com/jxwr/doby/parser"
+	"github.com/jxwr/doby/rt"
+	"github.com/jxwr/doby/vm"
 )
 
 type Runner struct {
@@ -62,7 +62,7 @@ func (self *Runner) Run(filename string) {
 	parser.ProgramAst = nil
 	lexer := parser.NewLexer(filename, string(contents))
 	self.irb.SetLexer(lexer)
-	parser.DoubiParse(lexer)
+	parser.DobyParse(lexer)
 
 	for _, stmt := range parser.ProgramAst {
 		stmt.Accept(self.attr)

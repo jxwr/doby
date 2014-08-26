@@ -3,7 +3,7 @@ package main
 import (
 	"flag"
 
-	"github.com/jxwr/doubi/runner"
+	"github.com/jxwr/doby/runner"
 )
 
 var input string

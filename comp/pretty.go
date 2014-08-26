@@ -3,8 +3,8 @@ package comp
 import (
 	"fmt"
 
-	"github.com/jxwr/doubi/ast"
-	"github.com/jxwr/doubi/token"
+	"github.com/jxwr/doby/ast"
+	"github.com/jxwr/doby/token"
 )
 
 type PrettyPrinter struct {

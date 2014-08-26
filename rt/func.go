@@ -3,7 +3,7 @@ package rt
 import (
 	"fmt"
 
-	"github.com/jxwr/doubi/vm/instr"
+	"github.com/jxwr/doby/vm/instr"
 )
 
 /// closure

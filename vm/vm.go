@@ -4,8 +4,8 @@ import (
 	"fmt"
 	"strings"
 
-	"github.com/jxwr/doubi/rt"
-	"github.com/jxwr/doubi/vm/instr"
+	"github.com/jxwr/doby/rt"
+	"github.com/jxwr/doby/vm/instr"
 )
 
 type VM struct {
@@ -124,7 +124,7 @@ func (self *VM) VisitSetUpval(ir *instr.SetUpvalInstr) {
 func (self *VM) VisitSendMethod(ir *instr.SendMethodInstr) {
 	obj := self.runtime.Pop()
 
-	// closure object is a function defined in doubi code, mark stack and rewind manually
+	// closure object is a function defined in doby code, mark stack and rewind manually
 	// gofunc object is a function defined in go lib, no way to rewind the stack here
 	// func object is a function of a builtin object, mark stack by CallFuncObj(rt/runtime.go)
 
