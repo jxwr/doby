@@ -336,8 +336,12 @@ func (self *Runtime) registerGlobals(env *env.Env) {
 		os.Create, os.Open,
 	})
 
+	argsStart := 1
+	if len(os.Args) > 2 {
+		argsStart = 2
+	}
 	self.RegisterVars("os", map[string]interface{}{
-		"Args": os.Args[2:],
+		"Args": os.Args[argsStart:],
 	})
 
 	self.RegisterFunctions("time", []interface{}{
